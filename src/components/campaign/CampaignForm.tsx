@@ -1,10 +1,12 @@
 'use client';
 
+import { useState } from 'react';
 import { createCampaign, updateCampaign } from '@/actions/campaign';
 import { Button } from '@/components/ui/Button';
-import { Input } from '@/components/ui/Input';
+import { Input, Textarea } from '@/components/ui/Input';
 import { Card } from '@/components/ui/Card';
 import { useToast } from '@/components/ui/Toast';
+import { Save, Plus } from 'lucide-react';
 
 interface CampaignFormProps {
   campaign?: {
@@ -29,11 +31,13 @@ function toMonthInput(date: Date) {
 export function CampaignForm({ campaign }: CampaignFormProps) {
   const { toast } = useToast();
   const isEditing = !!campaign;
+  const [loading, setLoading] = useState(false);
 
   return (
-    <Card className="p-4 md:p-6">
+    <Card className="p-5 md:p-6">
       <form
         action={async (formData) => {
+          setLoading(true);
           try {
             if (isEditing) {
               await updateCampaign(campaign.id, formData);
@@ -43,9 +47,11 @@ export function CampaignForm({ campaign }: CampaignFormProps) {
             }
           } catch (e) {
             toast(e instanceof Error ? e.message : 'Erro ao salvar campanha', 'error');
+          } finally {
+            setLoading(false);
           }
         }}
-        className="space-y-4"
+        className="space-y-5"
       >
         <Input
           name="name"
@@ -55,19 +61,13 @@ export function CampaignForm({ campaign }: CampaignFormProps) {
           placeholder="Ex: Congresso 2026"
         />
 
-        <div className="space-y-1">
-          <label htmlFor="description" className="block text-sm font-medium text-text-secondary">
-            Descrição (opcional)
-          </label>
-          <textarea
-            id="description"
-            name="description"
-            defaultValue={campaign?.description ?? ''}
-            placeholder="Breve descrição da campanha"
-            rows={2}
-            className="w-full rounded-md border border-border bg-app px-3 py-2 text-base text-text-primary placeholder:text-text-muted transition-all duration-200 ease-in-out focus:outline-none focus:ring-2 focus:ring-primary/50 focus:border-primary"
-          />
-        </div>
+        <Textarea
+          name="description"
+          label="Descrição (opcional)"
+          defaultValue={campaign?.description ?? ''}
+          placeholder="Breve descrição da campanha"
+          rows={2}
+        />
 
         <Input
           name="pixKey"
@@ -85,49 +85,67 @@ export function CampaignForm({ campaign }: CampaignFormProps) {
           min="0.01"
           defaultValue={campaign ? (campaign.monthlyValue / 100).toFixed(2) : ''}
           required
-          placeholder="20.00"
+          placeholder="20,00"
         />
 
-        <div className="grid grid-cols-2 gap-4">
-          <Input
-            name="startMonth"
-            label="Mês de início"
-            type="month"
-            defaultValue={campaign ? toMonthInput(campaign.startMonth) : ''}
-            required
-          />
-          <Input
-            name="endMonth"
-            label="Mês final"
-            type="month"
-            defaultValue={campaign ? toMonthInput(campaign.endMonth) : ''}
-            required
-          />
-        </div>
+        <fieldset className="space-y-1.5">
+          <legend className="text-sm font-medium text-text-secondary">Período da campanha</legend>
+          <div className="grid grid-cols-2 gap-3">
+            <Input
+              name="startMonth"
+              label="Início"
+              type="month"
+              defaultValue={campaign ? toMonthInput(campaign.startMonth) : ''}
+              required
+            />
+            <Input
+              name="endMonth"
+              label="Fim"
+              type="month"
+              defaultValue={campaign ? toMonthInput(campaign.endMonth) : ''}
+              required
+            />
+          </div>
+        </fieldset>
 
-        <div className="grid grid-cols-2 gap-4">
-          <Input
-            name="paymentDayStart"
-            label="Prazo: dia início"
-            type="number"
-            min="1"
-            max="31"
-            defaultValue={campaign?.paymentDayStart ?? 10}
-            required
-          />
-          <Input
-            name="paymentDayEnd"
-            label="Prazo: dia fim"
-            type="number"
-            min="1"
-            max="31"
-            defaultValue={campaign?.paymentDayEnd ?? 15}
-            required
-          />
-        </div>
+        <fieldset className="space-y-1.5">
+          <legend className="text-sm font-medium text-text-secondary">Prazo de pagamento</legend>
+          <div className="grid grid-cols-2 gap-3">
+            <Input
+              name="paymentDayStart"
+              label="Dia início"
+              type="number"
+              min="1"
+              max="31"
+              defaultValue={campaign?.paymentDayStart ?? 10}
+              required
+            />
+            <Input
+              name="paymentDayEnd"
+              label="Dia fim"
+              type="number"
+              min="1"
+              max="31"
+              defaultValue={campaign?.paymentDayEnd ?? 15}
+              required
+            />
+          </div>
+        </fieldset>
 
-        <div className="flex justify-end gap-2 pt-2">
-          <Button type="submit">{isEditing ? 'Salvar Alterações' : 'Criar Campanha'}</Button>
+        <div className="flex justify-end pt-2">
+          <Button type="submit" disabled={loading}>
+            {loading ? (
+              <span className="flex items-center gap-2">
+                <span className="size-4 border-2 border-primary-fg/30 border-t-primary-fg rounded-full animate-spin" />
+                Salvando...
+              </span>
+            ) : (
+              <>
+                {isEditing ? <Save size={16} aria-hidden="true" /> : <Plus size={16} aria-hidden="true" />}
+                {isEditing ? 'Salvar Alterações' : 'Criar Campanha'}
+              </>
+            )}
+          </Button>
         </div>
       </form>
     </Card>
