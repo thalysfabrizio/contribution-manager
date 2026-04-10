@@ -1,7 +1,7 @@
 'use client';
 
 import { useState } from 'react';
-import { Plus, Copy } from 'lucide-react';
+import { Plus, Copy, Check } from 'lucide-react';
 import { updatePaymentStatus } from '@/actions/payment';
 import { removeParticipant } from '@/actions/participant';
 import { Button } from './ui/Button';
@@ -24,6 +24,7 @@ interface DashboardProps {
 
 export default function Dashboard({ data, isEnded = false }: DashboardProps) {
   const [loadingId, setLoadingId] = useState<string | null>(null);
+  const [copied, setCopied] = useState(false);
   const [editModal, setEditModal] = useState<{
     isOpen: boolean;
     participant: CampaignData['participants'][number] | null;
@@ -67,32 +68,40 @@ export default function Dashboard({ data, isEnded = false }: DashboardProps) {
   const handleCopyPix = async () => {
     try {
       await navigator.clipboard.writeText(data.pixKey);
+      setCopied(true);
       toast('Chave PIX copiada', 'success');
+      setTimeout(() => setCopied(false), 2000);
     } catch {
       toast('Não foi possível copiar', 'error');
     }
   };
 
   return (
-    <main className="min-h-screen p-4 md:p-8">
+    <main className="min-h-[calc(100dvh-3.5rem)] p-4 md:p-6 lg:p-8">
       <div className="max-w-[1200px] mx-auto space-y-6">
         {/* Page Header */}
-        <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
-          <div>
+        <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3">
+          <div className="min-w-0">
             <div className="flex items-center gap-2">
-              <h1 className="text-xl font-bold text-text-primary tracking-tight">{data.name}</h1>
+              <h1 className="text-xl font-bold text-text-primary tracking-tight truncate">{data.name}</h1>
               {isEnded && <Badge variant="muted">Encerrada</Badge>}
             </div>
-            {data.description && <p className="text-sm text-text-secondary">{data.description}</p>}
+            {data.description && (
+              <p className="text-sm text-text-secondary mt-0.5 line-clamp-1">{data.description}</p>
+            )}
           </div>
           <button
             onClick={handleCopyPix}
-            className="flex items-center gap-2 bg-card border border-border rounded-lg px-3 py-2 text-sm hover:bg-card-hover transition-all duration-200"
-            title="Copiar chave PIX"
+            className="flex items-center gap-2 bg-card border border-border rounded-lg px-3 min-h-[44px] text-sm hover:bg-card-hover hover:border-primary/20 transition-all duration-200 shrink-0 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary"
+            aria-label="Copiar chave PIX"
           >
             <span className="text-text-muted">PIX:</span>
-            <span className="text-primary font-medium">{data.pixKey}</span>
-            <Copy size={14} className="text-text-muted" />
+            <span className="text-primary font-medium max-w-[180px] truncate">{data.pixKey}</span>
+            {copied ? (
+              <Check size={14} className="text-success" aria-hidden="true" />
+            ) : (
+              <Copy size={14} className="text-text-muted" aria-hidden="true" />
+            )}
           </button>
         </div>
 
@@ -102,20 +111,21 @@ export default function Dashboard({ data, isEnded = false }: DashboardProps) {
         {/* Actions bar */}
         <div className="flex items-center justify-between">
           <div className="flex gap-3 text-xs text-text-secondary">
-            <span className="flex items-center gap-1">
-              <span className="w-2 h-2 rounded-full bg-success" /> PIX
+            <span className="flex items-center gap-1.5">
+              <span className="size-2 rounded-full bg-success" aria-hidden="true" /> PIX
             </span>
-            <span className="flex items-center gap-1">
-              <span className="w-2 h-2 rounded-full bg-info" /> Dinheiro
+            <span className="flex items-center gap-1.5">
+              <span className="size-2 rounded-full bg-info" aria-hidden="true" /> Dinheiro
             </span>
-            <span className="flex items-center gap-1">
-              <span className="w-2 h-2 rounded-full bg-warning" /> Atrasado
+            <span className="flex items-center gap-1.5">
+              <span className="size-2 rounded-full bg-warning" aria-hidden="true" /> Atrasado
             </span>
           </div>
           {!isEnded && (
             <Button onClick={() => setEditModal({ isOpen: true, participant: null })}>
-              <Plus size={16} />
-              Novo Participante
+              <Plus size={16} aria-hidden="true" />
+              <span className="hidden sm:inline">Novo Participante</span>
+              <span className="sm:hidden">Novo</span>
             </Button>
           )}
         </div>
@@ -132,7 +142,7 @@ export default function Dashboard({ data, isEnded = false }: DashboardProps) {
           onDelete={(id, name) => setDeleteConfirm({ isOpen: true, id, name })}
         />
 
-        {/* Add/Edit Participant Modal */}
+        {/* Modals */}
         <AddParticipantModal
           isOpen={editModal.isOpen}
           onClose={() => setEditModal({ isOpen: false, participant: null })}
@@ -140,7 +150,6 @@ export default function Dashboard({ data, isEnded = false }: DashboardProps) {
           participant={editModal.participant}
         />
 
-        {/* Message Modal */}
         <MessageModal
           isOpen={msgModal.isOpen}
           onClose={() => setMsgModal({ isOpen: false, participant: null })}
@@ -149,13 +158,12 @@ export default function Dashboard({ data, isEnded = false }: DashboardProps) {
           months={months}
         />
 
-        {/* Delete Confirmation */}
         <ConfirmModal
           isOpen={deleteConfirm.isOpen}
           onClose={() => setDeleteConfirm({ isOpen: false, id: '', name: '' })}
           onConfirm={handleDelete}
           title="Excluir Participante"
-          message={`Tem certeza que deseja excluir ${deleteConfirm.name}? Esta ação não pode ser desfeita.`}
+          message={`Tem certeza que deseja excluir ${deleteConfirm.name}? Os pagamentos deste participante também serão removidos.`}
           confirmLabel="Excluir"
           variant="danger"
         />

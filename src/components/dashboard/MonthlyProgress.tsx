@@ -1,5 +1,5 @@
 import { Card } from '@/components/ui/Card';
-import { isSameMonth } from '@/lib/months';
+import { isSameMonth, isCurrentMonth } from '@/lib/months';
 import type { CampaignData } from '@/types';
 import type { MonthEntry } from '@/lib/months';
 
@@ -12,9 +12,9 @@ export function MonthlyProgress({ participants, months }: MonthlyProgressProps) 
   const total = participants.length;
 
   return (
-    <Card className="p-4 md:p-6">
-      <h2 className="text-base font-semibold text-text-primary mb-4">Progresso por Mês</h2>
-      <div className="space-y-3">
+    <Card className="p-4 md:p-5">
+      <h2 className="text-sm font-semibold text-text-primary mb-4">Progresso por Mês</h2>
+      <div className="space-y-2.5">
         {months.map((m) => {
           const paidCount = participants.filter((p) =>
             p.payments.some(
@@ -24,17 +24,28 @@ export function MonthlyProgress({ participants, months }: MonthlyProgressProps) 
             ),
           ).length;
           const pct = total > 0 ? Math.round((paidCount / total) * 100) : 0;
+          const isCurrent = isCurrentMonth(m.date);
 
           return (
-            <div key={m.date.toISOString()} className="flex items-center gap-3">
-              <span className="text-xs text-text-secondary w-16 shrink-0">{m.label}</span>
+            <div
+              key={m.date.toISOString()}
+              className={`flex items-center gap-3 py-1 rounded ${isCurrent ? 'bg-primary/5 px-2 -mx-2' : ''}`}
+            >
+              <span className={`text-xs w-16 shrink-0 ${isCurrent ? 'text-primary font-medium' : 'text-text-secondary'}`}>
+                {m.label}
+              </span>
               <div className="flex-1 h-2 bg-border rounded-full overflow-hidden">
                 <div
-                  className="h-full bg-primary rounded-full transition-all duration-500"
+                  className={`h-full rounded-full transition-all duration-700 ease-out ${isCurrent ? 'bg-primary' : 'bg-primary/60'}`}
                   style={{ width: `${pct}%` }}
+                  role="progressbar"
+                  aria-valuenow={pct}
+                  aria-valuemin={0}
+                  aria-valuemax={100}
+                  aria-label={`${m.label}: ${paidCount} de ${total}`}
                 />
               </div>
-              <span className="text-xs text-text-muted w-16 text-right">
+              <span className="text-xs text-text-muted w-20 text-right tabular-nums">
                 {paidCount}/{total} ({pct}%)
               </span>
             </div>

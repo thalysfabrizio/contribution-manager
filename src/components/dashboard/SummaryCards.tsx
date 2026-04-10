@@ -1,4 +1,5 @@
 import { Card } from '@/components/ui/Card';
+import { TrendingUp, Target, CheckCircle, Clock } from 'lucide-react';
 import type { CampaignData } from '@/types';
 import type { MonthEntry } from '@/lib/months';
 import { isSameMonth, isCurrentMonth } from '@/lib/months';
@@ -7,6 +8,9 @@ interface SummaryCardsProps {
   data: CampaignData;
   months: MonthEntry[];
 }
+
+const formatCurrency = (value: number) =>
+  value.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
 
 export function SummaryCards({ data, months }: SummaryCardsProps) {
   const valueInReais = data.monthlyValue / 100;
@@ -34,40 +38,64 @@ export function SummaryCards({ data, months }: SummaryCardsProps) {
     });
   }
 
+  const cards = [
+    {
+      label: 'Arrecadado',
+      value: formatCurrency(totalCollected),
+      sub: `${progressPct}% da meta`,
+      icon: TrendingUp,
+      color: 'text-success' as const,
+      progress: progressPct,
+    },
+    {
+      label: 'Meta Total',
+      value: formatCurrency(totalGoal),
+      sub: `${data.participants.length} x ${months.length} meses`,
+      icon: Target,
+      color: 'text-primary' as const,
+    },
+    {
+      label: 'Em dia',
+      value: String(paidThisMonth),
+      sub: `de ${data.participants.length} no mês`,
+      icon: CheckCircle,
+      color: 'text-success' as const,
+    },
+    {
+      label: 'Pendentes',
+      value: String(pendingThisMonth),
+      sub: `de ${data.participants.length} no mês`,
+      icon: Clock,
+      color: 'text-warning' as const,
+    },
+  ];
+
   return (
     <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
-      <Card className="p-3 md:p-4">
-        <span className="text-xs text-text-muted">Arrecadado</span>
-        <span className="block text-lg font-bold text-text-primary">
-          R$ {totalCollected.toFixed(2).replace('.', ',')}
-        </span>
-        <div className="mt-1 h-1.5 bg-border rounded-full overflow-hidden">
-          <div
-            className="h-full bg-success rounded-full transition-all duration-500"
-            style={{ width: `${progressPct}%` }}
-          />
-        </div>
-        <span className="text-xs text-text-muted">{progressPct}% da meta</span>
-      </Card>
-      <Card className="p-3 md:p-4">
-        <span className="text-xs text-text-muted">Meta Total</span>
-        <span className="block text-lg font-bold text-text-primary">
-          R$ {totalGoal.toFixed(2).replace('.', ',')}
-        </span>
-        <span className="text-xs text-text-muted">
-          {data.participants.length} x {months.length} meses
-        </span>
-      </Card>
-      <Card className="p-3 md:p-4">
-        <span className="text-xs text-text-muted">Em dia (mês atual)</span>
-        <span className="block text-lg font-bold text-success">{paidThisMonth}</span>
-        <span className="text-xs text-text-muted">de {data.participants.length}</span>
-      </Card>
-      <Card className="p-3 md:p-4">
-        <span className="text-xs text-text-muted">Pendentes (mês atual)</span>
-        <span className="block text-lg font-bold text-warning">{pendingThisMonth}</span>
-        <span className="text-xs text-text-muted">de {data.participants.length}</span>
-      </Card>
+      {cards.map((card) => (
+        <Card key={card.label} className="p-3.5 md:p-4">
+          <div className="flex items-center justify-between mb-2">
+            <span className="text-xs text-text-muted font-medium">{card.label}</span>
+            <card.icon size={14} className={card.color} aria-hidden="true" />
+          </div>
+          <span className="block text-lg font-bold text-text-primary leading-tight">
+            {card.value}
+          </span>
+          {card.progress !== undefined && (
+            <div className="mt-2 h-1.5 bg-border rounded-full overflow-hidden">
+              <div
+                className="h-full bg-success rounded-full transition-all duration-700 ease-out"
+                style={{ width: `${card.progress}%` }}
+                role="progressbar"
+                aria-valuenow={card.progress}
+                aria-valuemin={0}
+                aria-valuemax={100}
+              />
+            </div>
+          )}
+          <span className="text-xs text-text-muted mt-1 block">{card.sub}</span>
+        </Card>
+      ))}
     </div>
   );
 }
