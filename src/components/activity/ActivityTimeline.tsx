@@ -5,6 +5,7 @@ import { Card } from '@/components/ui/Card';
 import { Button } from '@/components/ui/Button';
 import { ActivityItem } from './ActivityItem';
 import { loadMoreActivity } from '@/actions/activity';
+import { History, ChevronDown } from 'lucide-react';
 
 export interface ActivityEntry {
   id: string;
@@ -41,8 +42,11 @@ export function ActivityTimeline({ campaignId, initialItems, hasMore: initialHas
 
   if (items.length === 0) {
     return (
-      <Card className="p-6 text-center">
-        <p className="text-sm text-text-muted">Nenhuma atividade registrada ainda.</p>
+      <Card className="py-10 text-center">
+        <div className="flex flex-col items-center gap-2 text-text-muted">
+          <History size={28} className="opacity-40" aria-hidden="true" />
+          <p className="text-sm">Nenhuma atividade registrada ainda.</p>
+        </div>
       </Card>
     );
   }
@@ -60,13 +64,13 @@ export function ActivityTimeline({ campaignId, initialItems, hasMore: initialHas
   });
 
   return (
-    <Card className="p-4 md:p-6">
-      <h2 className="text-base font-semibold text-text-primary mb-4">Atividade Recente</h2>
-      <div className="space-y-6">
+    <Card className="p-4 md:p-5">
+      <h2 className="text-sm font-semibold text-text-primary mb-4">Atividade Recente</h2>
+      <div className="space-y-5">
         {Object.entries(grouped).map(([day, dayItems]) => (
           <div key={day}>
-            <h3 className="text-xs font-medium text-text-muted mb-2">{day}</h3>
-            <div className="space-y-2">
+            <h3 className="text-xs font-medium text-text-muted mb-2 uppercase tracking-wider">{day}</h3>
+            <div className="space-y-1 border-l-2 border-border pl-3 ml-1">
               {dayItems.map((item) => (
                 <ActivityItem key={item.id} item={item} />
               ))}
@@ -75,9 +79,19 @@ export function ActivityTimeline({ campaignId, initialItems, hasMore: initialHas
         ))}
       </div>
       {hasMore && (
-        <div className="mt-4 text-center">
-          <Button variant="ghost" onClick={loadMore} disabled={loading}>
-            {loading ? 'Carregando...' : 'Carregar mais'}
+        <div className="mt-5 text-center">
+          <Button variant="ghost" size="sm" onClick={loadMore} disabled={loading}>
+            {loading ? (
+              <span className="flex items-center gap-1.5">
+                <span className="size-3 border-2 border-text-muted/30 border-t-text-muted rounded-full animate-spin" />
+                Carregando...
+              </span>
+            ) : (
+              <>
+                <ChevronDown size={14} aria-hidden="true" />
+                Carregar mais
+              </>
+            )}
           </Button>
         </div>
       )}

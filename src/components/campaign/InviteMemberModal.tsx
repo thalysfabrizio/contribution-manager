@@ -6,6 +6,7 @@ import { Modal } from '@/components/ui/Modal';
 import { Button } from '@/components/ui/Button';
 import { Input } from '@/components/ui/Input';
 import { useToast } from '@/components/ui/Toast';
+import { UserPlus } from 'lucide-react';
 
 interface InviteMemberModalProps {
   isOpen: boolean;
@@ -15,12 +16,20 @@ interface InviteMemberModalProps {
 
 export function InviteMemberModal({ isOpen, onClose, campaignId }: InviteMemberModalProps) {
   const [email, setEmail] = useState('');
+  const [loading, setLoading] = useState(false);
   const { toast } = useToast();
 
+  const handleClose = () => {
+    setEmail('');
+    setLoading(false);
+    onClose();
+  };
+
   return (
-    <Modal isOpen={isOpen} onClose={onClose} title="Convidar Líder">
+    <Modal isOpen={isOpen} onClose={handleClose} title="Convidar Líder" size="sm">
       <form
         action={async () => {
+          setLoading(true);
           try {
             const result = await inviteMember(campaignId, email);
             if (result.method === 'direct') {
@@ -28,10 +37,10 @@ export function InviteMemberModal({ isOpen, onClose, campaignId }: InviteMemberM
             } else {
               toast('Convite enviado — o líder terá acesso ao fazer login', 'success');
             }
-            setEmail('');
-            onClose();
+            handleClose();
           } catch (e) {
             toast(e instanceof Error ? e.message : 'Erro ao convidar', 'error');
+            setLoading(false);
           }
         }}
         className="space-y-4"
@@ -44,16 +53,29 @@ export function InviteMemberModal({ isOpen, onClose, campaignId }: InviteMemberM
           onChange={(e) => setEmail(e.target.value)}
           required
           placeholder="lider@exemplo.com"
+          autoComplete="email"
         />
-        <p className="text-xs text-text-muted">
+        <p className="text-xs text-text-muted leading-relaxed">
           Se a pessoa já tem conta, será adicionada diretamente.
           Caso contrário, terá acesso ao fazer login pela primeira vez.
         </p>
-        <div className="flex justify-end gap-2">
-          <Button type="button" variant="ghost" onClick={onClose}>
+        <div className="flex justify-end gap-3">
+          <Button type="button" variant="ghost" onClick={handleClose} disabled={loading}>
             Cancelar
           </Button>
-          <Button type="submit">Convidar</Button>
+          <Button type="submit" disabled={loading}>
+            {loading ? (
+              <span className="flex items-center gap-1.5">
+                <span className="size-3.5 border-2 border-primary-fg/30 border-t-primary-fg rounded-full animate-spin" />
+                Convidando...
+              </span>
+            ) : (
+              <>
+                <UserPlus size={15} aria-hidden="true" />
+                Convidar
+              </>
+            )}
+          </Button>
         </div>
       </form>
     </Modal>

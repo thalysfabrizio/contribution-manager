@@ -8,7 +8,7 @@ import { Badge } from '@/components/ui/Badge';
 import { ConfirmModal } from '@/components/ui/ConfirmModal';
 import { InviteMemberModal } from './InviteMemberModal';
 import { useToast } from '@/components/ui/Toast';
-import { UserPlus, Trash2 } from 'lucide-react';
+import { UserPlus, Trash2, User } from 'lucide-react';
 
 export interface MemberInfo {
   id: string;
@@ -34,41 +34,46 @@ export function MemberList({ campaignId, members }: MemberListProps) {
   const { toast } = useToast();
 
   return (
-    <Card className="p-4 md:p-6">
+    <Card className="p-4 md:p-5">
       <div className="flex items-center justify-between mb-4">
-        <h2 className="text-base font-semibold text-text-primary">Líderes da Campanha</h2>
-        <Button variant="outline" onClick={() => setInviteOpen(true)} className="text-xs">
-          <UserPlus size={14} />
+        <h2 className="text-sm font-semibold text-text-primary">Líderes da Campanha</h2>
+        <Button variant="outline" size="sm" onClick={() => setInviteOpen(true)}>
+          <UserPlus size={13} aria-hidden="true" />
           Convidar
         </Button>
       </div>
 
-      <div className="space-y-2">
+      <div className="space-y-1">
         {members.map((m) => (
           <div
             key={m.id}
-            className="flex items-center justify-between py-2 border-b border-border last:border-0"
+            className="flex items-center justify-between py-2.5 px-1 rounded-lg hover:bg-card-hover/30 transition-colors -mx-1"
           >
-            <div>
-              <div className="flex items-center gap-2">
-                <span className="text-sm text-text-primary">
-                  {m.user.name || m.user.email}
-                </span>
-                <Badge variant={m.role === 'OWNER' ? 'success' : 'muted'}>
-                  {m.role === 'OWNER' ? 'Proprietário' : 'Membro'}
-                </Badge>
+            <div className="flex items-center gap-3 min-w-0">
+              <div className="size-8 rounded-full bg-primary/10 flex items-center justify-center shrink-0">
+                <User size={14} className="text-primary" aria-hidden="true" />
               </div>
-              {m.user.name && (
-                <span className="text-xs text-text-muted">{m.user.email}</span>
-              )}
+              <div className="min-w-0">
+                <div className="flex items-center gap-2">
+                  <span className="text-sm text-text-primary truncate">
+                    {m.user.name || m.user.email}
+                  </span>
+                  <Badge variant={m.role === 'OWNER' ? 'success' : 'muted'}>
+                    {m.role === 'OWNER' ? 'Proprietário' : 'Membro'}
+                  </Badge>
+                </div>
+                {m.user.name && (
+                  <span className="text-xs text-text-muted">{m.user.email}</span>
+                )}
+              </div>
             </div>
             {m.role !== 'OWNER' && (
               <button
                 onClick={() => setDeleteConfirm({ isOpen: true, id: m.id, email: m.user.email })}
-                className="p-2 rounded-md text-danger/70 hover:text-danger hover:bg-danger-bg transition-all duration-200"
+                className="size-9 inline-flex items-center justify-center rounded-lg text-danger/60 hover:text-danger hover:bg-danger-bg transition-colors duration-200 shrink-0 focus-visible:outline-2 focus-visible:outline-offset-1 focus-visible:outline-primary"
                 aria-label={`Remover ${m.user.email}`}
               >
-                <Trash2 size={14} />
+                <Trash2 size={15} aria-hidden="true" />
               </button>
             )}
           </div>

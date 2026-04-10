@@ -14,22 +14,26 @@ interface Props {
 
 export function DeleteCampaignButton({ campaignId, campaignName }: Props) {
   const [isOpen, setIsOpen] = useState(false);
+  const [loading, setLoading] = useState(false);
   const { toast } = useToast();
 
   return (
     <>
       <Button variant="danger" onClick={() => setIsOpen(true)}>
-        <Trash2 size={16} />
+        <Trash2 size={15} aria-hidden="true" />
         Excluir Campanha
       </Button>
       <ConfirmModal
         isOpen={isOpen}
         onClose={() => setIsOpen(false)}
+        loading={loading}
         onConfirm={async () => {
+          setLoading(true);
           try {
             await deleteCampaign(campaignId);
           } catch {
             toast('Erro ao excluir campanha', 'error');
+            setLoading(false);
           }
         }}
         title="Excluir Campanha"
