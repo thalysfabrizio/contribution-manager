@@ -3,6 +3,7 @@
 import { Card } from '@/components/ui/Card';
 import { ParticipantRow } from './ParticipantRow';
 import { isSameMonth, isCurrentMonth } from '@/lib/months';
+import { Users } from 'lucide-react';
 import type { CampaignData, PaymentStatus } from '@/types';
 import type { MonthEntry } from '@/lib/months';
 
@@ -30,23 +31,32 @@ export function ParticipantTable({
   return (
     <Card>
       <div className="overflow-x-auto">
-        <table className="w-full text-sm border-collapse">
+        <table className="w-full text-sm border-collapse" role="grid">
           <thead>
             <tr className="border-b border-border text-left">
-              <th className="p-3 md:p-4 min-w-[150px] sticky left-0 bg-card z-10 shadow-[4px_0_6px_-1px_rgba(0,0,0,0.3)]">
+              <th
+                scope="col"
+                className="p-3 md:p-4 min-w-[160px] sticky left-0 bg-card z-10 shadow-[4px_0_6px_-1px_rgba(0,0,0,0.3)] text-xs font-semibold text-text-secondary uppercase tracking-wider"
+              >
                 Participante
               </th>
               {months.map((m) => (
                 <th
                   key={m.date.toISOString()}
-                  className={`px-2 py-3 text-center min-w-[80px] text-text-secondary font-medium ${
-                    isCurrentMonth(m.date) ? 'bg-primary/5' : ''
+                  scope="col"
+                  className={`px-2 py-3 text-center min-w-[52px] text-xs font-medium text-text-secondary ${
+                    isCurrentMonth(m.date)
+                      ? 'bg-primary/5 text-primary'
+                      : ''
                   }`}
                 >
                   {m.label}
                 </th>
               ))}
-              <th className="p-3 md:p-4 text-right sticky right-0 bg-card z-10 shadow-[-4px_0_6px_-1px_rgba(0,0,0,0.3)]">
+              <th
+                scope="col"
+                className="p-3 md:p-4 text-right sticky right-0 bg-card z-10 shadow-[-4px_0_6px_-1px_rgba(0,0,0,0.3)] text-xs font-semibold text-text-secondary uppercase tracking-wider"
+              >
                 Ações
               </th>
             </tr>
@@ -54,8 +64,12 @@ export function ParticipantTable({
           <tbody>
             {participants.length === 0 ? (
               <tr>
-                <td colSpan={months.length + 2} className="p-8 text-center text-text-muted">
-                  Nenhum participante cadastrado. Clique em &quot;Novo Participante&quot; para adicionar.
+                <td colSpan={months.length + 2} className="py-12 text-center">
+                  <div className="flex flex-col items-center gap-2 text-text-muted">
+                    <Users size={28} className="opacity-40" aria-hidden="true" />
+                    <p className="text-sm">Nenhum participante cadastrado.</p>
+                    <p className="text-xs">Clique em &quot;Novo Participante&quot; para adicionar.</p>
+                  </div>
                 </td>
               </tr>
             ) : (
@@ -76,8 +90,8 @@ export function ParticipantTable({
           </tbody>
           {participants.length > 0 && (
             <tfoot>
-              <tr className="border-t border-border">
-                <td className="p-3 md:p-4 sticky left-0 bg-card z-10 text-xs text-text-muted font-medium shadow-[4px_0_6px_-1px_rgba(0,0,0,0.3)]">
+              <tr className="border-t-2 border-border">
+                <td className="p-3 md:p-4 sticky left-0 bg-card z-10 text-xs text-text-muted font-semibold uppercase tracking-wider shadow-[4px_0_6px_-1px_rgba(0,0,0,0.3)]">
                   Totais
                 </td>
                 {months.map((m) => {
@@ -88,12 +102,13 @@ export function ParticipantTable({
                         (pay.status === 'PAID_PIX' || pay.status === 'PAID_CASH'),
                     ),
                   ).length;
+                  const allPaid = paidInMonth === participants.length && participants.length > 0;
                   return (
                     <td
                       key={m.date.toISOString()}
-                      className={`px-1.5 py-2 text-center text-xs text-text-muted ${
+                      className={`px-1.5 py-2.5 text-center text-xs tabular-nums ${
                         isCurrentMonth(m.date) ? 'bg-primary/5' : ''
-                      }`}
+                      } ${allPaid ? 'text-success font-medium' : 'text-text-muted'}`}
                     >
                       {paidInMonth}/{participants.length}
                     </td>

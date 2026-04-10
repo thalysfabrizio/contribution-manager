@@ -3,7 +3,6 @@
 import { Pencil, MessageCircle, Trash2 } from 'lucide-react';
 import { PaymentToggle } from './PaymentToggle';
 import { isSameMonth, isCurrentMonth } from '@/lib/months';
-import { getNextStatus } from '@/lib/payment-utils';
 import type { CampaignData, PaymentStatus } from '@/types';
 import type { MonthEntry } from '@/lib/months';
 
@@ -31,14 +30,21 @@ export function ParticipantRow({
   const paidCount = p.payments.filter(
     (pay) => pay.status === 'PAID_PIX' || pay.status === 'PAID_CASH',
   ).length;
+  const progressPct = months.length > 0 ? Math.round((paidCount / months.length) * 100) : 0;
 
   return (
-    <tr className="border-b border-border hover:bg-card-hover/50 transition-colors duration-200">
-      <td className="p-3 md:p-4 sticky left-0 bg-card z-10 shadow-[4px_0_6px_-1px_rgba(0,0,0,0.3)]">
-        <div className="font-medium text-text-primary">{p.person.name}</div>
-        <div className="text-xs text-text-muted">{p.person.phone || '-'}</div>
-        <div className="text-xs text-text-muted mt-0.5">
-          {paidCount}/{months.length} pagos
+    <tr className="border-b border-border hover:bg-card-hover/30 transition-colors duration-150 group">
+      <td className="p-3 md:p-4 sticky left-0 bg-card z-10 shadow-[4px_0_6px_-1px_rgba(0,0,0,0.3)] group-hover:bg-card-hover/30 transition-colors">
+        <div className="font-medium text-text-primary text-sm">{p.person.name}</div>
+        <div className="text-xs text-text-muted mt-0.5">{p.person.phone || '—'}</div>
+        <div className="flex items-center gap-2 mt-1">
+          <div className="flex-1 h-1 bg-border rounded-full overflow-hidden max-w-[60px]">
+            <div
+              className="h-full bg-primary/60 rounded-full transition-all duration-500"
+              style={{ width: `${progressPct}%` }}
+            />
+          </div>
+          <span className="text-xs text-text-muted tabular-nums">{paidCount}/{months.length}</span>
         </div>
       </td>
       {months.map((m) => {
@@ -49,7 +55,7 @@ export function ParticipantRow({
         return (
           <td
             key={m.date.toISOString()}
-            className={`px-1.5 py-2 text-center ${isCurrentMonth(m.date) ? 'bg-primary/5' : ''}`}
+            className={`px-1 py-2 text-center ${isCurrentMonth(m.date) ? 'bg-primary/5' : ''}`}
           >
             <PaymentToggle
               status={status}
@@ -60,33 +66,33 @@ export function ParticipantRow({
           </td>
         );
       })}
-      <td className="p-3 md:p-4 text-right whitespace-nowrap sticky right-0 bg-card z-10 shadow-[-4px_0_6px_-1px_rgba(0,0,0,0.3)]">
+      <td className="p-2 md:p-3 text-right whitespace-nowrap sticky right-0 bg-card z-10 shadow-[-4px_0_6px_-1px_rgba(0,0,0,0.3)] group-hover:bg-card-hover/30 transition-colors">
         {!isEnded && (
-          <>
+          <div className="inline-flex items-center gap-0.5">
             <button
               onClick={() => onEdit(p)}
-              className="p-2 rounded-md text-text-secondary hover:text-text-primary hover:bg-card-hover transition-all duration-200"
+              className="size-9 inline-flex items-center justify-center rounded-lg text-text-secondary hover:text-text-primary hover:bg-card-hover transition-colors duration-200 focus-visible:outline-2 focus-visible:outline-offset-1 focus-visible:outline-primary"
               aria-label={`Editar ${p.person.name}`}
             >
-              <Pencil size={16} />
+              <Pencil size={15} aria-hidden="true" />
             </button>
             {p.person.phone && (
               <button
                 onClick={() => onMessage(p)}
-                className="p-2 rounded-md text-text-secondary hover:text-text-primary hover:bg-card-hover transition-all duration-200"
+                className="size-9 inline-flex items-center justify-center rounded-lg text-text-secondary hover:text-text-primary hover:bg-card-hover transition-colors duration-200 focus-visible:outline-2 focus-visible:outline-offset-1 focus-visible:outline-primary"
                 aria-label={`Enviar mensagem para ${p.person.name}`}
               >
-                <MessageCircle size={16} />
+                <MessageCircle size={15} aria-hidden="true" />
               </button>
             )}
             <button
               onClick={() => onDelete(p.id, p.person.name)}
-              className="p-2 rounded-md text-danger/70 hover:text-danger hover:bg-danger-bg transition-all duration-200"
+              className="size-9 inline-flex items-center justify-center rounded-lg text-danger/60 hover:text-danger hover:bg-danger-bg transition-colors duration-200 focus-visible:outline-2 focus-visible:outline-offset-1 focus-visible:outline-primary"
               aria-label={`Excluir ${p.person.name}`}
             >
-              <Trash2 size={16} />
+              <Trash2 size={15} aria-hidden="true" />
             </button>
-          </>
+          </div>
         )}
       </td>
     </tr>
