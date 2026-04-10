@@ -2,14 +2,13 @@
 
 import { prisma } from '@/lib/prisma';
 import { requireCampaignOwner } from '@/lib/permissions';
+import { emailSchema } from '@/lib/validators';
 import { revalidatePath } from 'next/cache';
-import crypto from 'crypto';
 
 export async function inviteMember(campaignId: string, email: string) {
   const { user } = await requireCampaignOwner(campaignId);
 
-  const normalizedEmail = email.trim().toLowerCase();
-  if (!normalizedEmail) throw new Error('Email é obrigatório');
+  const normalizedEmail = emailSchema.parse(email);
 
   // Verificar se já é membro
   const existingUser = await prisma.user.findUnique({ where: { email: normalizedEmail } });

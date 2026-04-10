@@ -117,13 +117,15 @@ export async function removeParticipant(campaignId: string, participantId: strin
   revalidatePath(`/campaigns/${campaignId}`);
 }
 
-export async function searchPersonByPhone(phone: string) {
+export async function searchPersonByPhone(campaignId: string, phone: string) {
+  await requireCampaignAccess(campaignId);
+
   const cleaned = phone.replace(/\D/g, '');
   if (cleaned.length < 10) return null;
 
   const person = await prisma.person.findUnique({
     where: { phone: cleaned },
-    select: { id: true, name: true, phone: true },
+    select: { name: true, phone: true },
   });
 
   return person;
