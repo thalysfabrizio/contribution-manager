@@ -1,7 +1,7 @@
 'use client';
 
 import { useState } from 'react';
-import { Wand2, CalendarClock } from 'lucide-react';
+import { Wand2, CalendarClock, ExternalLink, CheckCircle } from 'lucide-react';
 import { confirmMessageSent } from '@/actions/message';
 import { Modal } from '@/components/ui/Modal';
 import { Button } from '@/components/ui/Button';
@@ -21,26 +21,29 @@ interface MessageModalProps {
 export function MessageModal({ isOpen, onClose, participant, campaign, months }: MessageModalProps) {
   const [step, setStep] = useState<'select' | 'confirm'>('select');
   const [sentTemplate, setSentTemplate] = useState('');
+  const [confirming, setConfirming] = useState(false);
   const { toast } = useToast();
 
   const handleClose = () => {
     setStep('select');
+    setConfirming(false);
     onClose();
   };
 
   if (!participant) return null;
 
+  const now = new Date();
+
   const getSmartMessageLink = () => {
-    const today = new Date();
-    const currentMonthStr = today.toLocaleDateString('pt-BR', { month: '2-digit', year: '2-digit' });
+    const currentMonthStr = now.toLocaleDateString('pt-BR', { month: '2-digit', year: '2-digit' });
     const remainingCount = months.filter(
       (m) =>
-        m.date.getUTCFullYear() > today.getFullYear() ||
-        (m.date.getUTCFullYear() === today.getFullYear() && m.date.getUTCMonth() >= today.getMonth()),
+        m.date.getUTCFullYear() > now.getUTCFullYear() ||
+        (m.date.getUTCFullYear() === now.getUTCFullYear() && m.date.getUTCMonth() >= now.getUTCMonth()),
     ).length;
     const pendingLabels = months
       .filter((m) => {
-        const isPastOrPresent = m.date <= today || isCurrentMonth(m.date);
+        const isPastOrPresent = m.date <= now || isCurrentMonth(m.date);
         if (!isPastOrPresent) return false;
         const payment = participant.payments.find((pay) => isSameMonth(pay.month, m.date));
         return !payment || payment.status === 'PENDING' || payment.status === 'LATE';
@@ -59,6 +62,25 @@ export function MessageModal({ isOpen, onClose, participant, campaign, months }:
     return `https://wa.me/55${participant.person.phone}?text=${encodeURIComponent(msg)}`;
   };
 
+  const templateOptions = [
+    {
+      key: 'charge',
+      label: 'Cobrança Inteligente',
+      description: 'Pendências + contagem regressiva',
+      icon: Wand2,
+      href: getSmartMessageLink(),
+      accent: true,
+    },
+    {
+      key: 'reminder',
+      label: 'Lembrete de Prazo',
+      description: `Dia ${campaign.paymentDayStart} ao ${campaign.paymentDayEnd}`,
+      icon: CalendarClock,
+      href: getReminderMessageLink(),
+      accent: false,
+    },
+  ];
+
   return (
     <Modal
       isOpen={isOpen}
@@ -70,56 +92,55 @@ export function MessageModal({ isOpen, onClose, participant, campaign, months }:
           <p className="text-sm text-text-secondary">
             Para: <span className="text-text-primary font-medium">{participant.person.name}</span>
           </p>
-          <div className="space-y-3">
-            <a
-              href={getSmartMessageLink()}
-              target="_blank"
-              rel="noopener noreferrer"
-              onClick={() => {
-                setSentTemplate('charge');
-                setStep('confirm');
-              }}
-              className="flex items-center gap-3 w-full p-3 bg-primary/10 border border-primary/30 rounded-lg text-primary hover:bg-primary/20 transition-all duration-200 no-underline"
-            >
-              <Wand2 size={20} />
-              <div className="text-left">
-                <span className="block text-sm font-medium">Cobrança Inteligente</span>
-                <span className="block text-xs opacity-80">Aviso de pendências + Contagem regressiva</span>
-              </div>
-            </a>
-            <a
-              href={getReminderMessageLink()}
-              target="_blank"
-              rel="noopener noreferrer"
-              onClick={() => {
-                setSentTemplate('reminder');
-                setStep('confirm');
-              }}
-              className="flex items-center gap-3 w-full p-3 border border-border rounded-lg text-text-secondary hover:bg-card-hover hover:text-text-primary transition-all duration-200 no-underline"
-            >
-              <CalendarClock size={20} />
-              <div className="text-left">
-                <span className="block text-sm font-medium">Lembrete de Prazo</span>
-                <span className="block text-xs opacity-80">
-                  Dia {campaign.paymentDayStart}-{campaign.paymentDayEnd}
-                </span>
-              </div>
-            </a>
+          <div className="space-y-2.5">
+            {templateOptions.map((opt) => (
+              <a
+                key={opt.key}
+                href={opt.href}
+                target="_blank"
+                rel="noopener noreferrer"
+                onClick={() => {
+                  setSentTemplate(opt.key);
+                  setStep('confirm');
+                }}
+                className={`flex items-center gap-3 w-full p-3.5 rounded-lg transition-all duration-200 no-underline min-h-[60px] group ${
+                  opt.accent
+                    ? 'bg-primary/10 border border-primary/20 text-primary hover:bg-primary/15'
+                    : 'border border-border text-text-secondary hover:bg-card-hover hover:text-text-primary'
+                }`}
+              >
+                <div className={`size-10 rounded-lg flex items-center justify-center shrink-0 ${
+                  opt.accent ? 'bg-primary/15' : 'bg-card-hover'
+                }`}>
+                  <opt.icon size={18} aria-hidden="true" />
+                </div>
+                <div className="flex-1 text-left">
+                  <span className="block text-sm font-medium">{opt.label}</span>
+                  <span className="block text-xs opacity-70">{opt.description}</span>
+                </div>
+                <ExternalLink size={14} className="opacity-40 group-hover:opacity-70 transition-opacity" aria-hidden="true" />
+              </a>
+            ))}
           </div>
         </div>
       )}
       {step === 'confirm' && (
-        <div className="space-y-4">
-          <p className="text-sm text-text-secondary">
-            Você enviou a mensagem para{' '}
-            <span className="text-text-primary font-medium">{participant.person.name}</span> pelo WhatsApp?
-          </p>
-          <div className="flex justify-end gap-2">
+        <div className="space-y-5">
+          <div className="flex items-start gap-3 bg-success-bg rounded-lg p-4 border border-success/10">
+            <CheckCircle size={20} className="text-success shrink-0 mt-0.5" aria-hidden="true" />
+            <p className="text-sm text-text-primary">
+              Você enviou a mensagem para{' '}
+              <span className="font-medium">{participant.person.name}</span> pelo WhatsApp?
+            </p>
+          </div>
+          <div className="flex justify-end gap-3">
             <Button variant="ghost" onClick={handleClose}>
               Cancelar
             </Button>
             <Button
+              disabled={confirming}
               onClick={async () => {
+                setConfirming(true);
                 try {
                   await confirmMessageSent(campaign.id, participant.id, sentTemplate);
                   toast('Envio registrado', 'success');
@@ -129,7 +150,7 @@ export function MessageModal({ isOpen, onClose, participant, campaign, months }:
                 handleClose();
               }}
             >
-              Confirmo que enviei
+              {confirming ? 'Registrando...' : 'Confirmo que enviei'}
             </Button>
           </div>
         </div>

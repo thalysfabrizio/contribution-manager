@@ -6,7 +6,7 @@ import { DeleteCampaignButton } from '@/components/campaign/DeleteCampaignButton
 import { TemplateEditor } from '@/components/messaging/TemplateEditor';
 import { MemberList } from '@/components/campaign/MemberList';
 import Link from 'next/link';
-import { ArrowLeft } from 'lucide-react';
+import { ArrowLeft, AlertTriangle } from 'lucide-react';
 import type { CampaignTemplates } from '@/lib/templates';
 
 export const dynamic = 'force-dynamic';
@@ -55,20 +55,18 @@ export default async function CampaignSettingsPage({ params }: Props) {
   }));
 
   return (
-    <main className="min-h-screen p-4 md:p-8">
+    <main className="min-h-[calc(100dvh-3.5rem)] p-4 md:p-8">
       <div className="max-w-[600px] mx-auto space-y-6">
-        <div className="flex items-center gap-3">
+        <div>
           <Link
             href={`/campaigns/${id}`}
-            className="p-2 rounded-md text-text-secondary hover:text-text-primary hover:bg-card-hover transition-all duration-200"
-            aria-label="Voltar"
+            className="inline-flex items-center gap-1 text-sm text-text-muted hover:text-text-primary transition-colors mb-3"
           >
-            <ArrowLeft size={20} />
+            <ArrowLeft size={14} aria-hidden="true" />
+            Voltar
           </Link>
-          <div>
-            <h1 className="text-xl font-bold text-text-primary">Configurações</h1>
-            <p className="text-sm text-text-secondary">{campaign.name}</p>
-          </div>
+          <h1 className="text-xl font-bold text-text-primary">Configurações</h1>
+          <p className="text-sm text-text-secondary mt-0.5">{campaign.name}</p>
         </div>
 
         <CampaignForm campaign={campaign} />
@@ -85,9 +83,12 @@ export default async function CampaignSettingsPage({ params }: Props) {
           templates={campaign.templates as CampaignTemplates | null}
         />
 
-        <div className="border border-danger/30 rounded-lg p-4 md:p-6 space-y-3">
-          <h2 className="text-base font-semibold text-danger">Zona de perigo</h2>
-          <p className="text-sm text-text-secondary">
+        <div className="border border-danger/20 rounded-xl p-5 space-y-3">
+          <div className="flex items-center gap-2">
+            <AlertTriangle size={16} className="text-danger" aria-hidden="true" />
+            <h2 className="text-sm font-semibold text-danger">Zona de perigo</h2>
+          </div>
+          <p className="text-sm text-text-secondary leading-relaxed">
             Excluir a campanha remove todos os participantes, pagamentos e histórico permanentemente.
           </p>
           <DeleteCampaignButton campaignId={id} campaignName={campaign.name} />
