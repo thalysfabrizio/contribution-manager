@@ -1,0 +1,163 @@
+import NextAuth from 'next-auth';
+import Google from 'next-auth/providers/google';
+import Resend from 'next-auth/providers/resend';
+import { prisma } from './prisma';
+import type { Adapter, AdapterUser, AdapterAccount, AdapterSession } from 'next-auth/adapters';
+
+function PrismaAdapter(): Adapter {
+  return {
+    async createUser(data) {
+      const user = await prisma.user.create({
+        data: {
+          email: data.email,
+          name: data.name,
+          image: data.image,
+          emailVerified: data.emailVerified,
+        },
+      });
+      return user as AdapterUser;
+    },
+
+    async getUser(id) {
+      const user = await prisma.user.findUnique({ where: { id } });
+      return (user as AdapterUser) ?? null;
+    },
+
+    async getUserByEmail(email) {
+      const user = await prisma.user.findUnique({ where: { email } });
+      return (user as AdapterUser) ?? null;
+    },
+
+    async getUserByAccount({ provider, providerAccountId }) {
+      const account = await prisma.account.findUnique({
+        where: { provider_providerAccountId: { provider, providerAccountId } },
+        include: { user: true },
+      });
+      return (account?.user as AdapterUser) ?? null;
+    },
+
+    async updateUser(data) {
+      const user = await prisma.user.update({
+        where: { id: data.id },
+        data: {
+          name: data.name,
+          email: data.email,
+          image: data.image,
+          emailVerified: data.emailVerified,
+        },
+      });
+      return user as AdapterUser;
+    },
+
+    async deleteUser(id) {
+      await prisma.user.delete({ where: { id } });
+    },
+
+    async linkAccount(data) {
+      await prisma.account.create({
+        data: {
+          userId: data.userId,
+          type: data.type,
+          provider: data.provider,
+          providerAccountId: data.providerAccountId,
+          refresh_token: data.refresh_token,
+          access_token: data.access_token,
+          expires_at: data.expires_at,
+          token_type: data.token_type,
+          scope: data.scope,
+          id_token: data.id_token,
+          session_state: data.session_state as string | undefined,
+        },
+      });
+    },
+
+    async unlinkAccount({ provider, providerAccountId }) {
+      await prisma.account.delete({
+        where: { provider_providerAccountId: { provider, providerAccountId } },
+      });
+    },
+
+    async createSession(data) {
+      const session = await prisma.session.create({
+        data: {
+          userId: data.userId,
+          sessionToken: data.sessionToken,
+          expires: data.expires,
+        },
+      });
+      return session as AdapterSession;
+    },
+
+    async getSessionAndUser(sessionToken) {
+      const session = await prisma.session.findUnique({
+        where: { sessionToken },
+        include: { user: true },
+      });
+      if (!session) return null;
+      return {
+        session: session as AdapterSession,
+        user: session.user as AdapterUser,
+      };
+    },
+
+    async updateSession(data) {
+      const session = await prisma.session.update({
+        where: { sessionToken: data.sessionToken },
+        data: { expires: data.expires },
+      });
+      return session as AdapterSession;
+    },
+
+    async deleteSession(sessionToken) {
+      await prisma.session.delete({ where: { sessionToken } });
+    },
+
+    async createVerificationToken(data) {
+      const token = await prisma.verificationToken.create({
+        data: {
+          identifier: data.identifier,
+          token: data.token,
+          expires: data.expires,
+        },
+      });
+      return token;
+    },
+
+    async useVerificationToken({ identifier, token }) {
+      try {
+        const vt = await prisma.verificationToken.delete({
+          where: { identifier_token: { identifier, token } },
+        });
+        return vt;
+      } catch {
+        return null;
+      }
+    },
+  };
+}
+
+export const { handlers, auth, signIn, signOut } = NextAuth({
+  adapter: PrismaAdapter(),
+  providers: [
+    Google({
+      clientId: process.env.GOOGLE_CLIENT_ID!,
+      clientSecret: process.env.GOOGLE_CLIENT_SECRET!,
+    }),
+    Resend({
+      apiKey: process.env.RESEND_API_KEY!,
+      from: process.env.EMAIL_FROM || 'noreply@example.com',
+    }),
+  ],
+  pages: {
+    signIn: '/login',
+    verifyRequest: '/login?verify=1',
+  },
+  callbacks: {
+    async session({ session, user }) {
+      if (session.user) {
+        session.user.id = user.id;
+      }
+      return session;
+    },
+  },
+});
