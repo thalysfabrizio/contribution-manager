@@ -1,9 +1,11 @@
 import { ButtonHTMLAttributes, forwardRef } from 'react';
 
 type ButtonVariant = 'primary' | 'ghost' | 'danger' | 'outline';
+type ButtonSize = 'default' | 'sm' | 'icon';
 
 interface ButtonProps extends ButtonHTMLAttributes<HTMLButtonElement> {
   variant?: ButtonVariant;
+  size?: ButtonSize;
 }
 
 const variantClasses: Record<ButtonVariant, string> = {
@@ -13,13 +15,19 @@ const variantClasses: Record<ButtonVariant, string> = {
   outline: 'bg-transparent text-text-secondary border border-border hover:bg-card-hover hover:text-text-primary',
 };
 
+const sizeClasses: Record<ButtonSize, string> = {
+  default: 'px-4 min-h-[44px] text-sm',
+  sm: 'px-3 min-h-[36px] text-xs',
+  icon: 'size-[44px] p-0',
+};
+
 const Button = forwardRef<HTMLButtonElement, ButtonProps>(
-  ({ variant = 'primary', className = '', disabled, children, ...props }, ref) => {
+  ({ variant = 'primary', size = 'default', className = '', disabled, children, ...props }, ref) => {
     return (
       <button
         ref={ref}
         disabled={disabled}
-        className={`inline-flex items-center justify-center gap-2 rounded-md px-4 min-h-[44px] text-sm font-medium cursor-pointer transition-all duration-200 ease-in-out disabled:opacity-50 disabled:cursor-not-allowed ${variantClasses[variant]} ${className}`}
+        className={`inline-flex items-center justify-center gap-2 rounded-md font-medium cursor-pointer transition-all duration-200 ease-in-out focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary disabled:opacity-50 disabled:cursor-not-allowed ${variantClasses[variant]} ${sizeClasses[size]} ${className}`}
         {...props}
       >
         {children}
@@ -31,3 +39,4 @@ const Button = forwardRef<HTMLButtonElement, ButtonProps>(
 Button.displayName = 'Button';
 
 export { Button };
+export type { ButtonProps, ButtonVariant, ButtonSize };

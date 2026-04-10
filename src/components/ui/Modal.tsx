@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useRef } from 'react';
+import { useEffect, useRef, useCallback } from 'react';
 import { X } from 'lucide-react';
 
 interface ModalProps {
@@ -8,46 +8,96 @@ interface ModalProps {
   onClose: () => void;
   title: string;
   children: React.ReactNode;
+  size?: 'sm' | 'md' | 'lg';
 }
 
-export function Modal({ isOpen, onClose, title, children }: ModalProps) {
+const sizeClasses = {
+  sm: 'md:max-w-sm',
+  md: 'md:max-w-md',
+  lg: 'md:max-w-lg',
+};
+
+export function Modal({ isOpen, onClose, title, children, size = 'md' }: ModalProps) {
   const overlayRef = useRef<HTMLDivElement>(null);
+  const contentRef = useRef<HTMLDivElement>(null);
+  const previousFocusRef = useRef<HTMLElement | null>(null);
+
+  const handleKeyDown = useCallback(
+    (e: KeyboardEvent) => {
+      if (e.key === 'Escape') {
+        onClose();
+        return;
+      }
+
+      // Focus trap
+      if (e.key === 'Tab' && contentRef.current) {
+        const focusable = contentRef.current.querySelectorAll<HTMLElement>(
+          'button, [href], input, select, textarea, [tabindex]:not([tabindex="-1"])',
+        );
+        const first = focusable[0];
+        const last = focusable[focusable.length - 1];
+
+        if (e.shiftKey && document.activeElement === first) {
+          e.preventDefault();
+          last?.focus();
+        } else if (!e.shiftKey && document.activeElement === last) {
+          e.preventDefault();
+          first?.focus();
+        }
+      }
+    },
+    [onClose],
+  );
 
   useEffect(() => {
     if (!isOpen) return;
 
-    function handleKeyDown(e: KeyboardEvent) {
-      if (e.key === 'Escape') onClose();
-    }
-
+    previousFocusRef.current = document.activeElement as HTMLElement;
     document.addEventListener('keydown', handleKeyDown);
     document.body.style.overflow = 'hidden';
+
+    // Focus first focusable element
+    requestAnimationFrame(() => {
+      const first = contentRef.current?.querySelector<HTMLElement>(
+        'button, [href], input, select, textarea, [tabindex]:not([tabindex="-1"])',
+      );
+      first?.focus();
+    });
 
     return () => {
       document.removeEventListener('keydown', handleKeyDown);
       document.body.style.overflow = '';
+      previousFocusRef.current?.focus();
     };
-  }, [isOpen, onClose]);
+  }, [isOpen, handleKeyDown]);
 
   if (!isOpen) return null;
 
   return (
     <div
       ref={overlayRef}
-      className="fixed inset-0 z-50 flex items-end md:items-center justify-center bg-black/50 backdrop-blur-sm"
+      role="dialog"
+      aria-modal="true"
+      aria-labelledby="modal-title"
+      className="fixed inset-0 z-50 flex items-end md:items-center justify-center bg-black/60 backdrop-blur-sm animate-fade-in"
       onClick={(e) => {
         if (e.target === overlayRef.current) onClose();
       }}
     >
-      <div className="w-full md:max-w-md bg-card border border-border rounded-t-lg md:rounded-lg p-6 max-h-[90vh] overflow-y-auto animate-in">
-        <div className="flex items-center justify-between mb-4">
-          <h2 className="text-lg font-semibold text-text-primary">{title}</h2>
+      <div
+        ref={contentRef}
+        className={`w-full ${sizeClasses[size]} bg-card border border-border rounded-t-2xl md:rounded-xl p-5 md:p-6 max-h-[85vh] overflow-y-auto animate-slide-up md:animate-scale-in`}
+      >
+        <div className="flex items-center justify-between mb-5">
+          <h2 id="modal-title" className="text-lg font-semibold text-text-primary">
+            {title}
+          </h2>
           <button
             onClick={onClose}
-            className="p-1 rounded-md text-text-muted hover:text-text-primary hover:bg-card-hover transition-all duration-200"
-            aria-label="Fechar"
+            className="size-9 inline-flex items-center justify-center rounded-lg text-text-muted hover:text-text-primary hover:bg-card-hover transition-colors duration-200 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary"
+            aria-label="Fechar modal"
           >
-            <X size={20} />
+            <X size={18} aria-hidden="true" />
           </button>
         </div>
         {children}

@@ -24,9 +24,9 @@ export function useToast() {
 }
 
 const icons: Record<ToastVariant, React.ReactNode> = {
-  success: <CheckCircle size={18} />,
-  error: <XCircle size={18} />,
-  info: <Info size={18} />,
+  success: <CheckCircle size={16} aria-hidden="true" />,
+  error: <XCircle size={16} aria-hidden="true" />,
+  info: <Info size={16} aria-hidden="true" />,
 };
 
 const variantClasses: Record<ToastVariant, string> = {
@@ -50,7 +50,11 @@ export function ToastProvider({ children }: { children: React.ReactNode }) {
   return (
     <ToastContext.Provider value={{ toast }}>
       {children}
-      <div className="fixed bottom-4 right-4 z-[100] flex flex-col gap-2">
+      <div
+        className="fixed bottom-4 left-4 right-4 md:left-auto md:right-4 z-[100] flex flex-col gap-2"
+        aria-live="polite"
+        aria-atomic="false"
+      >
         {toasts.map((t) => (
           <ToastItem key={t.id} toast={t} onRemove={removeToast} />
         ))}
@@ -67,16 +71,17 @@ function ToastItem({ toast: t, onRemove }: { toast: ToastMessage; onRemove: (id:
 
   return (
     <div
-      className={`flex items-center gap-2 bg-card border rounded-lg px-4 py-3 shadow-lg min-w-[280px] animate-in ${variantClasses[t.variant]}`}
+      role="status"
+      className={`flex items-center gap-3 bg-card border rounded-lg px-4 py-3 shadow-lg min-w-[280px] md:max-w-sm animate-slide-up ${variantClasses[t.variant]}`}
     >
       {icons[t.variant]}
       <span className="flex-1 text-sm text-text-primary">{t.message}</span>
       <button
         onClick={() => onRemove(t.id)}
-        className="p-0.5 text-text-muted hover:text-text-primary transition-colors"
+        className="size-7 inline-flex items-center justify-center rounded-md text-text-muted hover:text-text-primary transition-colors focus-visible:outline-2 focus-visible:outline-offset-1 focus-visible:outline-primary"
         aria-label="Fechar notificação"
       >
-        <X size={14} />
+        <X size={14} aria-hidden="true" />
       </button>
     </div>
   );
