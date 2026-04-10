@@ -1,9 +1,9 @@
 'use client';
 
-import { useState, useRef, useEffect } from 'react';
+import { useState, useRef, useEffect, useCallback } from 'react';
 import { signOut } from 'next-auth/react';
 import Link from 'next/link';
-import { ChevronDown, Settings, LogOut, User } from 'lucide-react';
+import { ChevronDown, Settings, LogOut, User, HandCoins } from 'lucide-react';
 
 interface Campaign {
   id: string;
@@ -25,6 +25,11 @@ export function Header({ userName, userImage, campaigns, currentCampaignId }: He
 
   const currentCampaign = campaigns.find((c) => c.id === currentCampaignId);
 
+  const closeAll = useCallback(() => {
+    setCampaignOpen(false);
+    setProfileOpen(false);
+  }, []);
+
   useEffect(() => {
     function handleClick(e: MouseEvent) {
       if (campaignRef.current && !campaignRef.current.contains(e.target as Node)) {
@@ -34,38 +39,64 @@ export function Header({ userName, userImage, campaigns, currentCampaignId }: He
         setProfileOpen(false);
       }
     }
+    function handleKeyDown(e: KeyboardEvent) {
+      if (e.key === 'Escape') closeAll();
+    }
     document.addEventListener('mousedown', handleClick);
-    return () => document.removeEventListener('mousedown', handleClick);
-  }, []);
+    document.addEventListener('keydown', handleKeyDown);
+    return () => {
+      document.removeEventListener('mousedown', handleClick);
+      document.removeEventListener('keydown', handleKeyDown);
+    };
+  }, [closeAll]);
 
   return (
-    <header className="sticky top-0 z-40 bg-app/80 backdrop-blur-sm border-b border-border">
+    <header className="sticky top-0 z-40 bg-app/90 backdrop-blur-md border-b border-border">
       <div className="max-w-[1200px] mx-auto px-4 h-14 flex items-center justify-between">
-        <div className="flex items-center gap-4">
-          <Link href="/campaigns" className="text-base font-bold text-text-primary hover:text-primary transition-colors">
-            Contribution Manager
+        <div className="flex items-center gap-3">
+          <Link
+            href="/campaigns"
+            className="flex items-center gap-2 text-text-primary hover:text-primary transition-colors focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary rounded-md"
+          >
+            <HandCoins size={20} className="text-primary" aria-hidden="true" />
+            <span className="text-sm font-bold hidden sm:inline">Gestor de Contribuições</span>
           </Link>
 
           {/* Seletor de campanha — só aparece se 2+ */}
           {campaigns.length >= 2 && (
             <div ref={campaignRef} className="relative">
               <button
-                onClick={() => setCampaignOpen(!campaignOpen)}
-                className="flex items-center gap-1 text-sm text-text-secondary hover:text-text-primary px-2 py-1 rounded-md hover:bg-card-hover transition-all duration-200"
+                onClick={() => {
+                  setCampaignOpen(!campaignOpen);
+                  setProfileOpen(false);
+                }}
+                aria-expanded={campaignOpen}
+                aria-haspopup="true"
+                className="flex items-center gap-1.5 text-sm text-text-secondary hover:text-text-primary min-h-[44px] px-3 rounded-lg hover:bg-card-hover transition-all duration-200 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary"
               >
-                {currentCampaign?.name || 'Selecionar'}
-                <ChevronDown size={14} className={`transition-transform ${campaignOpen ? 'rotate-180' : ''}`} />
+                <span className="max-w-[150px] md:max-w-[200px] truncate">
+                  {currentCampaign?.name || 'Selecionar'}
+                </span>
+                <ChevronDown
+                  size={14}
+                  className={`shrink-0 transition-transform duration-200 ${campaignOpen ? 'rotate-180' : ''}`}
+                  aria-hidden="true"
+                />
               </button>
               {campaignOpen && (
-                <div className="absolute top-full left-0 mt-1 w-56 bg-card border border-border rounded-lg shadow-lg py-1 animate-in">
+                <div
+                  className="absolute top-full left-0 mt-1.5 w-64 bg-card border border-border rounded-xl shadow-xl py-1.5 animate-slide-down"
+                  role="menu"
+                >
                   {campaigns.map((c) => (
                     <Link
                       key={c.id}
                       href={`/campaigns/${c.id}`}
+                      role="menuitem"
                       onClick={() => setCampaignOpen(false)}
-                      className={`block px-3 py-2 text-sm transition-colors ${
+                      className={`block px-3 py-2.5 text-sm transition-colors rounded-lg mx-1 ${
                         c.id === currentCampaignId
-                          ? 'text-primary bg-primary/5'
+                          ? 'text-primary bg-primary/10 font-medium'
                           : 'text-text-secondary hover:text-text-primary hover:bg-card-hover'
                       }`}
                     >
@@ -78,55 +109,66 @@ export function Header({ userName, userImage, campaigns, currentCampaignId }: He
           )}
         </div>
 
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-1">
           {/* Settings — só se tem campanha atual */}
           {currentCampaignId && (
             <Link
               href={`/campaigns/${currentCampaignId}/settings`}
-              className="p-2 rounded-md text-text-secondary hover:text-text-primary hover:bg-card-hover transition-all duration-200 hidden md:flex"
+              className="size-10 inline-flex items-center justify-center rounded-lg text-text-secondary hover:text-text-primary hover:bg-card-hover transition-colors duration-200 hidden md:inline-flex focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary"
               aria-label="Configurações da campanha"
             >
-              <Settings size={18} />
+              <Settings size={18} aria-hidden="true" />
             </Link>
           )}
 
           {/* Perfil */}
           <div ref={profileRef} className="relative">
             <button
-              onClick={() => setProfileOpen(!profileOpen)}
-              className="flex items-center gap-2 p-1 rounded-md hover:bg-card-hover transition-all duration-200"
+              onClick={() => {
+                setProfileOpen(!profileOpen);
+                setCampaignOpen(false);
+              }}
+              aria-expanded={profileOpen}
+              aria-haspopup="true"
+              aria-label="Menu do usuário"
+              className="flex items-center gap-2 min-h-[44px] px-2 rounded-lg hover:bg-card-hover transition-all duration-200 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary"
             >
               {userImage ? (
-                <img src={userImage} alt="" className="w-7 h-7 rounded-full" />
+                <img src={userImage} alt="" className="size-8 rounded-full ring-2 ring-border" />
               ) : (
-                <div className="w-7 h-7 rounded-full bg-primary/20 flex items-center justify-center">
-                  <User size={14} className="text-primary" />
+                <div className="size-8 rounded-full bg-primary/15 flex items-center justify-center">
+                  <User size={16} className="text-primary" aria-hidden="true" />
                 </div>
               )}
-              <span className="text-sm text-text-secondary hidden md:block">
+              <span className="text-sm text-text-secondary hidden md:block max-w-[120px] truncate">
                 {userName || 'Usuário'}
               </span>
             </button>
             {profileOpen && (
-              <div className="absolute top-full right-0 mt-1 w-48 bg-card border border-border rounded-lg shadow-lg py-1 animate-in">
-                <div className="px-3 py-2 text-xs text-text-muted border-b border-border">
+              <div
+                className="absolute top-full right-0 mt-1.5 w-52 bg-card border border-border rounded-xl shadow-xl py-1.5 animate-slide-down"
+                role="menu"
+              >
+                <div className="px-3 py-2.5 text-xs text-text-muted border-b border-border mb-1">
                   {userName || 'Usuário'}
                 </div>
                 {currentCampaignId && (
                   <Link
                     href={`/campaigns/${currentCampaignId}/settings`}
+                    role="menuitem"
                     onClick={() => setProfileOpen(false)}
-                    className="flex items-center gap-2 px-3 py-2 text-sm text-text-secondary hover:text-text-primary hover:bg-card-hover transition-colors md:hidden"
+                    className="flex items-center gap-2.5 px-3 py-2.5 text-sm text-text-secondary hover:text-text-primary hover:bg-card-hover transition-colors rounded-lg mx-1 md:hidden"
                   >
-                    <Settings size={14} />
+                    <Settings size={16} aria-hidden="true" />
                     Configurações
                   </Link>
                 )}
                 <button
+                  role="menuitem"
                   onClick={() => signOut({ callbackUrl: '/login' })}
-                  className="flex items-center gap-2 w-full px-3 py-2 text-sm text-danger hover:bg-danger-bg transition-colors"
+                  className="flex items-center gap-2.5 w-full px-3 py-2.5 text-sm text-danger hover:bg-danger-bg transition-colors rounded-lg mx-1 cursor-pointer"
                 >
-                  <LogOut size={14} />
+                  <LogOut size={16} aria-hidden="true" />
                   Sair
                 </button>
               </div>
