@@ -2,7 +2,8 @@ import NextAuth from 'next-auth';
 import Google from 'next-auth/providers/google';
 import Resend from 'next-auth/providers/resend';
 import { prisma } from './prisma';
-import type { Adapter, AdapterUser, AdapterAccount, AdapterSession } from 'next-auth/adapters';
+import { authConfig } from './auth.config';
+import type { Adapter, AdapterUser, AdapterSession } from 'next-auth/adapters';
 
 function PrismaAdapter(): Adapter {
   return {
@@ -137,6 +138,7 @@ function PrismaAdapter(): Adapter {
 }
 
 export const { handlers, auth, signIn, signOut } = NextAuth({
+  ...authConfig,
   adapter: PrismaAdapter(),
   providers: [
     Google({
@@ -148,16 +150,4 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
       from: process.env.EMAIL_FROM || 'noreply@example.com',
     }),
   ],
-  pages: {
-    signIn: '/login',
-    verifyRequest: '/login?verify=1',
-  },
-  callbacks: {
-    async session({ session, user }) {
-      if (session.user) {
-        session.user.id = user.id;
-      }
-      return session;
-    },
-  },
 });
