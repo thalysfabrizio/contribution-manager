@@ -4,10 +4,14 @@ import { useState, useRef, useEffect, useCallback } from 'react';
 import { signOut } from 'next-auth/react';
 import Link from 'next/link';
 import { ChevronDown, Settings, LogOut, User, HandCoins } from 'lucide-react';
+import { AccessibilityPanel } from './AccessibilityPanel';
 
 interface Campaign {
   id: string;
   name: string;
+  orgName?: string | null;
+  logoUrl?: string | null;
+  accentColor?: string | null;
 }
 
 interface HeaderProps {
@@ -52,14 +56,20 @@ export function Header({ userName, userImage, campaigns, currentCampaignId }: He
 
   return (
     <header className="sticky top-0 z-40 bg-app/90 backdrop-blur-md border-b border-border">
-      <div className="max-w-[1200px] mx-auto px-4 h-14 flex items-center justify-between">
+      <div className="max-w-[1200px] mx-auto px-5 md:px-10 h-16 flex items-center justify-between">
         <div className="flex items-center gap-3">
           <Link
             href="/campaigns"
             className="flex items-center gap-2 text-text-primary hover:text-primary transition-colors focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary rounded-md"
           >
-            <HandCoins size={20} className="text-primary" aria-hidden="true" />
-            <span className="text-sm font-bold hidden sm:inline">Gestor de Contribuições</span>
+            {currentCampaign?.logoUrl ? (
+              <img src={currentCampaign.logoUrl} alt="" className="size-7 rounded-md object-contain" />
+            ) : (
+              <HandCoins size={20} className="text-primary" aria-hidden="true" />
+            )}
+            <span className="text-sm font-bold hidden md:inline">
+              {currentCampaign?.orgName || 'Gestor de Contribuições'}
+            </span>
           </Link>
 
           {/* Seletor de campanha — só aparece se 2+ */}
@@ -85,7 +95,7 @@ export function Header({ userName, userImage, campaigns, currentCampaignId }: He
               </button>
               {campaignOpen && (
                 <div
-                  className="absolute top-full left-0 mt-1.5 w-64 bg-card border border-border rounded-xl shadow-xl py-1.5 animate-slide-down"
+                  className="absolute top-full left-0 mt-1.5 w-64 bg-card border border-border rounded-xl shadow-xl p-1.5 animate-slide-down"
                   role="menu"
                 >
                   {campaigns.map((c) => (
@@ -94,7 +104,7 @@ export function Header({ userName, userImage, campaigns, currentCampaignId }: He
                       href={`/campaigns/${c.id}`}
                       role="menuitem"
                       onClick={() => setCampaignOpen(false)}
-                      className={`block px-3 py-2.5 text-sm transition-colors rounded-lg mx-1 ${
+                      className={`block px-3 py-2.5 text-sm transition-colors rounded-lg ${
                         c.id === currentCampaignId
                           ? 'text-primary bg-primary/10 font-medium'
                           : 'text-text-secondary hover:text-text-primary hover:bg-card-hover'
@@ -109,7 +119,9 @@ export function Header({ userName, userImage, campaigns, currentCampaignId }: He
           )}
         </div>
 
-        <div className="flex items-center gap-1">
+        <div className="flex items-center gap-1.5">
+          <AccessibilityPanel />
+
           {/* Settings — só se tem campanha atual */}
           {currentCampaignId && (
             <Link
@@ -134,7 +146,7 @@ export function Header({ userName, userImage, campaigns, currentCampaignId }: He
               className="flex items-center gap-2 min-h-[44px] px-2 rounded-lg hover:bg-card-hover transition-all duration-200 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary"
             >
               {userImage ? (
-                <img src={userImage} alt="" className="size-8 rounded-full ring-2 ring-border" />
+                <img src={userImage} alt="" referrerPolicy="no-referrer" className="size-8 rounded-full ring-2 ring-border" />
               ) : (
                 <div className="size-8 rounded-full bg-primary/15 flex items-center justify-center">
                   <User size={16} className="text-primary" aria-hidden="true" />
@@ -146,7 +158,7 @@ export function Header({ userName, userImage, campaigns, currentCampaignId }: He
             </button>
             {profileOpen && (
               <div
-                className="absolute top-full right-0 mt-1.5 w-52 bg-card border border-border rounded-xl shadow-xl py-1.5 animate-slide-down"
+                className="absolute top-full right-0 mt-1.5 w-52 bg-card border border-border rounded-xl shadow-xl p-1.5 animate-slide-down"
                 role="menu"
               >
                 <div className="px-3 py-2.5 text-xs text-text-muted border-b border-border mb-1">
@@ -157,7 +169,7 @@ export function Header({ userName, userImage, campaigns, currentCampaignId }: He
                     href={`/campaigns/${currentCampaignId}/settings`}
                     role="menuitem"
                     onClick={() => setProfileOpen(false)}
-                    className="flex items-center gap-2.5 px-3 py-2.5 text-sm text-text-secondary hover:text-text-primary hover:bg-card-hover transition-colors rounded-lg mx-1 md:hidden"
+                    className="flex items-center gap-2.5 px-3 py-2.5 text-sm text-text-secondary hover:text-text-primary hover:bg-card-hover transition-colors rounded-lg md:hidden"
                   >
                     <Settings size={16} aria-hidden="true" />
                     Configurações
@@ -166,7 +178,7 @@ export function Header({ userName, userImage, campaigns, currentCampaignId }: He
                 <button
                   role="menuitem"
                   onClick={() => signOut({ callbackUrl: '/login' })}
-                  className="flex items-center gap-2.5 w-full px-3 py-2.5 text-sm text-danger hover:bg-danger-bg transition-colors rounded-lg mx-1 cursor-pointer"
+                  className="flex items-center gap-2.5 w-full px-3 py-2.5 text-sm text-danger hover:bg-danger-bg transition-colors rounded-lg cursor-pointer"
                 >
                   <LogOut size={16} aria-hidden="true" />
                   Sair

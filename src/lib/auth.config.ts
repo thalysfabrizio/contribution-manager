@@ -8,15 +8,21 @@ export const authConfig: NextAuthConfig = {
   },
   session: { strategy: 'jwt' },
   callbacks: {
-    async jwt({ token, user }) {
+    async jwt({ token, user, profile }) {
       if (user) {
         token.id = user.id;
+      }
+      if (profile?.picture) {
+        token.picture = profile.picture as string;
+      } else if (user?.image) {
+        token.picture = user.image;
       }
       return token;
     },
     async session({ session, token }) {
       if (session.user && token.id) {
         session.user.id = token.id as string;
+        session.user.image = token.picture as string | null;
       }
       return session;
     },
