@@ -6,6 +6,7 @@ import { Card } from '@/components/ui/Card';
 import { Button } from '@/components/ui/Button';
 import { Badge } from '@/components/ui/Badge';
 import { Plus, Users, Calendar, ArrowRight } from 'lucide-react';
+import { isCampaignEnded } from '@/lib/months';
 
 export const dynamic = 'force-dynamic';
 
@@ -75,7 +76,7 @@ export default async function CampaignsPage() {
         ) : (
           <div className="grid gap-4">
             {memberships.map(({ campaign, role }) => {
-              const isEnded = campaign.endMonth < now;
+              const isEnded = isCampaignEnded(campaign.endMonth);
               const startLabel = campaign.startMonth.toLocaleDateString('pt-BR', {
                 month: 'short',
                 year: 'numeric',

@@ -5,7 +5,7 @@ import Dashboard from '@/components/Dashboard';
 import { MonthlyProgress } from '@/components/dashboard/MonthlyProgress';
 import { PaymentMethodChart } from '@/components/dashboard/PaymentMethodChart';
 import { ActivityTimeline } from '@/components/activity/ActivityTimeline';
-import { getMonthsFromRange } from '@/lib/months';
+import { getMonthsFromRange, isCampaignEnded } from '@/lib/months';
 import type { CampaignData } from '@/types';
 
 export const dynamic = 'force-dynamic';
@@ -71,7 +71,7 @@ export default async function CampaignPage({ params }: Props) {
     })),
   };
 
-  const isEnded = campaign.endMonth < new Date();
+  const isEnded = isCampaignEnded(campaign.endMonth);
   const months = getMonthsFromRange(campaign.startMonth, campaign.endMonth);
 
   // Activity logs (first page)

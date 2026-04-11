@@ -5,21 +5,26 @@ export type MonthEntry = {
 
 export function getMonthsFromRange(startMonth: Date, endMonth: Date): MonthEntry[] {
   const months: MonthEntry[] = [];
-  const current = new Date(startMonth);
-  const end = new Date(endMonth);
+  let year = startMonth.getUTCFullYear();
+  let month = startMonth.getUTCMonth();
+  const endYear = endMonth.getUTCFullYear();
+  const endMon = endMonth.getUTCMonth();
 
-  while (current <= end) {
-    const month = current.getMonth();
-    const year = current.getFullYear();
-    const label = current
-      .toLocaleDateString('pt-BR', { month: 'short', year: '2-digit' })
+  while (year < endYear || (year === endYear && month <= endMon)) {
+    const date = new Date(Date.UTC(year, month, 1));
+    const label = date
+      .toLocaleDateString('pt-BR', { month: 'short', year: '2-digit', timeZone: 'UTC' })
       .replace('. de ', '/')
       .replace('.', '');
     months.push({
-      date: new Date(Date.UTC(year, month, 1)),
+      date,
       label: label.charAt(0).toUpperCase() + label.slice(1),
     });
-    current.setMonth(current.getMonth() + 1);
+    month++;
+    if (month > 11) {
+      month = 0;
+      year++;
+    }
   }
 
   return months;
@@ -31,5 +36,12 @@ export function isSameMonth(a: Date, b: Date) {
 
 export function isCurrentMonth(date: Date) {
   const now = new Date();
-  return date.getUTCFullYear() === now.getFullYear() && date.getUTCMonth() === now.getMonth();
+  return date.getUTCFullYear() === now.getUTCFullYear() && date.getUTCMonth() === now.getUTCMonth();
+}
+
+export function isCampaignEnded(endMonth: Date): boolean {
+  const endYear = endMonth.getUTCFullYear();
+  const endMon = endMonth.getUTCMonth();
+  const firstDayAfterEnd = new Date(Date.UTC(endYear, endMon + 1, 1));
+  return new Date() >= firstDayAfterEnd;
 }

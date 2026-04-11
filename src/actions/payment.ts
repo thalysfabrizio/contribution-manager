@@ -4,6 +4,7 @@ import { prisma } from '@/lib/prisma';
 import { requireCampaignAccess } from '@/lib/permissions';
 import { paymentStatusSchema } from '@/lib/validators';
 import type { PaymentStatus } from '@/generated/prisma/client';
+import { isCampaignEnded } from '@/lib/months';
 import { revalidatePath } from 'next/cache';
 
 export async function updatePaymentStatus(
@@ -20,7 +21,7 @@ export async function updatePaymentStatus(
     select: { endMonth: true },
   });
 
-  if (campaign && campaign.endMonth < new Date()) {
+  if (campaign && isCampaignEnded(campaign.endMonth)) {
     throw new Error('Campanha encerrada — somente leitura');
   }
 

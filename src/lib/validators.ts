@@ -23,5 +23,6 @@ export const paymentStatusSchema = z.enum(['PENDING', 'PAID_PIX', 'PAID_CASH', '
 export const emailSchema = z
   .string()
   .min(1, 'Email é obrigatório')
-  .email('Email inválido')
-  .transform((v) => v.trim().toLowerCase());
+  .trim()
+  .toLowerCase()
+  .email('Email inválido');
