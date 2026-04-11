@@ -26,6 +26,7 @@ export type CampaignData = {
   endMonth: Date;
   paymentDayStart: number;
   paymentDayEnd: number;
+  messageSignature?: string | null;
   participants: ParticipantWithPayments[];
 };
 

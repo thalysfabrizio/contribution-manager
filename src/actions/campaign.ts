@@ -104,6 +104,36 @@ export async function updateTemplates(campaignId: string, templates: Record<stri
   revalidatePath(`/campaigns/${campaignId}/settings`);
 }
 
+export async function updateBranding(campaignId: string, formData: FormData) {
+  const { user } = await requireCampaignOwner(campaignId);
+
+  const orgName = (formData.get('orgName') as string) || null;
+  const logoUrl = (formData.get('logoUrl') as string) || null;
+  const bannerUrl = (formData.get('bannerUrl') as string) || null;
+  const accentColor = (formData.get('accentColor') as string) || null;
+  const messageSignature = (formData.get('messageSignature') as string) || null;
+
+  await prisma.campaign.update({
+    where: { id: campaignId },
+    data: { orgName, logoUrl, bannerUrl, accentColor, messageSignature },
+  });
+
+  await prisma.auditLog.create({
+    data: {
+      action: 'CAMPAIGN_EDITED',
+      entity: 'Campaign',
+      entityId: campaignId,
+      details: { branding: true },
+      userId: user.id,
+      campaignId,
+    },
+  });
+
+  revalidatePath(`/campaigns/${campaignId}`);
+  revalidatePath(`/campaigns/${campaignId}/settings`);
+  revalidatePath('/campaigns');
+}
+
 export async function deleteCampaign(campaignId: string) {
   await requireCampaignOwner(campaignId);
 

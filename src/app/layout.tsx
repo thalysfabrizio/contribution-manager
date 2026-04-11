@@ -19,7 +19,14 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="pt-BR">
+    <html lang="pt-BR" suppressHydrationWarning>
+      <head>
+        <script
+          dangerouslySetInnerHTML={{
+            __html: `(function(){try{var t=localStorage.getItem('a11y-theme');if(t==='light')document.documentElement.classList.add('light');var f=localStorage.getItem('a11y-fontsize');if(f==='large')document.documentElement.classList.add('font-large');if(f==='xl')document.documentElement.classList.add('font-xl');}catch(e){}})()`,
+          }}
+        />
+      </head>
       <body className={`${geistSans.variable} font-[family-name:var(--font-geist-sans)]`}>
         <ToastProvider>{children}</ToastProvider>
       </body>

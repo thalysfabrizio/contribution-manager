@@ -2,6 +2,13 @@ import type { PaymentStatus } from '@/types';
 
 export const PAYMENT_CYCLE: PaymentStatus[] = ['PAID_PIX', 'PAID_CASH', 'LATE', 'PENDING'];
 
+export const PAYMENT_OPTIONS: { status: PaymentStatus; label: string; dot: string }[] = [
+  { status: 'PAID_PIX', label: 'Pago (PIX)', dot: 'bg-success' },
+  { status: 'PAID_CASH', label: 'Pago (Dinheiro)', dot: 'bg-info' },
+  { status: 'LATE', label: 'Atrasado', dot: 'bg-warning' },
+  { status: 'PENDING', label: 'Pendente', dot: 'bg-text-muted' },
+];
+
 export function getNextStatus(current?: PaymentStatus): PaymentStatus {
   if (!current || current === 'PENDING') return 'PAID_PIX';
   const idx = PAYMENT_CYCLE.indexOf(current);

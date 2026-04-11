@@ -70,6 +70,12 @@ model Campaign {
   paymentDayStart Int              @default(10)
   paymentDayEnd   Int              @default(15)
   templates       Json?
+  // Branding / personalização
+  orgName         String?          // Nome da organização (exibido no header)
+  logoUrl         String?          // URL do logo
+  bannerUrl       String?          // URL do banner/capa
+  accentColor     String?          // Cor primária (ex: "#8b5cf6")
+  messageSignature String?         // Assinatura para mensagens WhatsApp
   owner           User             @relation("owned", fields: [ownerId], references: [id])
   ownerId         String
   members         CampaignMember[]
