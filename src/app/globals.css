@@ -11,7 +11,7 @@
   /* Texto */
   --color-text-primary: #f4f4f5;
   --color-text-secondary: #a1a1aa;
-  --color-text-muted: #71717a;
+  --color-text-muted: #9898a3;
 
   /* Ação */
   --color-primary: #8b5cf6;
@@ -30,12 +30,37 @@
   --color-pending: #71717a;
 }
 
-/* === Base === */
-* {
-  box-sizing: border-box;
-  padding: 0;
-  margin: 0;
+/* === Light mode overrides === */
+html.light {
+  --color-app: #f5f5f7;
+  --color-card: #ffffff;
+  --color-card-hover: #f0f0f2;
+  --color-border: #e2e2e5;
+  --color-text-primary: #18181b;
+  --color-text-secondary: #52525b;
+  --color-text-muted: #71717a;
+  --color-success-bg: rgba(16, 185, 129, 0.08);
+  --color-info-bg: rgba(59, 130, 246, 0.08);
+  --color-warning-bg: rgba(245, 158, 11, 0.08);
+  --color-danger-bg: rgba(239, 68, 68, 0.08);
 }
+
+html.light ::-webkit-scrollbar-thumb {
+  background: #c4c4cc;
+}
+html.light ::-webkit-scrollbar-thumb:hover {
+  background: #9e9eaa;
+}
+
+/* Font size scaling */
+html.font-large { font-size: 18px; }
+html.font-xl { font-size: 20px; }
+
+/* === Base === */
+/* box-sizing já é tratado pelo preflight do Tailwind v4 (@layer base).
+   O reset de margin/padding com * { margin:0; padding:0 } fora de @layer
+   sobrescreve TODAS as utilidades do Tailwind (mx-auto, px-*, py-*, etc.)
+   porque estilos sem layer têm prioridade sobre estilos em @layer. */
 
 body {
   background-color: var(--color-app);
@@ -129,13 +154,40 @@ body {
   animation: slide-up 0.2s ease-out;
 }
 
+.animate-stagger > * {
+  opacity: 0;
+  animation: slide-up 0.3s ease-out forwards;
+}
+.animate-stagger > *:nth-child(1) { animation-delay: 0ms; }
+.animate-stagger > *:nth-child(2) { animation-delay: 60ms; }
+.animate-stagger > *:nth-child(3) { animation-delay: 120ms; }
+.animate-stagger > *:nth-child(4) { animation-delay: 180ms; }
+.animate-stagger > *:nth-child(5) { animation-delay: 240ms; }
+.animate-stagger > *:nth-child(6) { animation-delay: 300ms; }
+
+/* === Sticky column shadows (theme-aware) === */
+.sticky-shadow-left {
+  box-shadow: 4px 0 6px -1px rgba(0, 0, 0, 0.3);
+}
+.sticky-shadow-right {
+  box-shadow: -4px 0 6px -1px rgba(0, 0, 0, 0.3);
+}
+html.light .sticky-shadow-left {
+  box-shadow: 4px 0 6px -1px rgba(0, 0, 0, 0.08);
+}
+html.light .sticky-shadow-right {
+  box-shadow: -4px 0 6px -1px rgba(0, 0, 0, 0.08);
+}
+
 @media (prefers-reduced-motion: reduce) {
   .animate-fade-in,
   .animate-slide-up,
   .animate-scale-in,
   .animate-slide-down,
-  .animate-in {
+  .animate-in,
+  .animate-stagger > * {
     animation: none;
+    opacity: 1;
   }
 
   * {
