@@ -2,6 +2,7 @@ import { auth } from '@/lib/auth';
 import { prisma } from '@/lib/prisma';
 import { redirect } from 'next/navigation';
 import { Header } from '@/components/layout/Header';
+import { BottomNav } from '@/components/layout/BottomNav';
 
 export default async function CampaignsLayout({
   children,
@@ -17,7 +18,7 @@ export default async function CampaignsLayout({
     where: { userId: session.user.id },
     select: {
       campaign: {
-        select: { id: true, name: true },
+        select: { id: true, name: true, orgName: true, logoUrl: true, accentColor: true },
       },
     },
     orderBy: { campaign: { createdAt: 'desc' } },
@@ -32,15 +33,24 @@ export default async function CampaignsLayout({
     currentCampaignId = resolved?.id;
   }
 
+  const currentCampaign = campaigns.find((c) => c.id === currentCampaignId);
+  const accentColor = currentCampaign?.accentColor;
+
   return (
     <>
+      {accentColor && (
+        <style>{`:root { --color-primary: ${accentColor}; --color-primary-hover: color-mix(in srgb, ${accentColor} 85%, black); }`}</style>
+      )}
       <Header
         userName={session.user.name ?? null}
         userImage={session.user.image ?? null}
         campaigns={campaigns}
         currentCampaignId={currentCampaignId}
       />
-      {children}
+      <div className="pb-24 md:pb-0">
+        {children}
+      </div>
+      <BottomNav campaignId={currentCampaignId} />
     </>
   );
 }
