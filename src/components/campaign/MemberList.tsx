@@ -34,20 +34,20 @@ export function MemberList({ campaignId, members }: MemberListProps) {
   const { toast } = useToast();
 
   return (
-    <Card className="p-4 md:p-5">
-      <div className="flex items-center justify-between mb-4">
-        <h2 className="text-sm font-semibold text-text-primary">Líderes da Campanha</h2>
+    <Card className="p-5 md:p-6">
+      <div className="flex items-center justify-between mb-5">
+        <h2 className="text-base font-semibold text-text-primary">Líderes da Campanha</h2>
         <Button variant="outline" size="sm" onClick={() => setInviteOpen(true)}>
           <UserPlus size={13} aria-hidden="true" />
           Convidar
         </Button>
       </div>
 
-      <div className="space-y-1">
+      <div className="space-y-1.5">
         {members.map((m) => (
           <div
             key={m.id}
-            className="flex items-center justify-between py-2.5 px-1 rounded-lg hover:bg-card-hover/30 transition-colors -mx-1"
+            className="flex items-center justify-between py-3 px-2 rounded-lg hover:bg-card-hover/30 transition-colors -mx-2"
           >
             <div className="flex items-center gap-3 min-w-0">
               <div className="size-8 rounded-full bg-primary/10 flex items-center justify-center shrink-0">

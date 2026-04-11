@@ -2,6 +2,7 @@ import { auth } from '@/lib/auth';
 import { prisma } from '@/lib/prisma';
 import { redirect, notFound } from 'next/navigation';
 import { CampaignForm } from '@/components/campaign/CampaignForm';
+import { BrandingForm } from '@/components/campaign/BrandingForm';
 import { DeleteCampaignButton } from '@/components/campaign/DeleteCampaignButton';
 import { TemplateEditor } from '@/components/messaging/TemplateEditor';
 import { MemberList } from '@/components/campaign/MemberList';
@@ -55,23 +56,32 @@ export default async function CampaignSettingsPage({ params }: Props) {
   }));
 
   return (
-    <main className="min-h-[calc(100dvh-3.5rem)] p-4 md:p-8">
-      <div className="max-w-[600px] mx-auto space-y-6">
+    <main className="min-h-[calc(100dvh-4rem)] px-5 py-8 md:px-10 md:py-12">
+      <div className="max-w-[640px] mx-auto space-y-8">
         <div>
           <Link
             href={`/campaigns/${id}`}
-            className="inline-flex items-center gap-1 text-sm text-text-muted hover:text-text-primary transition-colors mb-3"
+            className="inline-flex items-center gap-1.5 text-sm text-text-muted hover:text-text-primary transition-colors mb-4"
           >
-            <ArrowLeft size={14} aria-hidden="true" />
+            <ArrowLeft size={16} aria-hidden="true" />
             Voltar
           </Link>
-          <h1 className="text-xl font-bold text-text-primary">Configurações</h1>
-          <p className="text-sm text-text-secondary mt-0.5">{campaign.name}</p>
+          <h1 className="text-2xl font-bold text-text-primary">Configurações</h1>
+          <p className="text-sm text-text-secondary mt-1.5">{campaign.name}</p>
         </div>
 
         <CampaignForm campaign={campaign} />
 
         <MemberList campaignId={id} members={memberList} />
+
+        <BrandingForm
+          campaignId={id}
+          orgName={campaign.orgName ?? null}
+          logoUrl={campaign.logoUrl ?? null}
+          bannerUrl={campaign.bannerUrl ?? null}
+          accentColor={campaign.accentColor ?? null}
+          messageSignature={campaign.messageSignature ?? null}
+        />
 
         <TemplateEditor
           campaignId={id}
@@ -83,10 +93,10 @@ export default async function CampaignSettingsPage({ params }: Props) {
           templates={campaign.templates as CampaignTemplates | null}
         />
 
-        <div className="border border-danger/20 rounded-xl p-5 space-y-3">
-          <div className="flex items-center gap-2">
-            <AlertTriangle size={16} className="text-danger" aria-hidden="true" />
-            <h2 className="text-sm font-semibold text-danger">Zona de perigo</h2>
+        <div className="border border-danger/20 rounded-xl p-5 md:p-6 space-y-3">
+          <div className="flex items-center gap-2.5">
+            <AlertTriangle size={18} className="text-danger" aria-hidden="true" />
+            <h2 className="text-base font-semibold text-danger">Zona de perigo</h2>
           </div>
           <p className="text-sm text-text-secondary leading-relaxed">
             Excluir a campanha remove todos os participantes, pagamentos e histórico permanentemente.

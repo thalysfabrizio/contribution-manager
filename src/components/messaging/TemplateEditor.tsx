@@ -78,9 +78,9 @@ export function TemplateEditor({
   const tabs = Object.keys(TEMPLATE_LABELS) as (keyof CampaignTemplates)[];
 
   return (
-    <Card className="p-4 md:p-5">
-      <div className="flex items-center justify-between mb-4">
-        <h2 className="text-sm font-semibold text-text-primary">Templates de Mensagem</h2>
+    <Card className="p-5 md:p-6">
+      <div className="flex items-center justify-between mb-5">
+        <h2 className="text-base font-semibold text-text-primary">Templates de Mensagem</h2>
         <form
           action={async () => {
             setSaving(true);
@@ -111,7 +111,7 @@ export function TemplateEditor({
       </div>
 
       {/* Tabs */}
-      <div className="flex gap-1 mb-4 overflow-x-auto pb-1" role="tablist">
+      <div className="flex gap-1.5 mb-5 overflow-x-auto pb-1" role="tablist">
         {tabs.map((key) => (
           <button
             key={key}

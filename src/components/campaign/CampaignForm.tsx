@@ -35,6 +35,7 @@ export function CampaignForm({ campaign }: CampaignFormProps) {
 
   return (
     <Card className="p-5 md:p-6">
+      <h2 className="text-base font-semibold text-text-primary mb-5">Dados da Campanha</h2>
       <form
         action={async (formData) => {
           setLoading(true);
