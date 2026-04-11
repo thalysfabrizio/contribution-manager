@@ -1,0 +1,167 @@
+import { vi, type Mock } from 'vitest';
+import { fakeUser, fakeMember, fakeFormData } from '@/test/helpers';
+
+const { createMockPrisma } = await vi.hoisted(() => import('@/test/mocks/prisma'));
+
+vi.mock('@/lib/prisma', () => ({
+  prisma: createMockPrisma(),
+}));
+
+vi.mock('@/lib/permissions', () => ({
+  requireCampaignAccess: vi.fn(),
+}));
+
+vi.mock('next/cache', () => ({
+  revalidatePath: vi.fn(),
+}));
+
+import { prisma } from '@/lib/prisma';
+import { requireCampaignAccess } from '@/lib/permissions';
+import { addParticipant, editParticipant, removeParticipant, searchPersonByPhone } from './participant';
+
+const mockPrisma = prisma as unknown as Record<string, Record<string, Mock>>;
+
+beforeEach(() => {
+  vi.clearAllMocks();
+  (requireCampaignAccess as Mock).mockResolvedValue({
+    user: fakeUser(),
+    member: fakeMember(),
+  });
+});
+
+const campaignId = 'campaign-1';
+
+describe('addParticipant', () => {
+  it('cria Person nova + Participant quando telefone novo', async () => {
+    mockPrisma.person.findUnique.mockResolvedValue(null);
+    mockPrisma.person.create.mockResolvedValue({ id: 'person-1', name: 'João', phone: '11934567890' });
+    mockPrisma.participant.findUnique.mockResolvedValue(null);
+    mockPrisma.participant.create.mockResolvedValue({ id: 'participant-1' });
+    mockPrisma.auditLog.create.mockResolvedValue({});
+
+    await addParticipant(campaignId, fakeFormData({ name: 'João', phone: '11934567890' }));
+
+    expect(mockPrisma.person.create).toHaveBeenCalled();
+    expect(mockPrisma.participant.create).toHaveBeenCalled();
+  });
+
+  it('reutiliza Person existente quando telefone já cadastrado', async () => {
+    mockPrisma.person.findUnique.mockResolvedValue({ id: 'person-1', name: 'João', phone: '11934567890' });
+    mockPrisma.participant.findUnique.mockResolvedValue(null);
+    mockPrisma.participant.create.mockResolvedValue({ id: 'participant-1' });
+    mockPrisma.auditLog.create.mockResolvedValue({});
+
+    await addParticipant(campaignId, fakeFormData({ name: 'João', phone: '11934567890' }));
+
+    expect(mockPrisma.person.create).not.toHaveBeenCalled();
+    expect(mockPrisma.participant.create).toHaveBeenCalled();
+  });
+
+  it('normaliza telefone removendo não-dígitos', async () => {
+    mockPrisma.person.findUnique.mockResolvedValue(null);
+    mockPrisma.person.create.mockResolvedValue({ id: 'person-1', name: 'João', phone: '11934567890' });
+    mockPrisma.participant.findUnique.mockResolvedValue(null);
+    mockPrisma.participant.create.mockResolvedValue({ id: 'participant-1' });
+    mockPrisma.auditLog.create.mockResolvedValue({});
+
+    await addParticipant(campaignId, fakeFormData({ name: 'João', phone: '(11) 93456-7890' }));
+
+    expect(mockPrisma.person.findUnique).toHaveBeenCalledWith({
+      where: { phone: '11934567890' },
+    });
+  });
+
+  it('rejeita duplicado na mesma campanha', async () => {
+    mockPrisma.person.findUnique.mockResolvedValue({ id: 'person-1', name: 'João', phone: '11934567890' });
+    mockPrisma.participant.findUnique.mockResolvedValue({ id: 'existing' });
+
+    await expect(
+      addParticipant(campaignId, fakeFormData({ name: 'João', phone: '11934567890' })),
+    ).rejects.toThrow('Esta pessoa já participa desta campanha');
+  });
+
+  it('cria auditLog PARTICIPANT_ADDED', async () => {
+    mockPrisma.person.findUnique.mockResolvedValue(null);
+    mockPrisma.person.create.mockResolvedValue({ id: 'person-1', name: 'João', phone: '11934567890' });
+    mockPrisma.participant.findUnique.mockResolvedValue(null);
+    mockPrisma.participant.create.mockResolvedValue({ id: 'participant-1' });
+    mockPrisma.auditLog.create.mockResolvedValue({});
+
+    await addParticipant(campaignId, fakeFormData({ name: 'João', phone: '11934567890' }));
+
+    const auditCall = mockPrisma.auditLog.create.mock.calls[0][0];
+    expect(auditCall.data.action).toBe('PARTICIPANT_ADDED');
+  });
+});
+
+describe('editParticipant', () => {
+  it('atualiza Person vinculada', async () => {
+    mockPrisma.participant.findUnique.mockResolvedValue({ personId: 'person-1' });
+    mockPrisma.person.update.mockResolvedValue({});
+    mockPrisma.auditLog.create.mockResolvedValue({});
+
+    await editParticipant(campaignId, 'participant-1', fakeFormData({ name: 'Maria', phone: '11934567890' }));
+
+    expect(mockPrisma.person.update).toHaveBeenCalledWith(
+      expect.objectContaining({
+        where: { id: 'person-1' },
+        data: { name: 'Maria', phone: '11934567890' },
+      }),
+    );
+  });
+
+  it('erro quando participante não encontrado', async () => {
+    mockPrisma.participant.findUnique.mockResolvedValue(null);
+
+    await expect(
+      editParticipant(campaignId, 'nao-existe', fakeFormData({ name: 'Maria', phone: '11934567890' })),
+    ).rejects.toThrow('Participante não encontrado');
+  });
+});
+
+describe('removeParticipant', () => {
+  it('deleta e cria auditLog com nome', async () => {
+    mockPrisma.participant.findUnique.mockResolvedValue({
+      id: 'participant-1',
+      person: { name: 'João' },
+    });
+    mockPrisma.participant.delete.mockResolvedValue({});
+    mockPrisma.auditLog.create.mockResolvedValue({});
+
+    await removeParticipant(campaignId, 'participant-1');
+
+    expect(mockPrisma.participant.delete).toHaveBeenCalledWith({ where: { id: 'participant-1' } });
+    const auditCall = mockPrisma.auditLog.create.mock.calls[0][0];
+    expect(auditCall.data.details.name).toBe('João');
+  });
+
+  it('erro quando não encontrado', async () => {
+    mockPrisma.participant.findUnique.mockResolvedValue(null);
+
+    await expect(removeParticipant(campaignId, 'nao-existe')).rejects.toThrow(
+      'Participante não encontrado',
+    );
+  });
+});
+
+describe('searchPersonByPhone', () => {
+  it('retorna person quando encontrada', async () => {
+    mockPrisma.person.findUnique.mockResolvedValue({ name: 'João', phone: '11934567890' });
+
+    const result = await searchPersonByPhone(campaignId, '11934567890');
+    expect(result).toEqual({ name: 'João', phone: '11934567890' });
+  });
+
+  it('retorna null quando telefone < 10 dígitos', async () => {
+    const result = await searchPersonByPhone(campaignId, '123456789');
+    expect(result).toBeNull();
+    expect(mockPrisma.person.findUnique).not.toHaveBeenCalled();
+  });
+
+  it('retorna null quando person não existe', async () => {
+    mockPrisma.person.findUnique.mockResolvedValue(null);
+
+    const result = await searchPersonByPhone(campaignId, '11934567890');
+    expect(result).toBeNull();
+  });
+});
