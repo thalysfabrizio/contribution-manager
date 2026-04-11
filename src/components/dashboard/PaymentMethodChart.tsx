@@ -22,12 +22,14 @@ export function PaymentMethodChart({ participants }: PaymentMethodChartProps) {
   const cashPct = total > 0 ? Math.round((cashCount / total) * 100) : 0;
 
   return (
-    <Card className="p-4 md:p-5">
-      <h2 className="text-sm font-semibold text-text-primary mb-4">Métodos de Pagamento</h2>
+    <Card className="p-5 md:p-6">
+      <h2 className="text-base font-semibold text-text-primary mb-5">Métodos de Pagamento</h2>
       {total === 0 ? (
-        <div className="flex flex-col items-center py-6 text-text-muted">
-          <CreditCard size={24} className="mb-2 opacity-50" aria-hidden="true" />
-          <p className="text-sm">Nenhum pagamento registrado.</p>
+        <div className="flex flex-col items-center py-8 text-center">
+          <div className="size-14 rounded-xl bg-primary/5 border border-primary/10 flex items-center justify-center mb-3">
+            <CreditCard size={24} className="text-primary/60" aria-hidden="true" />
+          </div>
+          <p className="text-sm text-text-muted">Nenhum pagamento registrado ainda.</p>
         </div>
       ) : (
         <div className="space-y-4">

@@ -34,6 +34,8 @@ export function MessageModal({ isOpen, onClose, participant, campaign, months }:
 
   const now = new Date();
 
+  const signature = campaign.messageSignature ? `\n\n${campaign.messageSignature}` : '';
+
   const getSmartMessageLink = () => {
     const currentMonthStr = now.toLocaleDateString('pt-BR', { month: '2-digit', year: '2-digit' });
     const remainingCount = months.filter(
@@ -53,12 +55,12 @@ export function MessageModal({ isOpen, onClose, participant, campaign, months }:
       pendingLabels.length > 0
         ? `Lembrando que estão pendentes os pagamentos dos meses: ${pendingLabels.join(', ')}.`
         : 'Que maravilha, você está em dia!';
-    const msg = `Olá! Iniciamos o mês ${currentMonthStr} e faltam ${remainingCount} meses para o nosso congresso! Vim te lembrar do compromisso mensal que temos com essa obra!\n\nEfetue o pagamento no pix ${campaign.pixKey}.\n\n${pendingText}\n\nSe precisar de algo, só avisar!`;
+    const msg = `Olá! Iniciamos o mês ${currentMonthStr} e faltam ${remainingCount} meses para o nosso congresso! Vim te lembrar do compromisso mensal que temos com essa obra!\n\nEfetue o pagamento no pix ${campaign.pixKey}.\n\n${pendingText}\n\nSe precisar de algo, só avisar!${signature}`;
     return `https://wa.me/55${participant.person.phone}?text=${encodeURIComponent(msg)}`;
   };
 
   const getReminderMessageLink = () => {
-    const msg = `Olá, lembrando que o prazo para contribuição do valor para o nosso congresso é do dia ${campaign.paymentDayStart} ao dia ${campaign.paymentDayEnd} de cada mês! Nos ajude nessa obra!`;
+    const msg = `Olá, lembrando que o prazo para contribuição do valor para o nosso congresso é do dia ${campaign.paymentDayStart} ao dia ${campaign.paymentDayEnd} de cada mês! Nos ajude nessa obra!${signature}`;
     return `https://wa.me/55${participant.person.phone}?text=${encodeURIComponent(msg)}`;
   };
 

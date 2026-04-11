@@ -33,44 +33,47 @@ export default async function CampaignsPage() {
   const now = new Date();
 
   return (
-    <main className="min-h-[calc(100dvh-3.5rem)] p-4 md:p-8">
-      <div className="max-w-[800px] mx-auto space-y-6">
-        <div className="flex items-center justify-between">
+    <main className="min-h-[calc(100dvh-4rem)] px-5 py-8 md:px-10 md:py-12">
+      <div className="max-w-[800px] mx-auto space-y-8">
+        <div className="flex items-center justify-between gap-4">
           <div>
-            <h1 className="text-xl font-bold text-text-primary">Minhas Campanhas</h1>
-            <p className="text-sm text-text-secondary mt-0.5">Selecione ou crie uma campanha</p>
+            <h1 className="text-xl md:text-2xl font-bold text-text-primary">Minhas Campanhas</h1>
+            <p className="text-sm text-text-secondary mt-1">Selecione ou crie uma campanha</p>
           </div>
           <Link href="/campaigns/new">
             <Button>
               <Plus size={16} aria-hidden="true" />
-              <span className="hidden sm:inline">Nova Campanha</span>
-              <span className="sm:hidden">Nova</span>
+              <span className="hidden md:inline">Nova Campanha</span>
+              <span className="md:hidden">Nova</span>
             </Button>
           </Link>
         </div>
 
         {memberships.length === 0 ? (
-          <Card className="p-10 text-center">
-            <div className="space-y-4">
-              <div className="mx-auto size-14 rounded-2xl bg-primary/10 flex items-center justify-center">
-                <Plus size={24} className="text-primary" aria-hidden="true" />
+          <Card className="p-6 md:p-10">
+            <div className="flex flex-col items-center py-8 text-center animate-in">
+              <div className="size-20 md:size-24 rounded-2xl bg-primary/5 border border-primary/10 flex items-center justify-center mb-6">
+                <svg width="48" height="48" viewBox="0 0 48 48" fill="none" className="text-primary/60" aria-hidden="true">
+                  <rect x="6" y="14" width="36" height="26" rx="4" stroke="currentColor" strokeWidth="2" />
+                  <path d="M6 22h36" stroke="currentColor" strokeWidth="2" />
+                  <circle cx="24" cy="8" r="4" stroke="currentColor" strokeWidth="2" />
+                  <path d="M18 32h12M22 28v8" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
+                </svg>
               </div>
-              <div>
-                <p className="text-text-primary font-medium">Nenhuma campanha ainda</p>
-                <p className="text-sm text-text-muted mt-1">
-                  Crie sua primeira campanha para começar a gerenciar contribuições.
-                </p>
-              </div>
+              <h3 className="text-lg font-semibold text-text-primary mb-2">Comece sua primeira campanha</h3>
+              <p className="text-sm text-text-muted max-w-sm leading-relaxed mb-6">
+                Crie uma campanha para organizar contribuicoes, acompanhar pagamentos e enviar lembretes.
+              </p>
               <Link href="/campaigns/new">
-                <Button className="mt-2">
+                <Button>
                   <Plus size={16} aria-hidden="true" />
-                  Criar sua primeira campanha
+                  Criar Campanha
                 </Button>
               </Link>
             </div>
           </Card>
         ) : (
-          <div className="grid gap-3">
+          <div className="grid gap-4">
             {memberships.map(({ campaign, role }) => {
               const isEnded = campaign.endMonth < now;
               const startLabel = campaign.startMonth.toLocaleDateString('pt-BR', {
@@ -84,11 +87,11 @@ export default async function CampaignsPage() {
 
               return (
                 <Link key={campaign.id} href={`/campaigns/${campaign.id}`}>
-                  <Card hover className="p-4 md:p-5 cursor-pointer group">
+                  <Card hover className="p-5 md:p-6 cursor-pointer group">
                     <div className="flex items-center justify-between gap-4">
-                      <div className="min-w-0 flex-1 space-y-1.5">
-                        <div className="flex items-center gap-2 flex-wrap">
-                          <h2 className="text-base font-semibold text-text-primary truncate">
+                      <div className="min-w-0 flex-1 space-y-2">
+                        <div className="flex items-center gap-2.5 flex-wrap">
+                          <h2 className="text-lg font-semibold text-text-primary truncate">
                             {campaign.name}
                           </h2>
                           {isEnded && <Badge variant="muted">Encerrada</Badge>}
@@ -99,20 +102,20 @@ export default async function CampaignsPage() {
                             {campaign.description}
                           </p>
                         )}
-                        <div className="flex items-center gap-4 text-xs text-text-muted">
-                          <span className="flex items-center gap-1">
-                            <Users size={13} aria-hidden="true" />
+                        <div className="flex items-center gap-4 text-sm text-text-muted">
+                          <span className="flex items-center gap-1.5">
+                            <Users size={14} aria-hidden="true" />
                             {campaign._count.participants} participantes
                           </span>
-                          <span className="flex items-center gap-1">
-                            <Calendar size={13} aria-hidden="true" />
+                          <span className="flex items-center gap-1.5">
+                            <Calendar size={14} aria-hidden="true" />
                             {startLabel} — {endLabel}
                           </span>
                         </div>
                       </div>
                       <div className="flex items-center gap-3 shrink-0">
-                        <div className="text-right hidden sm:block">
-                          <span className="text-lg font-bold text-text-primary">
+                        <div className="text-right">
+                          <span className="text-base sm:text-lg font-bold text-text-primary">
                             R$ {(campaign.monthlyValue / 100).toFixed(2).replace('.', ',')}
                           </span>
                           <span className="block text-xs text-text-muted">por mês</span>

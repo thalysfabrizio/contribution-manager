@@ -6,6 +6,7 @@ import { Button } from '@/components/ui/Button';
 import { ActivityItem } from './ActivityItem';
 import { loadMoreActivity } from '@/actions/activity';
 import { History, ChevronDown } from 'lucide-react';
+import { EmptyState } from '@/components/ui/EmptyState';
 
 export interface ActivityEntry {
   id: string;
@@ -42,11 +43,12 @@ export function ActivityTimeline({ campaignId, initialItems, hasMore: initialHas
 
   if (items.length === 0) {
     return (
-      <Card className="py-10 text-center">
-        <div className="flex flex-col items-center gap-2 text-text-muted">
-          <History size={28} className="opacity-40" aria-hidden="true" />
-          <p className="text-sm">Nenhuma atividade registrada ainda.</p>
-        </div>
+      <Card>
+        <EmptyState
+          icon={<History size={32} className="text-primary/60" aria-hidden="true" />}
+          title="Nenhuma atividade ainda"
+          description="As acoes realizadas na campanha aparecerão aqui."
+        />
       </Card>
     );
   }
@@ -64,8 +66,8 @@ export function ActivityTimeline({ campaignId, initialItems, hasMore: initialHas
   });
 
   return (
-    <Card className="p-4 md:p-5">
-      <h2 className="text-sm font-semibold text-text-primary mb-4">Atividade Recente</h2>
+    <Card className="p-5 md:p-6">
+      <h2 className="text-base font-semibold text-text-primary mb-5">Atividade Recente</h2>
       <div className="space-y-5">
         {Object.entries(grouped).map(([day, dayItems]) => (
           <div key={day}>

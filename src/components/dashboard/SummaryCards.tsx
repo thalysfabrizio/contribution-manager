@@ -4,6 +4,14 @@ import type { CampaignData } from '@/types';
 import type { MonthEntry } from '@/lib/months';
 import { isSameMonth, isCurrentMonth } from '@/lib/months';
 
+const iconBgMap: Record<string, string> = {
+  'text-success': 'bg-success-bg',
+  'text-primary': 'bg-primary/10',
+  'text-warning': 'bg-warning-bg',
+  'text-info': 'bg-info-bg',
+  'text-danger': 'bg-danger-bg',
+};
+
 interface SummaryCardsProps {
   data: CampaignData;
   months: MonthEntry[];
@@ -71,18 +79,20 @@ export function SummaryCards({ data, months }: SummaryCardsProps) {
   ];
 
   return (
-    <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+    <div className="grid grid-cols-2 md:grid-cols-4 gap-3 md:gap-4 animate-stagger">
       {cards.map((card) => (
-        <Card key={card.label} className="p-3.5 md:p-4">
+        <Card key={card.label} className="p-4 md:p-5">
           <div className="flex items-center justify-between mb-2">
-            <span className="text-xs text-text-muted font-medium">{card.label}</span>
-            <card.icon size={14} className={card.color} aria-hidden="true" />
+            <span className="text-xs md:text-sm text-text-muted font-medium">{card.label}</span>
+            <div className={`size-9 rounded-full flex items-center justify-center ${iconBgMap[card.color] ?? 'bg-card-hover'}`}>
+              <card.icon size={18} className={card.color} aria-hidden="true" />
+            </div>
           </div>
-          <span className="block text-lg font-bold text-text-primary leading-tight">
+          <span className="block text-xl md:text-2xl font-bold text-text-primary leading-tight">
             {card.value}
           </span>
           {card.progress !== undefined && (
-            <div className="mt-2 h-1.5 bg-border rounded-full overflow-hidden">
+            <div className="mt-2.5 h-2.5 bg-border rounded-full overflow-hidden">
               <div
                 className="h-full bg-success rounded-full transition-all duration-700 ease-out"
                 style={{ width: `${card.progress}%` }}
@@ -93,7 +103,7 @@ export function SummaryCards({ data, months }: SummaryCardsProps) {
               />
             </div>
           )}
-          <span className="text-xs text-text-muted mt-1 block">{card.sub}</span>
+          <span className="text-sm text-text-muted mt-1.5 block">{card.sub}</span>
         </Card>
       ))}
     </div>
