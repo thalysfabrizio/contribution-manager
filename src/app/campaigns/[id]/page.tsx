@@ -55,6 +55,7 @@ export default async function CampaignPage({ params }: Props) {
     endMonth: campaign.endMonth,
     paymentDayStart: campaign.paymentDayStart,
     paymentDayEnd: campaign.paymentDayEnd,
+    messageSignature: campaign.messageSignature,
     participants: campaign.participants.map((p) => ({
       id: p.id,
       person: {
@@ -92,9 +93,19 @@ export default async function CampaignPage({ params }: Props) {
   }));
 
   return (
-    <>
-      <Dashboard data={data} isEnded={isEnded} userRole={member.role} />
-      <div className="max-w-[1200px] mx-auto px-4 md:px-8 pb-8 space-y-6">
+    <main className="min-h-[calc(100dvh-3.5rem)]">
+      {campaign.bannerUrl && (
+        <div className="relative w-full h-32 md:h-44 overflow-hidden">
+          <img
+            src={campaign.bannerUrl}
+            alt=""
+            className="w-full h-full object-cover"
+          />
+          <div className="absolute inset-0 bg-gradient-to-b from-transparent via-transparent to-app" />
+        </div>
+      )}
+      <div className="max-w-[1200px] mx-auto px-5 py-8 md:px-10 md:py-10 space-y-8">
+        <Dashboard data={data} isEnded={isEnded} userRole={member.role} />
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
           <MonthlyProgress participants={data.participants} months={months} />
           <PaymentMethodChart participants={data.participants} />
@@ -105,6 +116,6 @@ export default async function CampaignPage({ params }: Props) {
           hasMore={logs.length > 20}
         />
       </div>
-    </>
+    </main>
   );
 }
