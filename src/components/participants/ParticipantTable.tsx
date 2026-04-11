@@ -1,9 +1,11 @@
 'use client';
 
+import { useRef, useState, useEffect, useCallback } from 'react';
 import { Card } from '@/components/ui/Card';
 import { ParticipantRow } from './ParticipantRow';
 import { isSameMonth, isCurrentMonth } from '@/lib/months';
-import { Users } from 'lucide-react';
+import { Users, Plus } from 'lucide-react';
+import { EmptyState } from '@/components/ui/EmptyState';
 import type { CampaignData, PaymentStatus } from '@/types';
 import type { MonthEntry } from '@/lib/months';
 
@@ -12,7 +14,7 @@ interface ParticipantTableProps {
   months: MonthEntry[];
   isEnded: boolean;
   loadingId: string | null;
-  onToggle: (participantId: string, monthDate: Date, currentStatus?: PaymentStatus) => void;
+  onToggle: (participantId: string, monthDate: Date, newStatus: PaymentStatus) => void;
   onEdit: (participant: CampaignData['participants'][number]) => void;
   onMessage: (participant: CampaignData['participants'][number]) => void;
   onDelete: (id: string, name: string) => void;
@@ -28,15 +30,46 @@ export function ParticipantTable({
   onMessage,
   onDelete,
 }: ParticipantTableProps) {
+  const scrollRef = useRef<HTMLDivElement>(null);
+  const [canScrollLeft, setCanScrollLeft] = useState(false);
+  const [canScrollRight, setCanScrollRight] = useState(false);
+
+  const checkScroll = useCallback(() => {
+    const el = scrollRef.current;
+    if (!el) return;
+    setCanScrollLeft(el.scrollLeft > 8);
+    setCanScrollRight(el.scrollLeft < el.scrollWidth - el.clientWidth - 8);
+  }, []);
+
+  useEffect(() => {
+    checkScroll();
+    const el = scrollRef.current;
+    if (!el) return;
+    el.addEventListener('scroll', checkScroll, { passive: true });
+    const ro = new ResizeObserver(checkScroll);
+    ro.observe(el);
+    return () => {
+      el.removeEventListener('scroll', checkScroll);
+      ro.disconnect();
+    };
+  }, [checkScroll]);
+
   return (
     <Card>
-      <div className="overflow-x-auto">
+      <div className="relative">
+        {canScrollLeft && (
+          <div className="absolute left-0 top-0 bottom-0 w-8 bg-gradient-to-r from-card to-transparent z-20 pointer-events-none md:hidden" />
+        )}
+        {canScrollRight && (
+          <div className="absolute right-0 top-0 bottom-0 w-8 bg-gradient-to-l from-card to-transparent z-20 pointer-events-none md:hidden" />
+        )}
+      <div ref={scrollRef} className="overflow-x-auto">
         <table className="w-full text-sm border-collapse" role="grid">
           <thead>
             <tr className="border-b border-border text-left">
               <th
                 scope="col"
-                className="p-3 md:p-4 min-w-[160px] sticky left-0 bg-card z-10 shadow-[4px_0_6px_-1px_rgba(0,0,0,0.3)] text-xs font-semibold text-text-secondary uppercase tracking-wider"
+                className="p-3 md:p-4 min-w-[160px] sticky left-0 bg-card z-10 sticky-shadow-left text-xs font-semibold text-text-secondary uppercase tracking-wider"
               >
                 Participante
               </th>
@@ -44,7 +77,7 @@ export function ParticipantTable({
                 <th
                   key={m.date.toISOString()}
                   scope="col"
-                  className={`px-2 py-3 text-center min-w-[52px] text-xs font-medium text-text-secondary ${
+                  className={`px-2 py-3 text-center min-w-[56px] text-sm font-medium text-text-secondary ${
                     isCurrentMonth(m.date)
                       ? 'bg-primary/5 text-primary'
                       : ''
@@ -55,7 +88,7 @@ export function ParticipantTable({
               ))}
               <th
                 scope="col"
-                className="p-3 md:p-4 text-right sticky right-0 bg-card z-10 shadow-[-4px_0_6px_-1px_rgba(0,0,0,0.3)] text-xs font-semibold text-text-secondary uppercase tracking-wider"
+                className="p-3 md:p-4 text-right sticky right-0 bg-card z-10 sticky-shadow-right text-xs font-semibold text-text-secondary uppercase tracking-wider"
               >
                 Ações
               </th>
@@ -64,12 +97,12 @@ export function ParticipantTable({
           <tbody>
             {participants.length === 0 ? (
               <tr>
-                <td colSpan={months.length + 2} className="py-12 text-center">
-                  <div className="flex flex-col items-center gap-2 text-text-muted">
-                    <Users size={28} className="opacity-40" aria-hidden="true" />
-                    <p className="text-sm">Nenhum participante cadastrado.</p>
-                    <p className="text-xs">Clique em &quot;Novo Participante&quot; para adicionar.</p>
-                  </div>
+                <td colSpan={months.length + 2}>
+                  <EmptyState
+                    icon={<Users size={32} className="text-primary/60" aria-hidden="true" />}
+                    title="Nenhum participante cadastrado"
+                    description="Adicione participantes para acompanhar os pagamentos da campanha."
+                  />
                 </td>
               </tr>
             ) : (
@@ -91,7 +124,7 @@ export function ParticipantTable({
           {participants.length > 0 && (
             <tfoot>
               <tr className="border-t-2 border-border">
-                <td className="p-3 md:p-4 sticky left-0 bg-card z-10 text-xs text-text-muted font-semibold uppercase tracking-wider shadow-[4px_0_6px_-1px_rgba(0,0,0,0.3)]">
+                <td className="p-3 md:p-4 sticky left-0 bg-card z-10 text-xs text-text-muted font-semibold uppercase tracking-wider sticky-shadow-left">
                   Totais
                 </td>
                 {months.map((m) => {
@@ -106,7 +139,7 @@ export function ParticipantTable({
                   return (
                     <td
                       key={m.date.toISOString()}
-                      className={`px-1.5 py-2.5 text-center text-xs tabular-nums ${
+                      className={`px-1.5 py-2.5 text-center text-sm tabular-nums ${
                         isCurrentMonth(m.date) ? 'bg-primary/5' : ''
                       } ${allPaid ? 'text-success font-medium' : 'text-text-muted'}`}
                     >
@@ -114,11 +147,12 @@ export function ParticipantTable({
                     </td>
                   );
                 })}
-                <td className="p-3 md:p-4 sticky right-0 bg-card z-10 shadow-[-4px_0_6px_-1px_rgba(0,0,0,0.3)]" />
+                <td className="p-3 md:p-4 sticky right-0 bg-card z-10 sticky-shadow-right" />
               </tr>
             </tfoot>
           )}
         </table>
+      </div>
       </div>
     </Card>
   );
