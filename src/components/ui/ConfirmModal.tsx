@@ -27,13 +27,13 @@ export function ConfirmModal({
 }: ConfirmModalProps) {
   return (
     <Modal isOpen={isOpen} onClose={onClose} title={title} size="sm">
-      <div className="flex gap-3 mb-6">
+      <div className="flex gap-4 mb-7">
         {variant === 'danger' && (
-          <div className="shrink-0 size-10 rounded-full bg-danger/10 flex items-center justify-center">
-            <AlertTriangle size={18} className="text-danger" aria-hidden="true" />
+          <div className="shrink-0 size-11 rounded-full bg-danger/10 flex items-center justify-center">
+            <AlertTriangle size={20} className="text-danger" aria-hidden="true" />
           </div>
         )}
-        <p className="text-sm text-text-secondary leading-relaxed pt-2">{message}</p>
+        <p className="text-sm text-text-secondary leading-relaxed pt-2.5">{message}</p>
       </div>
       <div className="flex justify-end gap-3">
         <Button variant="ghost" onClick={onClose} disabled={loading}>

@@ -86,9 +86,13 @@ export function Modal({ isOpen, onClose, title, children, size = 'md' }: ModalPr
     >
       <div
         ref={contentRef}
-        className={`w-full ${sizeClasses[size]} bg-card border border-border rounded-t-2xl md:rounded-xl p-5 md:p-6 max-h-[85vh] overflow-y-auto animate-slide-up md:animate-scale-in`}
+        className={`w-full ${sizeClasses[size]} bg-card border border-border rounded-t-2xl md:rounded-xl px-5 pt-5 pb-6 pb-[max(1.5rem,env(safe-area-inset-bottom))] md:p-7 max-h-[95vh] md:max-h-[85vh] overflow-y-auto animate-slide-up md:animate-scale-in`}
       >
-        <div className="flex items-center justify-between mb-5">
+        {/* Handle bar mobile */}
+        <div className="flex justify-center mb-3 md:hidden">
+          <div className="w-10 h-1 rounded-full bg-border" />
+        </div>
+        <div className="flex items-center justify-between mb-6">
           <h2 id="modal-title" className="text-lg font-semibold text-text-primary">
             {title}
           </h2>

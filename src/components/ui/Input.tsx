@@ -22,7 +22,7 @@ const Input = forwardRef<HTMLInputElement, InputProps>(
           id={inputId}
           aria-invalid={!!error}
           aria-describedby={errorId}
-          className={`w-full rounded-md border bg-app px-3 py-2.5 text-base text-text-primary placeholder:text-text-muted transition-all duration-200 ease-in-out focus:outline-none focus:ring-2 focus:ring-primary/50 focus:border-primary ${
+          className={`w-full rounded-lg border bg-app px-3 py-2.5 text-base text-text-primary placeholder:text-text-muted transition-all duration-200 ease-in-out focus:outline-none focus:ring-2 focus:ring-primary/50 focus:border-primary ${
             error ? 'border-danger ring-1 ring-danger/30' : 'border-border'
           } ${className}`}
           {...props}
@@ -61,7 +61,7 @@ const Textarea = forwardRef<HTMLTextAreaElement, TextareaProps>(
           id={inputId}
           aria-invalid={!!error}
           aria-describedby={errorId}
-          className={`w-full rounded-md border bg-app px-3 py-2.5 text-base text-text-primary placeholder:text-text-muted transition-all duration-200 ease-in-out focus:outline-none focus:ring-2 focus:ring-primary/50 focus:border-primary resize-y ${
+          className={`w-full rounded-lg border bg-app px-3 py-2.5 text-base text-text-primary placeholder:text-text-muted transition-all duration-200 ease-in-out focus:outline-none focus:ring-2 focus:ring-primary/50 focus:border-primary resize-y ${
             error ? 'border-danger ring-1 ring-danger/30' : 'border-border'
           } ${className}`}
           {...props}
