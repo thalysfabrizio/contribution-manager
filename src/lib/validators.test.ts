@@ -1,4 +1,11 @@
-import { campaignSchema, participantSchema, paymentStatusSchema, emailSchema } from './validators';
+import {
+  brandingSchema,
+  campaignSchema,
+  emailSchema,
+  participantSchema,
+  paymentStatusSchema,
+  safeHttpsUrlSchema,
+} from './validators';
 
 describe('campaignSchema', () => {
   const valid = {
@@ -141,6 +148,103 @@ describe('emailSchema', () => {
 
   it('rejeita email inválido', () => {
     const result = emailSchema.safeParse('nao-e-email');
+    expect(result.success).toBe(false);
+  });
+});
+
+describe('safeHttpsUrlSchema', () => {
+  it.each([
+    'https://example.com/logo.png',
+    'https://cdn.com/a/b/c.jpg',
+    'https://sub.domain.com.br/img.webp?x=1',
+  ])('aceita URL https válida: %s', (url) => {
+    expect(safeHttpsUrlSchema.parse(url)).toBe(url);
+  });
+
+  it.each([
+    'javascript:alert(1)',
+    'JAVASCRIPT:alert(1)',
+    'data:text/html,<script>alert(1)</script>',
+    'file:///etc/passwd',
+    'vbscript:msgbox(1)',
+    'about:blank',
+    'blob:https://example.com/abc',
+  ])('rejeita protocolo perigoso: %s', (url) => {
+    const result = safeHttpsUrlSchema.safeParse(url);
+    expect(result.success).toBe(false);
+  });
+
+  it('rejeita http:// (apenas https é permitido)', () => {
+    const result = safeHttpsUrlSchema.safeParse('http://example.com');
+    expect(result.success).toBe(false);
+  });
+
+  it('rejeita string vazia', () => {
+    const result = safeHttpsUrlSchema.safeParse('');
+    expect(result.success).toBe(false);
+  });
+
+  it('rejeita URL malformada', () => {
+    const result = safeHttpsUrlSchema.safeParse('isso não é uma url');
+    expect(result.success).toBe(false);
+  });
+
+  it('rejeita URL excessivamente longa', () => {
+    const long = 'https://example.com/' + 'a'.repeat(3000);
+    const result = safeHttpsUrlSchema.safeParse(long);
+    expect(result.success).toBe(false);
+  });
+});
+
+describe('brandingSchema', () => {
+  const valid = {
+    orgName: 'Igreja Exemplo',
+    logoUrl: 'https://cdn.example.com/logo.png',
+    bannerUrl: 'https://cdn.example.com/banner.jpg',
+    accentColor: '#8b5cf6',
+    messageSignature: 'Que Deus abençoe',
+  };
+
+  it('aceita um branding completo e válido', () => {
+    expect(() => brandingSchema.parse(valid)).not.toThrow();
+  });
+
+  it('aceita todos os campos nulos (branding vazio)', () => {
+    const empty = {
+      orgName: null,
+      logoUrl: null,
+      bannerUrl: null,
+      accentColor: null,
+      messageSignature: null,
+    };
+    expect(() => brandingSchema.parse(empty)).not.toThrow();
+  });
+
+  it('rejeita logoUrl com javascript:', () => {
+    const result = brandingSchema.safeParse({ ...valid, logoUrl: 'javascript:alert(1)' });
+    expect(result.success).toBe(false);
+  });
+
+  it('rejeita bannerUrl com data:', () => {
+    const result = brandingSchema.safeParse({
+      ...valid,
+      bannerUrl: 'data:image/png;base64,iVBOR',
+    });
+    expect(result.success).toBe(false);
+  });
+
+  it('rejeita accentColor em formato inválido', () => {
+    const result = brandingSchema.safeParse({ ...valid, accentColor: 'purple' });
+    expect(result.success).toBe(false);
+  });
+
+  it('aceita accentColor em formato #rrggbb minúsculo ou maiúsculo', () => {
+    expect(brandingSchema.safeParse({ ...valid, accentColor: '#AABBCC' }).success).toBe(true);
+    expect(brandingSchema.safeParse({ ...valid, accentColor: '#aabbcc' }).success).toBe(true);
+  });
+
+  it('rejeita orgName excessivamente longo', () => {
+    const result = brandingSchema.safeParse({ ...valid, orgName: 'a'.repeat(101) });
     expect(result.success).toBe(false);
   });
 });

@@ -2,7 +2,7 @@
 
 import { prisma } from '@/lib/prisma';
 import { getSessionUser, requireCampaignOwner } from '@/lib/permissions';
-import { campaignSchema } from '@/lib/validators';
+import { brandingSchema, campaignSchema } from '@/lib/validators';
 import { CampaignRole } from '@/generated/prisma/client';
 import { revalidatePath } from 'next/cache';
 import { redirect } from 'next/navigation';
@@ -107,15 +107,17 @@ export async function updateTemplates(campaignId: string, templates: Record<stri
 export async function updateBranding(campaignId: string, formData: FormData) {
   const { user } = await requireCampaignOwner(campaignId);
 
-  const orgName = (formData.get('orgName') as string) || null;
-  const logoUrl = (formData.get('logoUrl') as string) || null;
-  const bannerUrl = (formData.get('bannerUrl') as string) || null;
-  const accentColor = (formData.get('accentColor') as string) || null;
-  const messageSignature = (formData.get('messageSignature') as string) || null;
+  const data = brandingSchema.parse({
+    orgName: (formData.get('orgName') as string) || null,
+    logoUrl: (formData.get('logoUrl') as string) || null,
+    bannerUrl: (formData.get('bannerUrl') as string) || null,
+    accentColor: (formData.get('accentColor') as string) || null,
+    messageSignature: (formData.get('messageSignature') as string) || null,
+  });
 
   await prisma.campaign.update({
     where: { id: campaignId },
-    data: { orgName, logoUrl, bannerUrl, accentColor, messageSignature },
+    data,
   });
 
   await prisma.auditLog.create({
