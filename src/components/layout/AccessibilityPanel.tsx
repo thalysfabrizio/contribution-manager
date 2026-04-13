@@ -19,6 +19,7 @@ export function AccessibilityPanel() {
   const [reducedMotion, setReducedMotion] = useState(false);
 
   useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect -- reads localStorage on mount; lazy init would break SSR hydration
     setTheme(getStored<Theme>('a11y-theme', 'dark'));
     setFontSize(getStored<FontSize>('a11y-fontsize', 'normal'));
     setReducedMotion(localStorage.getItem('a11y-motion') === 'true');

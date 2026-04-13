@@ -13,6 +13,7 @@ export function LoginForm() {
   const isVerify = searchParams.has('verify');
 
   useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect -- reads DOM on mount; lazy init would break SSR hydration
     setIsDark(!document.documentElement.classList.contains('light'));
   }, []);
 
