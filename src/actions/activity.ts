@@ -34,7 +34,7 @@ export async function loadMoreActivity(
     entity: log.entity,
     entityId: log.entityId,
     details: log.details as Record<string, unknown>,
-    userName: log.user.name,
+    userName: log.user?.name ?? null,
     createdAt: log.createdAt,
   }));
 
