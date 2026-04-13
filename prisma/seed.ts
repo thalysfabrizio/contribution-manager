@@ -2,7 +2,11 @@ import 'dotenv/config';
 import { PrismaClient, PaymentStatus, CampaignRole } from '../src/generated/prisma/client';
 import { PrismaPg } from '@prisma/adapter-pg';
 
-const adapter = new PrismaPg(process.env.DATABASE_URL!);
+const DATABASE_URL = process.env.DATABASE_URL;
+if (!DATABASE_URL) {
+  throw new Error('DATABASE_URL não definida. Configure seu .env antes de rodar o seed.');
+}
+const adapter = new PrismaPg(DATABASE_URL);
 const prisma = new PrismaClient({ adapter });
 
 async function main() {

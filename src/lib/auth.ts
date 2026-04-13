@@ -3,6 +3,7 @@ import Google from 'next-auth/providers/google';
 import Resend from 'next-auth/providers/resend';
 import { prisma } from './prisma';
 import { authConfig } from './auth.config';
+import { env } from './env';
 import type { Adapter, AdapterUser, AdapterSession } from 'next-auth/adapters';
 
 function PrismaAdapter(): Adapter {
@@ -142,12 +143,12 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
   adapter: PrismaAdapter(),
   providers: [
     Google({
-      clientId: process.env.GOOGLE_CLIENT_ID!,
-      clientSecret: process.env.GOOGLE_CLIENT_SECRET!,
+      clientId: env.GOOGLE_CLIENT_ID,
+      clientSecret: env.GOOGLE_CLIENT_SECRET,
     }),
     Resend({
-      apiKey: process.env.RESEND_API_KEY!,
-      from: process.env.EMAIL_FROM || 'noreply@example.com',
+      apiKey: env.RESEND_API_KEY,
+      from: env.EMAIL_FROM,
     }),
   ],
 });
