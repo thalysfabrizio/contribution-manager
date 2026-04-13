@@ -51,6 +51,8 @@ model User {
   email           String           @unique
   emailVerified   DateTime?
   image           String?
+  consentAt       DateTime?
+  consentVersion  String?
   accounts        Account[]
   sessions        Session[]
   ownedCampaigns  Campaign[]       @relation("owned")

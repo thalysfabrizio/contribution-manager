@@ -10,6 +10,7 @@ export function LoginForm() {
   const [email, setEmail] = useState('');
   const [loading, setLoading] = useState<'google' | 'email' | null>(null);
   const [isDark, setIsDark] = useState(true);
+  const [consentGiven, setConsentGiven] = useState(false);
   const searchParams = useSearchParams();
   const isVerify = searchParams.has('verify');
 
@@ -89,13 +90,47 @@ export function LoginForm() {
         {/* ===== Card do formulário ===== */}
         <div className="bg-card border border-border rounded-2xl shadow-2xl shadow-black/15">
           <div className="px-7 py-8 md:px-9 md:py-10">
+            {/* Consentimento LGPD */}
+            <label className="flex items-start gap-2.5 mb-5 cursor-pointer select-none group">
+              <input
+                type="checkbox"
+                checked={consentGiven}
+                onChange={(e) => setConsentGiven(e.target.checked)}
+                required
+                aria-describedby="consent-hint"
+                data-testid="consent-checkbox"
+                className="mt-0.5 size-4 rounded border-2 border-border text-primary focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary cursor-pointer"
+              />
+              <span id="consent-hint" className="text-xs text-text-secondary leading-relaxed">
+                Li e aceito os{' '}
+                <Link
+                  href="/legal/terms"
+                  target="_blank"
+                  className="underline underline-offset-2 text-text-primary hover:text-primary transition-colors"
+                >
+                  Termos de Uso
+                </Link>{' '}
+                e a{' '}
+                <Link
+                  href="/legal/privacy"
+                  target="_blank"
+                  className="underline underline-offset-2 text-text-primary hover:text-primary transition-colors"
+                >
+                  Política de Privacidade
+                </Link>
+                .
+              </span>
+            </label>
+
             {/* Botão Google */}
             <button
               onClick={() => {
+                if (!consentGiven) return;
                 setLoading('google');
                 signIn('google', { callbackUrl: '/campaigns' });
               }}
-              disabled={loading !== null}
+              disabled={loading !== null || !consentGiven}
+              data-testid="google-signin-button"
               className="w-full flex items-center justify-center gap-3 h-[52px] rounded-xl bg-white text-zinc-800 font-semibold text-[15px] border border-zinc-200 hover:bg-zinc-50 hover:border-zinc-300 active:scale-[0.99] transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer shadow-sm focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary"
             >
               {loading === 'google' ? (
@@ -127,7 +162,7 @@ export function LoginForm() {
             <form
               onSubmit={(e) => {
                 e.preventDefault();
-                if (!email.trim()) return;
+                if (!email.trim() || !consentGiven) return;
                 setLoading('email');
                 signIn('resend', { email, callbackUrl: '/campaigns' });
               }}
@@ -155,7 +190,8 @@ export function LoginForm() {
 
               <button
                 type="submit"
-                disabled={loading !== null}
+                disabled={loading !== null || !consentGiven}
+                data-testid="email-signin-button"
                 className="w-full flex items-center justify-center gap-2.5 h-[52px] rounded-xl bg-primary text-white font-semibold text-[15px] hover:bg-primary-hover active:scale-[0.99] transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer shadow-md shadow-primary/25 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary"
               >
                 {loading === 'email' ? (

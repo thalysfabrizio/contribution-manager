@@ -3,6 +3,8 @@ import Google from 'next-auth/providers/google';
 import Resend from 'next-auth/providers/resend';
 import { prisma } from './prisma';
 import { authConfig } from './auth.config';
+import { CURRENT_CONSENT_VERSION } from './consent';
+import { recordConsentIfMissing } from './consent-service';
 import { env } from './env';
 import type { Adapter, AdapterUser, AdapterSession } from 'next-auth/adapters';
 
@@ -151,4 +153,10 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
       from: env.EMAIL_FROM,
     }),
   ],
+  events: {
+    async signIn({ user }) {
+      if (!user?.id) return;
+      await recordConsentIfMissing(prisma, user.id, CURRENT_CONSENT_VERSION);
+    },
+  },
 });
