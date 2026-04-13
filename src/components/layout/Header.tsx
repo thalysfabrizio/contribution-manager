@@ -3,7 +3,7 @@
 import { useState, useRef, useEffect, useCallback } from 'react';
 import { signOut } from 'next-auth/react';
 import Link from 'next/link';
-import { ChevronDown, Settings, LogOut, User, HandCoins } from 'lucide-react';
+import { ChevronDown, Settings, LogOut, User, HandCoins, FileText, Shield } from 'lucide-react';
 import { AccessibilityPanel } from './AccessibilityPanel';
 
 interface Campaign {
@@ -175,6 +175,25 @@ export function Header({ userName, userImage, campaigns, currentCampaignId }: He
                     Configurações
                   </Link>
                 )}
+                <Link
+                  href="/legal/privacy"
+                  role="menuitem"
+                  onClick={() => setProfileOpen(false)}
+                  className="flex items-center gap-2.5 px-3 py-2.5 text-sm text-text-secondary hover:text-text-primary hover:bg-card-hover transition-colors rounded-lg"
+                >
+                  <Shield size={16} aria-hidden="true" />
+                  Política de Privacidade
+                </Link>
+                <Link
+                  href="/legal/terms"
+                  role="menuitem"
+                  onClick={() => setProfileOpen(false)}
+                  className="flex items-center gap-2.5 px-3 py-2.5 text-sm text-text-secondary hover:text-text-primary hover:bg-card-hover transition-colors rounded-lg"
+                >
+                  <FileText size={16} aria-hidden="true" />
+                  Termos de Uso
+                </Link>
+                <div className="h-px bg-border my-1" role="separator" />
                 <button
                   role="menuitem"
                   onClick={() => signOut({ callbackUrl: '/login' })}

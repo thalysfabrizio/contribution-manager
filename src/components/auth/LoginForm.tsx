@@ -3,6 +3,7 @@
 import { useState, useEffect } from 'react';
 import { signIn } from 'next-auth/react';
 import { useSearchParams } from 'next/navigation';
+import Link from 'next/link';
 import { Mail, CheckCircle, HandCoins, Sun, Moon, ArrowLeft } from 'lucide-react';
 
 export function LoginForm() {
@@ -176,10 +177,20 @@ export function LoginForm() {
         {/* Footer */}
         <p className="text-center text-sm text-text-muted mt-8 leading-relaxed">
           Ao continuar, você aceita os{' '}
-          <span className="underline underline-offset-2 cursor-pointer hover:text-text-secondary transition-colors">
-            termos de uso
-          </span>{' '}
-          da plataforma.
+          <Link
+            href="/legal/terms"
+            className="underline underline-offset-2 hover:text-text-secondary transition-colors focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary rounded"
+          >
+            Termos de Uso
+          </Link>{' '}
+          e a{' '}
+          <Link
+            href="/legal/privacy"
+            className="underline underline-offset-2 hover:text-text-secondary transition-colors focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary rounded"
+          >
+            Política de Privacidade
+          </Link>
+          .
         </p>
       </div>
     </main>
