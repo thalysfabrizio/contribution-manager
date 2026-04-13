@@ -2,6 +2,71 @@ import { z } from 'zod';
 
 const UNSAFE_URL_PROTOCOLS = /^(javascript|data|file|vbscript|about|blob):/i;
 
+const EMAIL_REGEX = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+const UUID_V4_REGEX = /^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
+const ONLY_DIGITS = /^\d+$/;
+// Formato alfanumérico a partir de jul/2026 (IN RFB 2229/2024): 12 caracteres [0-9A-Z] + 2 dígitos verificadores numéricos.
+const CNPJ_SHAPE = /^[0-9A-Z]{12}\d{2}$/;
+
+function isValidCpf(raw: string): boolean {
+  if (!ONLY_DIGITS.test(raw) || raw.length !== 11) return false;
+  if (/^(\d)\1{10}$/.test(raw)) return false;
+  const digits = raw.split('').map(Number);
+  const calc = (slice: number[], start: number) => {
+    let sum = 0;
+    for (let i = 0; i < slice.length; i++) sum += slice[i] * (start - i);
+    const mod = sum % 11;
+    return mod < 2 ? 0 : 11 - mod;
+  };
+  return calc(digits.slice(0, 9), 10) === digits[9] && calc(digits.slice(0, 10), 11) === digits[10];
+}
+
+function isValidCnpj(raw: string): boolean {
+  if (!CNPJ_SHAPE.test(raw)) return false;
+  if (/^(.)\1{13}$/.test(raw)) return false;
+  // Valor de cada posição = charCodeAt - 48 (dígitos '0'-'9' mapeiam para 0-9, letras 'A'-'Z' para 17-42).
+  const values = raw.split('').map((c) => c.charCodeAt(0) - 48);
+  const calc = (len: number) => {
+    const weights =
+      len === 12
+        ? [5, 4, 3, 2, 9, 8, 7, 6, 5, 4, 3, 2]
+        : [6, 5, 4, 3, 2, 9, 8, 7, 6, 5, 4, 3, 2];
+    let sum = 0;
+    for (let i = 0; i < len; i++) sum += values[i] * weights[i];
+    const mod = sum % 11;
+    return mod < 2 ? 0 : 11 - mod;
+  };
+  return calc(12) === values[12] && calc(13) === values[13];
+}
+
+function isValidBrPhone(raw: string): boolean {
+  if (!/^\d{10,11}$/.test(raw)) return false;
+  if (/^(\d)\1+$/.test(raw)) return false;
+  if (raw.length === 11 && raw[2] !== '9') return false;
+  return true;
+}
+
+export function isValidPixKey(key: string): boolean {
+  const trimmed = key.trim();
+  if (!trimmed) return false;
+  if (EMAIL_REGEX.test(trimmed)) return true;
+  if (UUID_V4_REGEX.test(trimmed)) return true;
+  // Remove apenas os separadores usuais de CPF/CNPJ — mantém letras para CNPJ alfanumérico.
+  const unformatted = trimmed.replace(/[.\-/]/g, '').toUpperCase();
+  if (isValidCpf(unformatted)) return true;
+  if (isValidCnpj(unformatted)) return true;
+  if (isValidBrPhone(trimmed)) return true;
+  return false;
+}
+
+export const pixKeySchema = z
+  .string()
+  .min(1, 'Chave PIX é obrigatória')
+  .refine(isValidPixKey, {
+    message:
+      'Chave PIX inválida. Use email, telefone (10-11 dígitos), CPF, CNPJ ou chave aleatória (UUID).',
+  });
+
 export const safeHttpsUrlSchema = z
   .string()
   .trim()
@@ -26,7 +91,7 @@ export const optionalSafeHttpsUrl = safeHttpsUrlSchema.nullable();
 export const campaignSchema = z.object({
   name: z.string().min(1, 'Nome é obrigatório').max(100),
   description: z.string().max(500).optional(),
-  pixKey: z.string().min(1, 'Chave PIX é obrigatória'),
+  pixKey: pixKeySchema,
   monthlyValue: z.number().int().positive('Valor deve ser positivo'),
   startMonth: z.date(),
   endMonth: z.date(),

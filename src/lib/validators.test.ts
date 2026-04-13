@@ -2,8 +2,10 @@ import {
   brandingSchema,
   campaignSchema,
   emailSchema,
+  isValidPixKey,
   participantSchema,
   paymentStatusSchema,
+  pixKeySchema,
   safeHttpsUrlSchema,
 } from './validators';
 
@@ -246,5 +248,125 @@ describe('brandingSchema', () => {
   it('rejeita orgName excessivamente longo', () => {
     const result = brandingSchema.safeParse({ ...valid, orgName: 'a'.repeat(101) });
     expect(result.success).toBe(false);
+  });
+});
+
+describe('isValidPixKey / pixKeySchema', () => {
+  describe('email', () => {
+    it.each(['pix@example.com', 'Joao.Silva@igreja.com.br', 'a+b@c.co'])(
+      'aceita email válido: %s',
+      (k) => {
+        expect(isValidPixKey(k)).toBe(true);
+      },
+    );
+    it.each(['sem-arroba', 'dois@@sinais.com', '@sem-local.com', 'sem-dominio@', 'com espaço@a.com'])(
+      'rejeita email inválido: %s',
+      (k) => {
+        expect(isValidPixKey(k)).toBe(false);
+      },
+    );
+  });
+
+  describe('telefone BR', () => {
+    it.each(['1134567890', '11934567890', '8399001001', '83999001001'])(
+      'aceita telefone de %d dígitos: %s',
+      (k) => {
+        expect(isValidPixKey(k)).toBe(true);
+      },
+    );
+    it.each(['119345', '551134567890', '1193456789a'])('rejeita telefone inválido: %s', (k) => {
+      expect(isValidPixKey(k)).toBe(false);
+    });
+  });
+
+  describe('CPF', () => {
+    it.each(['52998224725', '11144477735', '39053344705'])('aceita CPF válido: %s', (k) => {
+      expect(isValidPixKey(k)).toBe(true);
+    });
+    it.each([
+      '00000000000',
+      '11111111111',
+      '12345678901',
+      '11144477736',
+    ])('rejeita CPF inválido: %s', (k) => {
+      expect(isValidPixKey(k)).toBe(false);
+    });
+  });
+
+  describe('CNPJ numérico (formato legado)', () => {
+    it.each(['11444777000161', '45723174000110', '60746948000112'])(
+      'aceita CNPJ válido: %s',
+      (k) => {
+        expect(isValidPixKey(k)).toBe(true);
+      },
+    );
+    it.each([
+      '00000000000000',
+      '11111111111111',
+      '12345678000100',
+      '11444777000162',
+    ])('rejeita CNPJ inválido: %s', (k) => {
+      expect(isValidPixKey(k)).toBe(false);
+    });
+
+    it('aceita CNPJ com separadores formatados', () => {
+      expect(isValidPixKey('11.444.777/0001-61')).toBe(true);
+    });
+  });
+
+  describe('CNPJ alfanumérico (IN RFB 2229/2024, jul/2026)', () => {
+    it('aceita CNPJ alfanumérico exemplificado pela Receita (12ABC34501DE35)', () => {
+      expect(isValidPixKey('12ABC34501DE35')).toBe(true);
+    });
+
+    it('aceita o mesmo CNPJ alfanumérico em minúsculas e com separadores', () => {
+      expect(isValidPixKey('12.abc.345/01de-35')).toBe(true);
+    });
+
+    it('rejeita CNPJ alfanumérico com DV incorreto', () => {
+      expect(isValidPixKey('12ABC34501DE34')).toBe(false);
+    });
+
+    it('rejeita CNPJ alfanumérico com letra nos últimos 2 caracteres', () => {
+      expect(isValidPixKey('12ABC34501DEAB')).toBe(false);
+    });
+
+    it('rejeita 14 caracteres todos iguais', () => {
+      expect(isValidPixKey('AAAAAAAAAAAAAA')).toBe(false);
+    });
+  });
+
+  describe('chave aleatória (UUID v4)', () => {
+    it.each([
+      '550e8400-e29b-41d4-a716-446655440000',
+      '123e4567-e89b-42d3-a456-556642440000',
+      '6ba7b810-9dad-41d1-80b4-00c04fd430c8',
+    ])('aceita UUID v4 válido: %s', (k) => {
+      expect(isValidPixKey(k)).toBe(true);
+    });
+    it.each([
+      'not-a-uuid',
+      '550e8400-e29b-41d4-a716-44665544',
+      '550e8400e29b41d4a716446655440000',
+      '550e8400-e29b-31d4-a716-446655440000',
+    ])('rejeita UUID inválido ou não-v4: %s', (k) => {
+      expect(isValidPixKey(k)).toBe(false);
+    });
+  });
+
+  it('rejeita string vazia', () => {
+    expect(pixKeySchema.safeParse('').success).toBe(false);
+  });
+
+  it('rejeita string só com espaços', () => {
+    expect(pixKeySchema.safeParse('   ').success).toBe(false);
+  });
+
+  it('pixKeySchema retorna mensagem de erro indicando formatos aceitos', () => {
+    const result = pixKeySchema.safeParse('nao-e-nada');
+    expect(result.success).toBe(false);
+    if (!result.success) {
+      expect(result.error.issues[0]?.message).toMatch(/email|CPF|CNPJ|UUID|telefone/i);
+    }
   });
 });
