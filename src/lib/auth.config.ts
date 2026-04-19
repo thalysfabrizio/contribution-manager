@@ -35,7 +35,7 @@ export const authConfig: NextAuthConfig = {
       const emailVerified =
         !!(auth?.user as { emailVerified?: Date | string | null } | undefined)?.emailVerified;
       const { pathname } = nextUrl;
-      const publicRoutes = ['/login', '/api/auth', '/legal'];
+      const publicRoutes = ['/login', '/api/auth', '/api/health', '/legal'];
       const isPublic = publicRoutes.some((route) => pathname.startsWith(route));
 
       if (isPublic) {
