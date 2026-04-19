@@ -76,6 +76,26 @@ body {
   outline-offset: 2px;
 }
 
+/* === Form validation === */
+/* :user-invalid só ativa depois de interação (foco + blur ou submit), evitando
+   piscar vermelho quando a página carrega com campos vazios. */
+input:user-invalid,
+select:user-invalid,
+textarea:user-invalid {
+  border-color: var(--color-danger);
+  box-shadow: 0 0 0 1px rgba(239, 68, 68, 0.3);
+}
+
+.validation-hint {
+  display: none;
+}
+input:user-invalid ~ .validation-hint,
+select:user-invalid ~ .validation-hint,
+textarea:user-invalid ~ .validation-hint,
+.select-group:has(:user-invalid) .validation-hint {
+  display: block;
+}
+
 /* === Scrollbar === */
 ::-webkit-scrollbar {
   width: 6px;

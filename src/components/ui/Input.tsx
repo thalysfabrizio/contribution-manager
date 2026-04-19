@@ -27,11 +27,13 @@ const Input = forwardRef<HTMLInputElement, InputProps>(
           } ${className}`}
           {...props}
         />
-        {error && (
+        {error ? (
           <p id={errorId} className="text-xs text-danger" role="alert">
             {error}
           </p>
-        )}
+        ) : props.required ? (
+          <p className="validation-hint text-xs text-danger">Preencha este campo</p>
+        ) : null}
       </div>
     );
   },
@@ -66,11 +68,13 @@ const Textarea = forwardRef<HTMLTextAreaElement, TextareaProps>(
           } ${className}`}
           {...props}
         />
-        {error && (
+        {error ? (
           <p id={errorId} className="text-xs text-danger" role="alert">
             {error}
           </p>
-        )}
+        ) : props.required ? (
+          <p className="validation-hint text-xs text-danger">Preencha este campo</p>
+        ) : null}
       </div>
     );
   },

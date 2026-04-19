@@ -6,6 +6,7 @@ import { Button } from '@/components/ui/Button';
 import { Input, Textarea } from '@/components/ui/Input';
 import { Card } from '@/components/ui/Card';
 import { useToast } from '@/components/ui/Toast';
+import { MonthYearPicker } from './MonthYearPicker';
 import { Save, Plus } from 'lucide-react';
 
 interface CampaignFormProps {
@@ -22,7 +23,7 @@ interface CampaignFormProps {
   };
 }
 
-function toMonthInput(date: Date) {
+function toMonthString(date: Date) {
   const y = date.getUTCFullYear();
   const m = String(date.getUTCMonth() + 1).padStart(2, '0');
   return `${y}-${m}`;
@@ -32,6 +33,17 @@ export function CampaignForm({ campaign }: CampaignFormProps) {
   const { toast } = useToast();
   const isEditing = !!campaign;
   const [loading, setLoading] = useState(false);
+
+  const [name, setName] = useState(campaign?.name ?? '');
+  const [description, setDescription] = useState(campaign?.description ?? '');
+  const [pixKey, setPixKey] = useState(campaign?.pixKey ?? '');
+  const [monthlyValue, setMonthlyValue] = useState(
+    campaign ? (campaign.monthlyValue / 100).toFixed(2) : '',
+  );
+  const [startMonth, setStartMonth] = useState(campaign ? toMonthString(campaign.startMonth) : '');
+  const [endMonth, setEndMonth] = useState(campaign ? toMonthString(campaign.endMonth) : '');
+  const [paymentDayStart, setPaymentDayStart] = useState(String(campaign?.paymentDayStart ?? 10));
+  const [paymentDayEnd, setPaymentDayEnd] = useState(String(campaign?.paymentDayEnd ?? 15));
 
   return (
     <Card className="p-5 md:p-6">
@@ -61,7 +73,8 @@ export function CampaignForm({ campaign }: CampaignFormProps) {
         <Input
           name="name"
           label="Nome da campanha"
-          defaultValue={campaign?.name}
+          value={name}
+          onChange={(e) => setName(e.target.value)}
           required
           placeholder="Ex: Congresso 2026"
         />
@@ -69,7 +82,8 @@ export function CampaignForm({ campaign }: CampaignFormProps) {
         <Textarea
           name="description"
           label="Descrição (opcional)"
-          defaultValue={campaign?.description ?? ''}
+          value={description}
+          onChange={(e) => setDescription(e.target.value)}
           placeholder="Breve descrição da campanha"
           rows={2}
         />
@@ -77,7 +91,8 @@ export function CampaignForm({ campaign }: CampaignFormProps) {
         <Input
           name="pixKey"
           label="Chave PIX"
-          defaultValue={campaign?.pixKey}
+          value={pixKey}
+          onChange={(e) => setPixKey(e.target.value)}
           required
           placeholder="email@exemplo.com ou CPF"
         />
@@ -88,26 +103,27 @@ export function CampaignForm({ campaign }: CampaignFormProps) {
           type="number"
           step="0.01"
           min="0.01"
-          defaultValue={campaign ? (campaign.monthlyValue / 100).toFixed(2) : ''}
+          value={monthlyValue}
+          onChange={(e) => setMonthlyValue(e.target.value)}
           required
           placeholder="20,00"
         />
 
         <fieldset className="space-y-1.5">
           <legend className="text-sm font-medium text-text-secondary">Período da campanha</legend>
-          <div className="grid grid-cols-2 gap-3">
-            <Input
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+            <MonthYearPicker
               name="startMonth"
               label="Início"
-              type="month"
-              defaultValue={campaign ? toMonthInput(campaign.startMonth) : ''}
+              value={startMonth}
+              onChange={setStartMonth}
               required
             />
-            <Input
+            <MonthYearPicker
               name="endMonth"
               label="Fim"
-              type="month"
-              defaultValue={campaign ? toMonthInput(campaign.endMonth) : ''}
+              value={endMonth}
+              onChange={setEndMonth}
               required
             />
           </div>
@@ -122,7 +138,8 @@ export function CampaignForm({ campaign }: CampaignFormProps) {
               type="number"
               min="1"
               max="31"
-              defaultValue={campaign?.paymentDayStart ?? 10}
+              value={paymentDayStart}
+              onChange={(e) => setPaymentDayStart(e.target.value)}
               required
             />
             <Input
@@ -131,7 +148,8 @@ export function CampaignForm({ campaign }: CampaignFormProps) {
               type="number"
               min="1"
               max="31"
-              defaultValue={campaign?.paymentDayEnd ?? 15}
+              value={paymentDayEnd}
+              onChange={(e) => setPaymentDayEnd(e.target.value)}
               required
             />
           </div>

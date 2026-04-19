@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { addParticipant, editParticipant, searchPersonByPhone } from '@/actions/participant';
 import { Modal } from '@/components/ui/Modal';
 import { Button } from '@/components/ui/Button';
@@ -17,14 +17,27 @@ interface AddParticipantModalProps {
 }
 
 export function AddParticipantModal({ isOpen, onClose, campaignId, participant }: AddParticipantModalProps) {
+  const isEditing = !!participant;
+  const { toast } = useToast();
+
+  const [phone, setPhone] = useState(participant?.person.phone ?? '');
+  const [name, setName] = useState(participant?.person.name ?? '');
   const [phoneLookup, setPhoneLookup] = useState<{ name: string; phone: string } | null>(null);
   const [isSearching, setIsSearching] = useState(false);
   const [loading, setLoading] = useState(false);
-  const { toast } = useToast();
-  const isEditing = !!participant;
 
-  const handlePhoneSearch = async (phone: string) => {
-    const cleaned = phone.replace(/\D/g, '');
+  // Quando o telefone casa com uma pessoa existente, sugere o nome se o campo estiver vazio.
+  useEffect(() => {
+    if (phoneLookup && !isEditing && !name) {
+      setName(phoneLookup.name);
+    }
+  }, [phoneLookup, isEditing, name]);
+
+  const handlePhoneChange = async (value: string) => {
+    setPhone(value);
+    if (isEditing) return;
+
+    const cleaned = value.replace(/\D/g, '');
     if (cleaned.length < 10) {
       setPhoneLookup(null);
       return;
@@ -39,6 +52,8 @@ export function AddParticipantModal({ isOpen, onClose, campaignId, participant }
   };
 
   const handleClose = () => {
+    setPhone(participant?.person.phone ?? '');
+    setName(participant?.person.name ?? '');
     setPhoneLookup(null);
     setLoading(false);
     onClose();
@@ -70,13 +85,11 @@ export function AddParticipantModal({ isOpen, onClose, campaignId, participant }
           <Input
             name="phone"
             label="Telefone"
-            defaultValue={participant?.person.phone}
+            value={phone}
+            onChange={(e) => handlePhoneChange(e.target.value)}
             placeholder="(83) 9 9999-9999"
             required
             inputMode="tel"
-            onChange={(e) => {
-              if (!isEditing) handlePhoneSearch(e.target.value);
-            }}
           />
           {isSearching && (
             <div className="flex items-center gap-2 mt-2 text-xs text-text-muted">
@@ -100,7 +113,8 @@ export function AddParticipantModal({ isOpen, onClose, campaignId, participant }
         <Input
           name="name"
           label="Nome"
-          defaultValue={participant?.person.name || phoneLookup?.name || ''}
+          value={name}
+          onChange={(e) => setName(e.target.value)}
           required
           placeholder="Nome completo"
         />
