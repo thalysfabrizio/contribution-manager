@@ -2,7 +2,7 @@
 
 import { useState } from 'react';
 import Link from 'next/link';
-import { Plus, Copy, Check, MessageSquare } from 'lucide-react';
+import { Plus, Copy, Check, MessageSquare, FileDown } from 'lucide-react';
 import { updatePaymentStatus } from '@/actions/payment';
 import { removeParticipant } from '@/actions/participant';
 import { Button } from './ui/Button';
@@ -143,6 +143,17 @@ export default function Dashboard({ data, isEnded = false }: DashboardProps) {
           </span>
         </div>
         <div className="flex items-center gap-2">
+          <Link
+            href={`/campaigns/${data.id}/print`}
+            target="_blank"
+            rel="noopener"
+            className="inline-flex items-center justify-center gap-2 rounded-lg font-medium px-4 min-h-[44px] text-sm bg-transparent text-text-secondary border border-border hover:bg-card-hover hover:text-text-primary transition-all duration-200 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary"
+            aria-label="Exportar relatório em PDF"
+          >
+            <FileDown size={16} aria-hidden="true" />
+            <span className="hidden md:inline">Exportar PDF</span>
+            <span className="md:hidden">PDF</span>
+          </Link>
           <Link
             href={`/campaigns/${data.id}/settings#templates`}
             className="inline-flex items-center justify-center gap-2 rounded-lg font-medium px-4 min-h-[44px] text-sm bg-transparent text-text-secondary border border-border hover:bg-card-hover hover:text-text-primary transition-all duration-200 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary"
