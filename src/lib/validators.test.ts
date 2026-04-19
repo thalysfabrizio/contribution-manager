@@ -84,6 +84,28 @@ describe('campaignSchema', () => {
     const result = campaignSchema.safeParse({ ...valid, paymentDayEnd: 32 });
     expect(result.success).toBe(false);
   });
+
+  it('rejeita startMonth igual a endMonth', () => {
+    const sameMonth = new Date('2026-01-01');
+    const result = campaignSchema.safeParse({
+      ...valid,
+      startMonth: sameMonth,
+      endMonth: sameMonth,
+    });
+    expect(result.success).toBe(false);
+    if (!result.success) {
+      expect(result.error.issues[0]?.message).toMatch(/anterior/i);
+    }
+  });
+
+  it('rejeita endMonth anterior a startMonth', () => {
+    const result = campaignSchema.safeParse({
+      ...valid,
+      startMonth: new Date('2026-06-01'),
+      endMonth: new Date('2026-01-01'),
+    });
+    expect(result.success).toBe(false);
+  });
 });
 
 describe('participantSchema', () => {

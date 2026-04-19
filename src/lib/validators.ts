@@ -88,16 +88,21 @@ export const safeHttpsUrlSchema = z
 
 export const optionalSafeHttpsUrl = safeHttpsUrlSchema.nullable();
 
-export const campaignSchema = z.object({
-  name: z.string().min(1, 'Nome é obrigatório').max(100),
-  description: z.string().max(500).optional(),
-  pixKey: pixKeySchema,
-  monthlyValue: z.number().int().positive('Valor deve ser positivo'),
-  startMonth: z.date(),
-  endMonth: z.date(),
-  paymentDayStart: z.number().int().min(1).max(31),
-  paymentDayEnd: z.number().int().min(1).max(31),
-});
+export const campaignSchema = z
+  .object({
+    name: z.string().min(1, 'Nome é obrigatório').max(100),
+    description: z.string().max(500).optional(),
+    pixKey: pixKeySchema,
+    monthlyValue: z.number().int().positive('Valor deve ser positivo'),
+    startMonth: z.date(),
+    endMonth: z.date(),
+    paymentDayStart: z.number().int().min(1).max(31),
+    paymentDayEnd: z.number().int().min(1).max(31),
+  })
+  .refine((data) => data.startMonth < data.endMonth, {
+    message: 'Mês inicial deve ser anterior ao mês final',
+    path: ['endMonth'],
+  });
 
 export const brandingSchema = z.object({
   orgName: z.string().trim().max(100).nullable(),
