@@ -13,45 +13,45 @@ export async function addParticipant(campaignId: string, formData: FormData) {
     phone: (formData.get('phone') as string).trim().replace(/\D/g, ''),
   });
 
-  // Verifica se Person já existe pelo telefone
-  let person = await prisma.person.findUnique({ where: { phone: data.phone } });
+  await prisma.$transaction(async (tx) => {
+    let person = await tx.person.findUnique({ where: { phone: data.phone } });
 
-  if (!person) {
-    person = await prisma.person.create({
-      data: { name: data.name, phone: data.phone },
+    if (!person) {
+      person = await tx.person.create({
+        data: { name: data.name, phone: data.phone },
+      });
+    }
+
+    const existing = await tx.participant.findUnique({
+      where: {
+        personId_campaignId: {
+          personId: person.id,
+          campaignId,
+        },
+      },
     });
-  }
 
-  // Verifica se já é participante desta campanha
-  const existing = await prisma.participant.findUnique({
-    where: {
-      personId_campaignId: {
+    if (existing) {
+      throw new Error('Esta pessoa já participa desta campanha');
+    }
+
+    const participant = await tx.participant.create({
+      data: {
         personId: person.id,
         campaignId,
       },
-    },
-  });
+    });
 
-  if (existing) {
-    throw new Error('Esta pessoa já participa desta campanha');
-  }
-
-  const participant = await prisma.participant.create({
-    data: {
-      personId: person.id,
-      campaignId,
-    },
-  });
-
-  await prisma.auditLog.create({
-    data: {
-      action: 'PARTICIPANT_ADDED',
-      entity: 'Participant',
-      entityId: participant.id,
-      details: { name: person.name, phone: person.phone },
-      userId: user.id,
-      campaignId,
-    },
+    await tx.auditLog.create({
+      data: {
+        action: 'PARTICIPANT_ADDED',
+        entity: 'Participant',
+        entityId: participant.id,
+        details: { name: person.name, phone: person.phone },
+        userId: user.id,
+        campaignId,
+      },
+    });
   });
 
   revalidatePath(`/campaigns/${campaignId}`);

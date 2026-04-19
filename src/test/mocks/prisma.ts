@@ -25,16 +25,23 @@ const models = [
   'verificationToken',
 ] as const;
 
-type MockModel = Record<string, ReturnType<typeof vi.fn>>;
-type MockPrisma = Record<string, MockModel>;
+type MockFn = ReturnType<typeof vi.fn>;
+type MockModel = Record<string, MockFn>;
+type MockPrisma = Record<string, MockModel> & { $transaction: MockFn };
 
 export function createMockPrisma(): MockPrisma {
-  const mock: MockPrisma = {};
+  const mock = {} as MockPrisma;
   for (const model of models) {
-    mock[model] = {};
+    (mock as Record<string, MockModel>)[model] = {};
     for (const method of modelMethods) {
-      mock[model][method] = vi.fn();
+      (mock as Record<string, MockModel>)[model][method] = vi.fn();
     }
   }
+  mock.$transaction = vi.fn(async (arg: unknown) => {
+    if (typeof arg === 'function') {
+      return (arg as (tx: MockPrisma) => Promise<unknown>)(mock);
+    }
+    return Promise.all(arg as Promise<unknown>[]);
+  });
   return mock;
 }

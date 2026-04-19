@@ -88,6 +88,19 @@ describe('inviteMember', () => {
     const auditCall = mockPrisma.auditLog.create.mock.calls[0][0];
     expect(auditCall.data.details.email).toBe('teste@teste.com');
   });
+
+  it('agrupa criação e audit log em uma transação', async () => {
+    mockPrisma.user.findUnique.mockResolvedValue(null);
+    mockPrisma.user.create.mockResolvedValue({ id: 'new-user', email: 'novo@teste.com' });
+    mockPrisma.campaignMember.create.mockResolvedValue({});
+    mockPrisma.auditLog.create.mockRejectedValue(new Error('audit falhou'));
+
+    await expect(inviteMember(campaignId, 'novo@teste.com')).rejects.toThrow('audit falhou');
+
+    const tx = (prisma as unknown as { $transaction: Mock }).$transaction;
+    expect(tx).toHaveBeenCalledTimes(1);
+    expect(typeof tx.mock.calls[0][0]).toBe('function');
+  });
 });
 
 describe('removeMember', () => {

@@ -22,38 +22,41 @@ export async function createCampaign(formData: FormData) {
   });
 
   const userId = user.id;
-  const campaign = await prisma.campaign.create({
-    data: {
-      name: data.name,
-      description: data.description ?? null,
-      pixKey: data.pixKey,
-      monthlyValue: data.monthlyValue,
-      startMonth: data.startMonth,
-      endMonth: data.endMonth,
-      paymentDayStart: data.paymentDayStart,
-      paymentDayEnd: data.paymentDayEnd,
-      owner: { connect: { id: userId } },
-    },
-  });
+  const campaign = await prisma.$transaction(async (tx) => {
+    const created = await tx.campaign.create({
+      data: {
+        name: data.name,
+        description: data.description ?? null,
+        pixKey: data.pixKey,
+        monthlyValue: data.monthlyValue,
+        startMonth: data.startMonth,
+        endMonth: data.endMonth,
+        paymentDayStart: data.paymentDayStart,
+        paymentDayEnd: data.paymentDayEnd,
+        owner: { connect: { id: userId } },
+      },
+    });
 
-  // Owner também é CampaignMember
-  await prisma.campaignMember.create({
-    data: {
-      userId: user.id,
-      campaignId: campaign.id,
-      role: CampaignRole.OWNER,
-    },
-  });
+    await tx.campaignMember.create({
+      data: {
+        userId: user.id,
+        campaignId: created.id,
+        role: CampaignRole.OWNER,
+      },
+    });
 
-  await prisma.auditLog.create({
-    data: {
-      action: 'CAMPAIGN_CREATED',
-      entity: 'Campaign',
-      entityId: campaign.id,
-      details: { name: campaign.name },
-      userId: user.id,
-      campaignId: campaign.id,
-    },
+    await tx.auditLog.create({
+      data: {
+        action: 'CAMPAIGN_CREATED',
+        entity: 'Campaign',
+        entityId: created.id,
+        details: { name: created.name },
+        userId: user.id,
+        campaignId: created.id,
+      },
+    });
+
+    return created;
   });
 
   redirect(`/campaigns/${campaign.id}`);

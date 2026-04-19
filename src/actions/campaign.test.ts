@@ -100,6 +100,19 @@ describe('createCampaign', () => {
 
     await expect(createCampaign(validFormData())).rejects.toThrow('NEXT_REDIRECT:/campaigns/abc123');
   });
+
+  it('envolve as três operações em uma transação única', async () => {
+    mockPrisma.campaign.create.mockResolvedValue(fakeCampaign());
+    mockPrisma.campaignMember.create.mockResolvedValue({});
+    mockPrisma.auditLog.create.mockRejectedValue(new Error('audit falhou'));
+
+    await expect(createCampaign(validFormData())).rejects.toThrow('audit falhou');
+
+    const tx = (prisma as unknown as { $transaction: Mock }).$transaction;
+    expect(tx).toHaveBeenCalledTimes(1);
+    expect(typeof tx.mock.calls[0][0]).toBe('function');
+    expect(revalidatePath).not.toHaveBeenCalled();
+  });
 });
 
 describe('updateCampaign', () => {

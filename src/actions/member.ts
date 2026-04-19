@@ -10,71 +10,71 @@ export async function inviteMember(campaignId: string, email: string) {
 
   const normalizedEmail = emailSchema.parse(email);
 
-  // Verificar se já é membro
-  const existingUser = await prisma.user.findUnique({ where: { email: normalizedEmail } });
-  if (existingUser) {
-    const existingMember = await prisma.campaignMember.findUnique({
-      where: {
-        userId_campaignId: {
+  const method = await prisma.$transaction(async (tx) => {
+    const existingUser = await tx.user.findUnique({ where: { email: normalizedEmail } });
+
+    if (existingUser) {
+      const existingMember = await tx.campaignMember.findUnique({
+        where: {
+          userId_campaignId: {
+            userId: existingUser.id,
+            campaignId,
+          },
+        },
+      });
+
+      if (existingMember) {
+        throw new Error('Esta pessoa já é membro desta campanha');
+      }
+
+      await tx.campaignMember.create({
+        data: {
           userId: existingUser.id,
           campaignId,
+          role: 'MEMBER',
         },
-      },
-    });
+      });
 
-    if (existingMember) {
-      throw new Error('Esta pessoa já é membro desta campanha');
+      await tx.auditLog.create({
+        data: {
+          action: 'MEMBER_INVITED',
+          entity: 'CampaignMember',
+          details: { email: normalizedEmail, method: 'direct' },
+          userId: user.id,
+          campaignId,
+        },
+      });
+
+      return 'direct' as const;
     }
 
-    // Adicionar diretamente
-    await prisma.campaignMember.create({
+    const invitedUser = await tx.user.create({
+      data: { email: normalizedEmail },
+    });
+
+    await tx.campaignMember.create({
       data: {
-        userId: existingUser.id,
+        userId: invitedUser.id,
         campaignId,
         role: 'MEMBER',
       },
     });
 
-    await prisma.auditLog.create({
+    await tx.auditLog.create({
       data: {
         action: 'MEMBER_INVITED',
         entity: 'CampaignMember',
-        details: { email: normalizedEmail, method: 'direct' },
+        details: { email: normalizedEmail, method: 'invite' },
         userId: user.id,
         campaignId,
       },
     });
 
-    revalidatePath(`/campaigns/${campaignId}/settings`);
-    return { method: 'direct' as const };
-  }
-
-  // Usuário não existe — gerar link de convite
-  // Criar o user para que o NextAuth possa vincular no primeiro login
-  const invitedUser = await prisma.user.create({
-    data: { email: normalizedEmail },
-  });
-
-  await prisma.campaignMember.create({
-    data: {
-      userId: invitedUser.id,
-      campaignId,
-      role: 'MEMBER',
-    },
-  });
-
-  await prisma.auditLog.create({
-    data: {
-      action: 'MEMBER_INVITED',
-      entity: 'CampaignMember',
-      details: { email: normalizedEmail, method: 'invite' },
-      userId: user.id,
-      campaignId,
-    },
+    return 'invite' as const;
   });
 
   revalidatePath(`/campaigns/${campaignId}/settings`);
-  return { method: 'invite' as const };
+  return { method };
 }
 
 export async function removeMember(campaignId: string, memberId: string) {

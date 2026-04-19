@@ -92,6 +92,22 @@ describe('addParticipant', () => {
     const auditCall = mockPrisma.auditLog.create.mock.calls[0][0];
     expect(auditCall.data.action).toBe('PARTICIPANT_ADDED');
   });
+
+  it('executa as operações dentro de uma transação', async () => {
+    mockPrisma.person.findUnique.mockResolvedValue(null);
+    mockPrisma.person.create.mockResolvedValue({ id: 'person-1', name: 'João', phone: '11934567890' });
+    mockPrisma.participant.findUnique.mockResolvedValue(null);
+    mockPrisma.participant.create.mockResolvedValue({ id: 'participant-1' });
+    mockPrisma.auditLog.create.mockRejectedValue(new Error('audit falhou'));
+
+    await expect(
+      addParticipant(campaignId, fakeFormData({ name: 'João', phone: '11934567890' })),
+    ).rejects.toThrow('audit falhou');
+
+    const tx = (prisma as unknown as { $transaction: Mock }).$transaction;
+    expect(tx).toHaveBeenCalledTimes(1);
+    expect(typeof tx.mock.calls[0][0]).toBe('function');
+  });
 });
 
 describe('editParticipant', () => {
