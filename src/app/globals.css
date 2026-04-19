@@ -190,7 +190,8 @@ textarea:user-invalid ~ .validation-hint,
   0%, 40% { background-color: rgba(139, 92, 246, 0.22); }
   100% { background-color: transparent; }
 }
-tr.row-highlight > td {
+tr.row-highlight > td,
+.card-highlight {
   animation: row-highlight 2.2s ease-out;
 }
 
@@ -215,7 +216,8 @@ html.light .sticky-shadow-right {
   .animate-slide-down,
   .animate-in,
   .animate-stagger > *,
-  tr.row-highlight > td {
+  tr.row-highlight > td,
+  .card-highlight {
     animation: none;
     opacity: 1;
   }

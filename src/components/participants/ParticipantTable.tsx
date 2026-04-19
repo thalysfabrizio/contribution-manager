@@ -1,10 +1,10 @@
 'use client';
 
-import { useRef, useState, useEffect, useCallback } from 'react';
 import { Card } from '@/components/ui/Card';
 import { ParticipantRow } from './ParticipantRow';
+import { ParticipantCard } from './ParticipantCard';
 import { isSameMonth, isCurrentMonth } from '@/lib/months';
-import { Users, Plus } from 'lucide-react';
+import { Users } from 'lucide-react';
 import { EmptyState } from '@/components/ui/EmptyState';
 import type { CampaignData, PaymentStatus } from '@/types';
 import type { MonthEntry } from '@/lib/months';
@@ -32,40 +32,39 @@ export function ParticipantTable({
   onMessage,
   onDelete,
 }: ParticipantTableProps) {
-  const scrollRef = useRef<HTMLDivElement>(null);
-  const [canScrollLeft, setCanScrollLeft] = useState(false);
-  const [canScrollRight, setCanScrollRight] = useState(false);
-
-  const checkScroll = useCallback(() => {
-    const el = scrollRef.current;
-    if (!el) return;
-    setCanScrollLeft(el.scrollLeft > 8);
-    setCanScrollRight(el.scrollLeft < el.scrollWidth - el.clientWidth - 8);
-  }, []);
-
-  useEffect(() => {
-    checkScroll();
-    const el = scrollRef.current;
-    if (!el) return;
-    el.addEventListener('scroll', checkScroll, { passive: true });
-    const ro = new ResizeObserver(checkScroll);
-    ro.observe(el);
-    return () => {
-      el.removeEventListener('scroll', checkScroll);
-      ro.disconnect();
-    };
-  }, [checkScroll]);
-
   return (
-    <Card>
-      <div className="relative">
-        {canScrollLeft && (
-          <div className="absolute left-0 top-0 bottom-0 w-8 bg-gradient-to-r from-card to-transparent z-20 pointer-events-none md:hidden" />
+    <>
+      {/* Mobile: lista de cards */}
+      <div className="md:hidden space-y-3">
+        {participants.length === 0 ? (
+          <Card>
+            <EmptyState
+              icon={<Users size={32} className="text-primary/60" aria-hidden="true" />}
+              title="Nenhum participante cadastrado"
+              description="Adicione participantes para acompanhar os pagamentos da campanha."
+            />
+          </Card>
+        ) : (
+          participants.map((p) => (
+            <ParticipantCard
+              key={p.id}
+              participant={p}
+              months={months}
+              isEnded={isEnded}
+              loadingId={loadingId}
+              isHighlighted={highlightId === p.id}
+              onToggle={onToggle}
+              onEdit={onEdit}
+              onMessage={onMessage}
+              onDelete={onDelete}
+            />
+          ))
         )}
-        {canScrollRight && (
-          <div className="absolute right-0 top-0 bottom-0 w-8 bg-gradient-to-l from-card to-transparent z-20 pointer-events-none md:hidden" />
-        )}
-      <div ref={scrollRef} className="overflow-x-auto">
+      </div>
+
+      {/* Desktop: tabela */}
+      <Card className="hidden md:block">
+      <div className="overflow-x-auto">
         <table className="w-full text-sm border-collapse" role="grid">
           <thead>
             <tr className="border-b border-border text-left">
@@ -156,7 +155,7 @@ export function ParticipantTable({
           )}
         </table>
       </div>
-      </div>
-    </Card>
+      </Card>
+    </>
   );
 }
