@@ -147,12 +147,40 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
     Google({
       clientId: env.GOOGLE_CLIENT_ID,
       clientSecret: env.GOOGLE_CLIENT_SECRET,
+      profile(profile) {
+        return {
+          id: profile.sub,
+          name: profile.name ?? null,
+          email: profile.email,
+          image: profile.picture ?? null,
+          emailVerified: profile.email_verified ? new Date() : null,
+        };
+      },
     }),
     Resend({
       apiKey: env.RESEND_API_KEY,
       from: env.EMAIL_FROM,
     }),
   ],
+  callbacks: {
+    ...authConfig.callbacks,
+    async signIn({ user, account, profile }) {
+      const adapterUser = user as AdapterUser;
+      if (
+        account?.type === 'oauth' &&
+        (profile as { email_verified?: boolean } | undefined)?.email_verified &&
+        adapterUser.id &&
+        !adapterUser.emailVerified
+      ) {
+        const updated = await prisma.user.update({
+          where: { id: adapterUser.id },
+          data: { emailVerified: new Date() },
+        });
+        adapterUser.emailVerified = updated.emailVerified;
+      }
+      return true;
+    },
+  },
   events: {
     async signIn({ user }) {
       if (!user?.id) return;
