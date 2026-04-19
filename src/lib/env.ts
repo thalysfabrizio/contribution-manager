@@ -17,6 +17,11 @@ export const envSchema = z.object({
   GOOGLE_CLIENT_SECRET: z.string().min(1, 'GOOGLE_CLIENT_SECRET é obrigatório'),
   RESEND_API_KEY: z.string().min(1, 'RESEND_API_KEY é obrigatório'),
   EMAIL_FROM: z.string().email('EMAIL_FROM deve ser um email válido'),
+  SENTRY_DSN: z.string().url('SENTRY_DSN deve ser uma URL válida').optional(),
+  SENTRY_ENVIRONMENT: z.string().optional(),
+  SENTRY_ORG: z.string().optional(),
+  SENTRY_PROJECT: z.string().optional(),
+  SENTRY_AUTH_TOKEN: z.string().optional(),
 });
 
 export type Env = z.infer<typeof envSchema>;

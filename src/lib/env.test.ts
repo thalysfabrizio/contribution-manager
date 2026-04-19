@@ -62,6 +62,28 @@ describe('envSchema', () => {
     const result = envSchema.safeParse({ ...validEnv, EMAIL_FROM: 'nao-e-email' });
     expect(result.success).toBe(false);
   });
+
+  it('aceita envs Sentry ausentes (opcionais)', () => {
+    const result = envSchema.safeParse(validEnv);
+    expect(result.success).toBe(true);
+    if (result.success) {
+      expect(result.data.SENTRY_DSN).toBeUndefined();
+      expect(result.data.SENTRY_AUTH_TOKEN).toBeUndefined();
+    }
+  });
+
+  it('rejeita SENTRY_DSN com formato inválido', () => {
+    const result = envSchema.safeParse({ ...validEnv, SENTRY_DSN: 'nao-e-url' });
+    expect(result.success).toBe(false);
+  });
+
+  it('aceita SENTRY_DSN como URL válida', () => {
+    const result = envSchema.safeParse({
+      ...validEnv,
+      SENTRY_DSN: 'https://abc@o1.ingest.sentry.io/1',
+    });
+    expect(result.success).toBe(true);
+  });
 });
 
 describe('loadEnv', () => {
