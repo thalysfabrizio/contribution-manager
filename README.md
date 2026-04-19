@@ -1,36 +1,93 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# Contribution Manager
 
-## Getting Started
+App [Next.js 16](https://nextjs.org) com NextAuth, Prisma + PostgreSQL e Resend (magic link).
 
-First, run the development server:
+## Pré-requisitos
+
+- Node.js 20+
+- Docker Desktop (para o Postgres local)
+- Conta no [Resend](https://resend.com) e credenciais OAuth do Google para login
+
+## Setup inicial (uma vez)
 
 ```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
+# 1. instalar dependências (o postinstall já roda prisma generate)
+npm install
+
+# 2. copiar e preencher variáveis de ambiente
+cp .env.example .env
+# edite .env: NEXTAUTH_SECRET, GOOGLE_CLIENT_ID/SECRET, RESEND_API_KEY, EMAIL_FROM
+
+# 3. subir o Postgres
+docker compose up -d
+
+# 4. aplicar migrations
+npx prisma migrate deploy
+
+# 5. (opcional) popular dados de seed
+npm run db:seed
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+Gere o `NEXTAUTH_SECRET` com `openssl rand -base64 32`. Variáveis obrigatórias são validadas em [src/lib/env.ts](src/lib/env.ts) — o app falha na inicialização se algo estiver ausente.
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+## Rotina diária (após reboot da máquina)
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+```bash
+docker compose up -d      # sobe o Postgres
+npm run dev               # inicia o Next em http://localhost:3000
+```
 
-## Learn More
+Se há migrations novas no repositório:
 
-To learn more about Next.js, take a look at the following resources:
+```bash
+npx prisma migrate status   # verificar pendências
+npx prisma migrate deploy   # aplicar
+```
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+## Scripts
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+| Comando | Descrição |
+| --- | --- |
+| `npm run dev` | servidor de desenvolvimento (Turbopack) |
+| `npm run build` | build de produção |
+| `npm start` | serve o build de produção |
+| `npm run lint` | ESLint |
+| `npm test` | vitest (run único) |
+| `npm run test:watch` | vitest em modo watch |
+| `npm run test:coverage` | cobertura |
+| `npm run db:seed` | popula o banco com dados de seed |
+| `npm run db:migrate-json` | importa dados de JSON legado |
+| `npm run cleanup:audit-logs -- --dry-run` | simula exclusão de audit logs > 24 meses |
+| `npm run cleanup:audit-logs` | exclui audit logs > 24 meses (retenção LGPD) |
 
-## Deploy on Vercel
+## Banco de dados
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+- Dev local: Postgres 16 via [docker-compose.yml](docker-compose.yml) (container `contribution-db`, porta `5432`, volume `pgdata`)
+- Schema: [prisma/schema.prisma](prisma/schema.prisma)
+- Migrations: [prisma/migrations/](prisma/migrations/)
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+Comandos úteis:
+
+```bash
+docker compose stop           # para o Postgres preservando dados
+docker compose down           # remove container (dados ficam no volume pgdata)
+docker compose down -v        # remove container E volume (apaga os dados)
+npx prisma studio             # GUI para inspecionar o banco
+npx prisma migrate dev        # cria nova migration a partir de mudanças no schema
+```
+
+## Retenção de audit logs (LGPD)
+
+A política é manter `AuditLog` por **24 meses** (alinhada à [Política de Privacidade](src/app/legal/privacy/page.tsx)). O script [scripts/cleanup-audit-logs.ts](scripts/cleanup-audit-logs.ts) remove registros mais antigos que esse limite. Deve rodar mensalmente em produção:
+
+- **Vercel Cron**: adicione entrada em `vercel.json` apontando para uma rota interna que invoque a rotina. Ou
+- **GitHub Actions**: workflow `schedule: - cron: '0 3 1 * *'` rodando `npm run cleanup:audit-logs` com as envs do ambiente (ver [docs/RUNBOOK.md](docs/RUNBOOK.md)).
+
+Sempre faça um `--dry-run` antes em produção para ver quantos registros seriam afetados.
+
+## Estrutura
+
+- [src/app/](src/app/) — rotas do App Router
+- [src/lib/](src/lib/) — utilitários (env, prisma, rate-limit, auth)
+- [prisma/](prisma/) — schema, migrations e seed
+- [scripts/](scripts/) — scripts de manutenção (retenção, etc.)

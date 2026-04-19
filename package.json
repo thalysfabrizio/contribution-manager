@@ -10,6 +10,7 @@
     "postinstall": "prisma generate",
     "db:seed": "tsx prisma/seed.ts",
     "db:migrate-json": "tsx prisma/migrate-json.ts",
+    "cleanup:audit-logs": "tsx scripts/cleanup-audit-logs.ts",
     "test": "vitest run",
     "test:watch": "vitest",
     "test:coverage": "vitest run --coverage"
