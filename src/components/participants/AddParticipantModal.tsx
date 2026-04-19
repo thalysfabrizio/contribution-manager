@@ -31,10 +31,8 @@ export function AddParticipantModal({ isOpen, onClose, campaignId, participant }
     }
     setIsSearching(true);
     try {
-      const person = await searchPersonByPhone(campaignId, cleaned);
-      setPhoneLookup(person);
-    } catch {
-      setPhoneLookup(null);
+      const result = await searchPersonByPhone(campaignId, cleaned);
+      setPhoneLookup(result.ok ? result.data : null);
     } finally {
       setIsSearching(false);
     }
@@ -55,19 +53,16 @@ export function AddParticipantModal({ isOpen, onClose, campaignId, participant }
       <form
         action={async (formData) => {
           setLoading(true);
-          try {
-            if (isEditing) {
-              await editParticipant(campaignId, participant.id, formData);
-              toast('Participante atualizado', 'success');
-            } else {
-              await addParticipant(campaignId, formData);
-              toast('Participante adicionado', 'success');
-            }
-            handleClose();
-          } catch (e) {
-            toast(e instanceof Error ? e.message : 'Erro ao salvar', 'error');
+          const result = isEditing
+            ? await editParticipant(campaignId, participant.id, formData)
+            : await addParticipant(campaignId, formData);
+          if (!result.ok) {
+            toast(result.error, 'error');
             setLoading(false);
+            return;
           }
+          toast(isEditing ? 'Participante atualizado' : 'Participante adicionado', 'success');
+          handleClose();
         }}
         className="space-y-4"
       >

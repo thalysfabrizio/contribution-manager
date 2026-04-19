@@ -6,70 +6,78 @@ import { paymentStatusSchema } from '@/lib/validators';
 import type { PaymentStatus } from '@/generated/prisma/client';
 import { isCampaignEnded } from '@/lib/months';
 import { revalidatePath } from 'next/cache';
+import { type ActionResult, handlePrismaError, ok } from '@/lib/errors';
 
 export async function updatePaymentStatus(
   campaignId: string,
   participantId: string,
   month: Date,
   newStatus: PaymentStatus,
-) {
-  const { user } = await requireCampaignAccess(campaignId);
+): Promise<ActionResult<void>> {
+  try {
+    const { user } = await requireCampaignAccess(campaignId);
 
-  // Verificar que campanha não está encerrada
-  const campaign = await prisma.campaign.findUnique({
-    where: { id: campaignId },
-    select: { endMonth: true },
-  });
-
-  if (campaign && isCampaignEnded(campaign.endMonth)) {
-    throw new Error('Campanha encerrada — somente leitura');
-  }
-
-  paymentStatusSchema.parse(newStatus);
-
-  // Buscar status anterior para o audit log
-  const existingPayment = await prisma.payment.findUnique({
-    where: { participantId_month: { participantId, month } },
-    select: { status: true },
-  });
-  const previousStatus = existingPayment?.status ?? 'PENDING';
-
-  if (newStatus === 'PENDING') {
-    await prisma.payment.deleteMany({
-      where: { participantId, month },
+    const campaign = await prisma.campaign.findUnique({
+      where: { id: campaignId },
+      select: { endMonth: true },
     });
-  } else {
-    await prisma.payment.upsert({
-      where: {
-        participantId_month: { participantId, month },
-      },
-      update: {
-        status: newStatus,
-        paidAt: newStatus === 'PAID_PIX' || newStatus === 'PAID_CASH' ? new Date() : null,
-      },
-      create: {
-        participantId,
-        month,
-        status: newStatus,
-        paidAt: newStatus === 'PAID_PIX' || newStatus === 'PAID_CASH' ? new Date() : null,
+
+    if (campaign && isCampaignEnded(campaign.endMonth)) {
+      throw new Error('Campanha encerrada — somente leitura');
+    }
+
+    paymentStatusSchema.parse(newStatus);
+
+    const existingPayment = await prisma.payment.findUnique({
+      where: { participantId_month: { participantId, month } },
+      select: { status: true },
+    });
+    const previousStatus = existingPayment?.status ?? 'PENDING';
+
+    if (newStatus === 'PENDING') {
+      await prisma.payment.deleteMany({
+        where: { participantId, month },
+      });
+    } else {
+      await prisma.payment.upsert({
+        where: {
+          participantId_month: { participantId, month },
+        },
+        update: {
+          status: newStatus,
+          paidAt: newStatus === 'PAID_PIX' || newStatus === 'PAID_CASH' ? new Date() : null,
+        },
+        create: {
+          participantId,
+          month,
+          status: newStatus,
+          paidAt: newStatus === 'PAID_PIX' || newStatus === 'PAID_CASH' ? new Date() : null,
+        },
+      });
+    }
+
+    await prisma.auditLog.create({
+      data: {
+        action: 'PAYMENT_UPDATED',
+        entity: 'Payment',
+        entityId: participantId,
+        details: {
+          month: month.toISOString(),
+          from: previousStatus,
+          to: newStatus,
+        },
+        userId: user.id,
+        campaignId,
       },
     });
-  }
-
-  await prisma.auditLog.create({
-    data: {
-      action: 'PAYMENT_UPDATED',
-      entity: 'Payment',
-      entityId: participantId,
-      details: {
-        month: month.toISOString(),
-        from: previousStatus,
-        to: newStatus,
-      },
-      userId: user.id,
+  } catch (e) {
+    return handlePrismaError(e, {
+      action: 'updatePaymentStatus',
       campaignId,
-    },
-  });
+      participantId,
+    });
+  }
 
   revalidatePath(`/campaigns/${campaignId}`);
+  return ok(undefined);
 }

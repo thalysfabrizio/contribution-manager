@@ -41,13 +41,17 @@ export function CampaignForm({ campaign }: CampaignFormProps) {
           setLoading(true);
           try {
             if (isEditing) {
-              await updateCampaign(campaign.id, formData);
+              const result = await updateCampaign(campaign.id, formData);
+              if (!result.ok) {
+                toast(result.error, 'error');
+                return;
+              }
               toast('Campanha atualizada', 'success');
             } else {
-              await createCampaign(formData);
+              const result = await createCampaign(formData);
+              // Em caso de sucesso, o redirect throw NEXT_REDIRECT antes de chegar aqui.
+              if (!result.ok) toast(result.error, 'error');
             }
-          } catch (e) {
-            toast(e instanceof Error ? e.message : 'Erro ao salvar campanha', 'error');
           } finally {
             setLoading(false);
           }

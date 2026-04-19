@@ -84,14 +84,13 @@ export function TemplateEditor({
         <form
           action={async () => {
             setSaving(true);
-            try {
-              await updateTemplates(campaignId, templates);
-              toast('Templates salvos', 'success');
-            } catch {
-              toast('Erro ao salvar templates', 'error');
-            } finally {
-              setSaving(false);
+            const result = await updateTemplates(campaignId, templates);
+            setSaving(false);
+            if (!result.ok) {
+              toast(result.error, 'error');
+              return;
             }
+            toast('Templates salvos', 'success');
           }}
         >
           <Button type="submit" size="sm" disabled={saving}>

@@ -30,18 +30,19 @@ export function InviteMemberModal({ isOpen, onClose, campaignId }: InviteMemberM
       <form
         action={async () => {
           setLoading(true);
-          try {
-            const result = await inviteMember(campaignId, email);
-            if (result.method === 'direct') {
-              toast('Líder adicionado com sucesso', 'success');
-            } else {
-              toast('Convite enviado — o líder terá acesso ao fazer login', 'success');
-            }
-            handleClose();
-          } catch (e) {
-            toast(e instanceof Error ? e.message : 'Erro ao convidar', 'error');
+          const result = await inviteMember(campaignId, email);
+          if (!result.ok) {
+            toast(result.error, 'error');
             setLoading(false);
+            return;
           }
+          toast(
+            result.data.method === 'direct'
+              ? 'Líder adicionado com sucesso'
+              : 'Convite enviado — o líder terá acesso ao fazer login',
+            'success',
+          );
+          handleClose();
         }}
         className="space-y-4"
       >

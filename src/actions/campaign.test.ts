@@ -106,7 +106,8 @@ describe('createCampaign', () => {
     mockPrisma.campaignMember.create.mockResolvedValue({});
     mockPrisma.auditLog.create.mockRejectedValue(new Error('audit falhou'));
 
-    await expect(createCampaign(validFormData())).rejects.toThrow('audit falhou');
+    const result = await createCampaign(validFormData());
+    expect(result).toEqual({ ok: false, error: 'audit falhou', code: undefined });
 
     const tx = (prisma as unknown as { $transaction: Mock }).$transaction;
     expect(tx).toHaveBeenCalledTimes(1);

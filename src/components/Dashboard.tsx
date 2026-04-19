@@ -47,22 +47,18 @@ export default function Dashboard({ data, isEnded = false }: DashboardProps) {
     if (loadingId || isEnded) return;
     const id = `${participantId}-${monthDate.toISOString()}`;
     setLoadingId(id);
-    try {
-      await updatePaymentStatus(data.id, participantId, monthDate, newStatus);
-    } catch {
-      toast('Erro ao atualizar pagamento', 'error');
-    } finally {
-      setLoadingId(null);
-    }
+    const result = await updatePaymentStatus(data.id, participantId, monthDate, newStatus);
+    if (!result.ok) toast(result.error, 'error');
+    setLoadingId(null);
   };
 
   const handleDelete = async () => {
-    try {
-      await removeParticipant(data.id, deleteConfirm.id);
-      toast('Participante removido', 'success');
-    } catch {
-      toast('Erro ao remover participante', 'error');
+    const result = await removeParticipant(data.id, deleteConfirm.id);
+    if (!result.ok) {
+      toast(result.error, 'error');
+      return;
     }
+    toast('Participante removido', 'success');
   };
 
   const handleCopyPix = async () => {

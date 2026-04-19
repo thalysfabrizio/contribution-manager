@@ -103,9 +103,9 @@ describe('updatePaymentStatus', () => {
       fakeCampaign({ endMonth: new Date(Date.UTC(2020, 0, 1)) }),
     );
 
-    await expect(
-      updatePaymentStatus(campaignId, participantId, month, 'PAID_PIX'),
-    ).rejects.toThrow('Campanha encerrada — somente leitura');
+    const result = await updatePaymentStatus(campaignId, participantId, month, 'PAID_PIX');
+    expect(result.ok).toBe(false);
+    if (!result.ok) expect(result.error).toBe('Campanha encerrada — somente leitura');
   });
 
   it('permite atualização quando endMonth é o mês atual', async () => {
@@ -151,9 +151,14 @@ describe('updatePaymentStatus', () => {
   it('valida newStatus via paymentStatusSchema', async () => {
     mockPrisma.campaign.findUnique.mockResolvedValue(fakeCampaign());
 
-    await expect(
-      updatePaymentStatus(campaignId, participantId, month, 'INVALIDO' as never),
-    ).rejects.toThrow();
+    const result = await updatePaymentStatus(
+      campaignId,
+      participantId,
+      month,
+      'INVALIDO' as never,
+    );
+    expect(result.ok).toBe(false);
+    if (!result.ok) expect(result.code).toBe('VALIDATION');
   });
 
   it('chama revalidatePath', async () => {

@@ -43,18 +43,23 @@ describe('loadMoreActivity', () => {
     mockPrisma.auditLog.findMany.mockResolvedValue(logs);
 
     const result = await loadMoreActivity('campaign-1');
-    expect(result.hasMore).toBe(false);
-    expect(result.items).toHaveLength(5);
+    expect(result.ok).toBe(true);
+    if (result.ok) {
+      expect(result.data.hasMore).toBe(false);
+      expect(result.data.items).toHaveLength(5);
+    }
   });
 
   it('retorna hasMore: true quando > PAGE_SIZE', async () => {
-    // PAGE_SIZE = 20, retorna 21 para indicar que há mais
     const logs = Array.from({ length: 21 }, (_, i) => fakeLog(`log-${i}`));
     mockPrisma.auditLog.findMany.mockResolvedValue(logs);
 
     const result = await loadMoreActivity('campaign-1');
-    expect(result.hasMore).toBe(true);
-    expect(result.items).toHaveLength(20);
+    expect(result.ok).toBe(true);
+    if (result.ok) {
+      expect(result.data.hasMore).toBe(true);
+      expect(result.data.items).toHaveLength(20);
+    }
   });
 
   it('usa cursor + skip quando cursor fornecido', async () => {
@@ -71,7 +76,9 @@ describe('loadMoreActivity', () => {
     mockPrisma.auditLog.findMany.mockResolvedValue([fakeLog('log-1')]);
 
     const result = await loadMoreActivity('campaign-1');
-    const item = result.items[0];
+    expect(result.ok).toBe(true);
+    if (!result.ok) return;
+    const item = result.data.items[0];
 
     expect(item.id).toBe('log-1');
     expect(item.action).toBe('PAYMENT_UPDATED');

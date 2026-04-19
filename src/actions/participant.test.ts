@@ -75,9 +75,15 @@ describe('addParticipant', () => {
     mockPrisma.person.findUnique.mockResolvedValue({ id: 'person-1', name: 'João', phone: '11934567890' });
     mockPrisma.participant.findUnique.mockResolvedValue({ id: 'existing' });
 
-    await expect(
-      addParticipant(campaignId, fakeFormData({ name: 'João', phone: '11934567890' })),
-    ).rejects.toThrow('Esta pessoa já participa desta campanha');
+    const result = await addParticipant(
+      campaignId,
+      fakeFormData({ name: 'João', phone: '11934567890' }),
+    );
+    expect(result).toEqual({
+      ok: false,
+      error: 'Esta pessoa já participa desta campanha',
+      code: undefined,
+    });
   });
 
   it('cria auditLog PARTICIPANT_ADDED', async () => {
@@ -100,9 +106,12 @@ describe('addParticipant', () => {
     mockPrisma.participant.create.mockResolvedValue({ id: 'participant-1' });
     mockPrisma.auditLog.create.mockRejectedValue(new Error('audit falhou'));
 
-    await expect(
-      addParticipant(campaignId, fakeFormData({ name: 'João', phone: '11934567890' })),
-    ).rejects.toThrow('audit falhou');
+    const result = await addParticipant(
+      campaignId,
+      fakeFormData({ name: 'João', phone: '11934567890' }),
+    );
+    expect(result.ok).toBe(false);
+    if (!result.ok) expect(result.error).toBe('audit falhou');
 
     const tx = (prisma as unknown as { $transaction: Mock }).$transaction;
     expect(tx).toHaveBeenCalledTimes(1);
@@ -129,9 +138,13 @@ describe('editParticipant', () => {
   it('erro quando participante não encontrado', async () => {
     mockPrisma.participant.findUnique.mockResolvedValue(null);
 
-    await expect(
-      editParticipant(campaignId, 'nao-existe', fakeFormData({ name: 'Maria', phone: '11934567890' })),
-    ).rejects.toThrow('Participante não encontrado');
+    const result = await editParticipant(
+      campaignId,
+      'nao-existe',
+      fakeFormData({ name: 'Maria', phone: '11934567890' }),
+    );
+    expect(result.ok).toBe(false);
+    if (!result.ok) expect(result.error).toBe('Participante não encontrado');
   });
 });
 
@@ -154,9 +167,9 @@ describe('removeParticipant', () => {
   it('erro quando não encontrado', async () => {
     mockPrisma.participant.findUnique.mockResolvedValue(null);
 
-    await expect(removeParticipant(campaignId, 'nao-existe')).rejects.toThrow(
-      'Participante não encontrado',
-    );
+    const result = await removeParticipant(campaignId, 'nao-existe');
+    expect(result.ok).toBe(false);
+    if (!result.ok) expect(result.error).toBe('Participante não encontrado');
   });
 });
 
@@ -165,12 +178,14 @@ describe('searchPersonByPhone', () => {
     mockPrisma.person.findUnique.mockResolvedValue({ name: 'João', phone: '11934567890' });
 
     const result = await searchPersonByPhone(campaignId, '11934567890');
-    expect(result).toEqual({ name: 'João', phone: '11934567890' });
+    expect(result.ok).toBe(true);
+    if (result.ok) expect(result.data).toEqual({ name: 'João', phone: '11934567890' });
   });
 
   it('retorna null quando telefone < 10 dígitos', async () => {
     const result = await searchPersonByPhone(campaignId, '123456789');
-    expect(result).toBeNull();
+    expect(result.ok).toBe(true);
+    if (result.ok) expect(result.data).toBeNull();
     expect(mockPrisma.person.findUnique).not.toHaveBeenCalled();
   });
 
@@ -178,6 +193,7 @@ describe('searchPersonByPhone', () => {
     mockPrisma.person.findUnique.mockResolvedValue(null);
 
     const result = await searchPersonByPhone(campaignId, '11934567890');
-    expect(result).toBeNull();
+    expect(result.ok).toBe(true);
+    if (result.ok) expect(result.data).toBeNull();
   });
 });

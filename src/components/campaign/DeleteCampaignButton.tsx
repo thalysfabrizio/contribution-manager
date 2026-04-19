@@ -29,10 +29,10 @@ export function DeleteCampaignButton({ campaignId, campaignName }: Props) {
         loading={loading}
         onConfirm={async () => {
           setLoading(true);
-          try {
-            await deleteCampaign(campaignId);
-          } catch {
-            toast('Erro ao excluir campanha', 'error');
+          const result = await deleteCampaign(campaignId);
+          // Em caso de sucesso, redirect throw NEXT_REDIRECT antes de chegar aqui.
+          if (!result.ok) {
+            toast(result.error, 'error');
             setLoading(false);
           }
         }}

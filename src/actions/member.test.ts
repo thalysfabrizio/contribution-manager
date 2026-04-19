@@ -49,7 +49,8 @@ describe('inviteMember', () => {
     mockPrisma.auditLog.create.mockResolvedValue({});
 
     const result = await inviteMember(campaignId, 'existente@teste.com');
-    expect(result.method).toBe('direct');
+    expect(result.ok).toBe(true);
+    if (result.ok) expect(result.data.method).toBe('direct');
     expect(mockPrisma.campaignMember.create).toHaveBeenCalledWith(
       expect.objectContaining({
         data: expect.objectContaining({ role: 'MEMBER' }),
@@ -61,9 +62,9 @@ describe('inviteMember', () => {
     mockPrisma.user.findUnique.mockResolvedValue({ id: 'user-2', email: 'membro@teste.com' });
     mockPrisma.campaignMember.findUnique.mockResolvedValue({ id: 'existing-member' });
 
-    await expect(inviteMember(campaignId, 'membro@teste.com')).rejects.toThrow(
-      'Esta pessoa já é membro desta campanha',
-    );
+    const result = await inviteMember(campaignId, 'membro@teste.com');
+    expect(result.ok).toBe(false);
+    if (!result.ok) expect(result.error).toBe('Esta pessoa já é membro desta campanha');
   });
 
   it('cria usuário + membro quando não existe → method: invite', async () => {
@@ -73,7 +74,8 @@ describe('inviteMember', () => {
     mockPrisma.auditLog.create.mockResolvedValue({});
 
     const result = await inviteMember(campaignId, 'novo@teste.com');
-    expect(result.method).toBe('invite');
+    expect(result.ok).toBe(true);
+    if (result.ok) expect(result.data.method).toBe('invite');
     expect(mockPrisma.user.create).toHaveBeenCalled();
   });
 
@@ -95,7 +97,9 @@ describe('inviteMember', () => {
     mockPrisma.campaignMember.create.mockResolvedValue({});
     mockPrisma.auditLog.create.mockRejectedValue(new Error('audit falhou'));
 
-    await expect(inviteMember(campaignId, 'novo@teste.com')).rejects.toThrow('audit falhou');
+    const result = await inviteMember(campaignId, 'novo@teste.com');
+    expect(result.ok).toBe(false);
+    if (!result.ok) expect(result.error).toBe('audit falhou');
 
     const tx = (prisma as unknown as { $transaction: Mock }).$transaction;
     expect(tx).toHaveBeenCalledTimes(1);
@@ -126,16 +130,16 @@ describe('removeMember', () => {
       user: { email: 'owner@teste.com' },
     });
 
-    await expect(removeMember(campaignId, 'member-1')).rejects.toThrow(
-      'Não é possível remover o proprietário',
-    );
+    const result = await removeMember(campaignId, 'member-1');
+    expect(result.ok).toBe(false);
+    if (!result.ok) expect(result.error).toBe('Não é possível remover o proprietário');
   });
 
   it('erro quando membro não encontrado', async () => {
     mockPrisma.campaignMember.findUnique.mockResolvedValue(null);
 
-    await expect(removeMember(campaignId, 'nao-existe')).rejects.toThrow(
-      'Membro não encontrado',
-    );
+    const result = await removeMember(campaignId, 'nao-existe');
+    expect(result.ok).toBe(false);
+    if (!result.ok) expect(result.error).toBe('Membro não encontrado');
   });
 });

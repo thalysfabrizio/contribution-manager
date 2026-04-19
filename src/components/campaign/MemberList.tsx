@@ -90,12 +90,12 @@ export function MemberList({ campaignId, members }: MemberListProps) {
         isOpen={deleteConfirm.isOpen}
         onClose={() => setDeleteConfirm({ isOpen: false, id: '', email: '' })}
         onConfirm={async () => {
-          try {
-            await removeMember(campaignId, deleteConfirm.id);
-            toast('Membro removido', 'success');
-          } catch (e) {
-            toast(e instanceof Error ? e.message : 'Erro ao remover', 'error');
+          const result = await removeMember(campaignId, deleteConfirm.id);
+          if (!result.ok) {
+            toast(result.error, 'error');
+            return;
           }
+          toast('Membro removido', 'success');
         }}
         title="Remover Membro"
         message={`Tem certeza que deseja remover ${deleteConfirm.email} da campanha?`}

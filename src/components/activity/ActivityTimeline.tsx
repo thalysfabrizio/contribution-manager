@@ -5,6 +5,7 @@ import { Card } from '@/components/ui/Card';
 import { Button } from '@/components/ui/Button';
 import { ActivityItem } from './ActivityItem';
 import { loadMoreActivity } from '@/actions/activity';
+import { useToast } from '@/components/ui/Toast';
 import { History, ChevronDown } from 'lucide-react';
 import { EmptyState } from '@/components/ui/EmptyState';
 
@@ -28,17 +29,19 @@ export function ActivityTimeline({ campaignId, initialItems, hasMore: initialHas
   const [items, setItems] = useState(initialItems);
   const [hasMore, setHasMore] = useState(initialHasMore);
   const [loading, setLoading] = useState(false);
+  const { toast } = useToast();
 
   const loadMore = async () => {
     setLoading(true);
-    try {
-      const lastItem = items[items.length - 1];
-      const result = await loadMoreActivity(campaignId, lastItem?.id);
-      setItems([...items, ...result.items]);
-      setHasMore(result.hasMore);
-    } finally {
-      setLoading(false);
+    const lastItem = items[items.length - 1];
+    const result = await loadMoreActivity(campaignId, lastItem?.id);
+    setLoading(false);
+    if (!result.ok) {
+      toast(result.error, 'error');
+      return;
     }
+    setItems([...items, ...result.data.items]);
+    setHasMore(result.data.hasMore);
   };
 
   if (items.length === 0) {

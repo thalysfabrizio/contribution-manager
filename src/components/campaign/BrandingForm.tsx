@@ -50,15 +50,14 @@ export function BrandingForm({
       <form
         action={async (formData) => {
           setLoading(true);
-          try {
-            formData.set('accentColor', selectedColor);
-            await updateBranding(campaignId, formData);
-            toast('Aparencia atualizada', 'success');
-          } catch {
-            toast('Erro ao salvar', 'error');
-          } finally {
-            setLoading(false);
+          formData.set('accentColor', selectedColor);
+          const result = await updateBranding(campaignId, formData);
+          setLoading(false);
+          if (!result.ok) {
+            toast(result.error, 'error');
+            return;
           }
+          toast('Aparencia atualizada', 'success');
         }}
         className="space-y-5"
       >

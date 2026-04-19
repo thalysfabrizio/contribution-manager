@@ -143,11 +143,11 @@ export function MessageModal({ isOpen, onClose, participant, campaign, months }:
               disabled={confirming}
               onClick={async () => {
                 setConfirming(true);
-                try {
-                  await confirmMessageSent(campaign.id, participant.id, sentTemplate);
+                const result = await confirmMessageSent(campaign.id, participant.id, sentTemplate);
+                if (!result.ok) {
+                  toast(result.error, 'error');
+                } else {
                   toast('Envio registrado', 'success');
-                } catch {
-                  toast('Erro ao registrar envio', 'error');
                 }
                 handleClose();
               }}
