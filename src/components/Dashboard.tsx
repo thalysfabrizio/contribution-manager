@@ -1,7 +1,8 @@
 'use client';
 
-import { useState, useRef, useEffect } from 'react';
-import { Plus, Copy, Check } from 'lucide-react';
+import { useState } from 'react';
+import Link from 'next/link';
+import { Plus, Copy, Check, MessageSquare } from 'lucide-react';
 import { updatePaymentStatus } from '@/actions/payment';
 import { removeParticipant } from '@/actions/participant';
 import { Button } from './ui/Button';
@@ -141,12 +142,23 @@ export default function Dashboard({ data, isEnded = false }: DashboardProps) {
             <span className="size-2.5 rounded-full bg-warning" aria-hidden="true" /> Atrasado
           </span>
         </div>
-        {!isEnded && (
-          <Button className="hidden md:inline-flex" onClick={() => setEditModal({ isOpen: true, participant: null })}>
-            <Plus size={16} aria-hidden="true" />
-            Novo Participante
-          </Button>
-        )}
+        <div className="flex items-center gap-2">
+          <Link
+            href={`/campaigns/${data.id}/settings#templates`}
+            className="inline-flex items-center justify-center gap-2 rounded-lg font-medium px-4 min-h-[44px] text-sm bg-transparent text-text-secondary border border-border hover:bg-card-hover hover:text-text-primary transition-all duration-200 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary"
+            aria-label="Editar templates de mensagem"
+          >
+            <MessageSquare size={16} aria-hidden="true" />
+            <span className="hidden md:inline">Editar mensagens</span>
+            <span className="md:hidden">Mensagens</span>
+          </Link>
+          {!isEnded && (
+            <Button className="hidden md:inline-flex" onClick={() => setEditModal({ isOpen: true, participant: null })}>
+              <Plus size={16} aria-hidden="true" />
+              Novo Participante
+            </Button>
+          )}
+        </div>
       </div>
 
       {/* FAB mobile — Novo Participante */}

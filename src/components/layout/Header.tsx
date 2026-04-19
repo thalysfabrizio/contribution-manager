@@ -3,7 +3,7 @@
 import { useState, useRef, useEffect, useCallback } from 'react';
 import { signOut } from 'next-auth/react';
 import Link from 'next/link';
-import { ChevronDown, Settings, LogOut, User, HandCoins, FileText, Shield, UserCog } from 'lucide-react';
+import { ChevronDown, Settings, LogOut, User, HandCoins, FileText, Shield, UserCog, Plus } from 'lucide-react';
 import { AccessibilityPanel } from './AccessibilityPanel';
 
 interface Campaign {
@@ -127,7 +127,8 @@ export function Header({ userName, userImage, campaigns, currentCampaignId }: He
             <Link
               href={`/campaigns/${currentCampaignId}/settings`}
               className="size-10 inline-flex items-center justify-center rounded-lg text-text-secondary hover:text-text-primary hover:bg-card-hover transition-colors duration-200 hidden md:inline-flex focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary"
-              aria-label="Configurações da campanha"
+              aria-label="Configurações e templates da campanha"
+              title="Configurações e templates"
             >
               <Settings size={18} aria-hidden="true" />
             </Link>
@@ -175,6 +176,15 @@ export function Header({ userName, userImage, campaigns, currentCampaignId }: He
                     Configurações
                   </Link>
                 )}
+                <Link
+                  href="/campaigns/new"
+                  role="menuitem"
+                  onClick={() => setProfileOpen(false)}
+                  className="flex items-center gap-2.5 px-3 py-2.5 text-sm text-text-secondary hover:text-text-primary hover:bg-card-hover transition-colors rounded-lg"
+                >
+                  <Plus size={16} aria-hidden="true" />
+                  Nova campanha
+                </Link>
                 <Link
                   href="/settings/account"
                   role="menuitem"
