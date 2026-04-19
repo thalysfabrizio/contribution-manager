@@ -166,8 +166,9 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
     ...authConfig.callbacks,
     async signIn({ user, account, profile }) {
       const adapterUser = user as AdapterUser;
+      const isOAuthProvider = account?.type === 'oauth' || account?.type === 'oidc';
       if (
-        account?.type === 'oauth' &&
+        isOAuthProvider &&
         (profile as { email_verified?: boolean } | undefined)?.email_verified &&
         adapterUser.id &&
         !adapterUser.emailVerified
