@@ -6,6 +6,8 @@ import { useSearchParams } from 'next/navigation';
 import Link from 'next/link';
 import { Mail, CheckCircle, HandCoins, Sun, Moon, ArrowLeft } from 'lucide-react';
 
+const emailEnabled = process.env.NEXT_PUBLIC_AUTH_EMAIL_ENABLED === 'true';
+
 export function LoginForm() {
   const [email, setEmail] = useState('');
   const [loading, setLoading] = useState<'google' | 'email' | null>(null);
@@ -151,62 +153,66 @@ export function LoginForm() {
               )}
             </button>
 
-            {/* Separador */}
-            <div className="flex items-center gap-4 my-7">
-              <div className="flex-1 h-px bg-border" />
-              <span className="text-sm text-text-muted select-none">ou</span>
-              <div className="flex-1 h-px bg-border" />
-            </div>
+            {emailEnabled && (
+              <>
+                {/* Separador */}
+                <div className="flex items-center gap-4 my-7">
+                  <div className="flex-1 h-px bg-border" />
+                  <span className="text-sm text-text-muted select-none">ou</span>
+                  <div className="flex-1 h-px bg-border" />
+                </div>
 
-            {/* Form de email */}
-            <form
-              onSubmit={(e) => {
-                e.preventDefault();
-                if (!email.trim() || !consentGiven) return;
-                setLoading('email');
-                signIn('resend', { email, callbackUrl: '/campaigns' });
-              }}
-              className="space-y-5"
-            >
-              <div className="space-y-2">
-                <label
-                  htmlFor="login-email"
-                  className="block text-sm font-medium text-text-secondary"
+                {/* Form de email */}
+                <form
+                  onSubmit={(e) => {
+                    e.preventDefault();
+                    if (!email.trim() || !consentGiven) return;
+                    setLoading('email');
+                    signIn('resend', { email, callbackUrl: '/campaigns' });
+                  }}
+                  className="space-y-5"
                 >
-                  Endereço de email
-                </label>
-                <input
-                  id="login-email"
-                  type="email"
-                  name="email"
-                  placeholder="voce@exemplo.com"
-                  value={email}
-                  onChange={(e) => setEmail(e.target.value)}
-                  required
-                  autoComplete="email"
-                  className="w-full h-[52px] rounded-xl border-2 border-border bg-app px-4 text-base text-text-primary placeholder:text-text-muted transition-all duration-200 focus:outline-none focus:border-primary focus:ring-2 focus:ring-primary/20"
-                />
-              </div>
+                  <div className="space-y-2">
+                    <label
+                      htmlFor="login-email"
+                      className="block text-sm font-medium text-text-secondary"
+                    >
+                      Endereço de email
+                    </label>
+                    <input
+                      id="login-email"
+                      type="email"
+                      name="email"
+                      placeholder="voce@exemplo.com"
+                      value={email}
+                      onChange={(e) => setEmail(e.target.value)}
+                      required
+                      autoComplete="email"
+                      className="w-full h-[52px] rounded-xl border-2 border-border bg-app px-4 text-base text-text-primary placeholder:text-text-muted transition-all duration-200 focus:outline-none focus:border-primary focus:ring-2 focus:ring-primary/20"
+                    />
+                  </div>
 
-              <button
-                type="submit"
-                disabled={loading !== null || !consentGiven}
-                data-testid="email-signin-button"
-                className="w-full flex items-center justify-center gap-2.5 h-[52px] rounded-xl bg-primary text-white font-semibold text-[15px] hover:bg-primary-hover active:scale-[0.99] transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer shadow-md shadow-primary/25 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary"
-              >
-                {loading === 'email' ? (
-                  <span className="flex items-center gap-2.5">
-                    <span className="size-5 border-2 border-white/30 border-t-white rounded-full animate-spin" />
-                    Enviando link...
-                  </span>
-                ) : (
-                  <>
-                    <Mail size={18} aria-hidden="true" />
-                    Enviar link de acesso
-                  </>
-                )}
-              </button>
-            </form>
+                  <button
+                    type="submit"
+                    disabled={loading !== null || !consentGiven}
+                    data-testid="email-signin-button"
+                    className="w-full flex items-center justify-center gap-2.5 h-[52px] rounded-xl bg-primary text-white font-semibold text-[15px] hover:bg-primary-hover active:scale-[0.99] transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer shadow-md shadow-primary/25 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary"
+                  >
+                    {loading === 'email' ? (
+                      <span className="flex items-center gap-2.5">
+                        <span className="size-5 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+                        Enviando link...
+                      </span>
+                    ) : (
+                      <>
+                        <Mail size={18} aria-hidden="true" />
+                        Enviar link de acesso
+                      </>
+                    )}
+                  </button>
+                </form>
+              </>
+            )}
           </div>
         </div>
 
