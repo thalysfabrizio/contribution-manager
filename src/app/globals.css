@@ -185,6 +185,15 @@ textarea:user-invalid ~ .validation-hint,
 .animate-stagger > *:nth-child(5) { animation-delay: 240ms; }
 .animate-stagger > *:nth-child(6) { animation-delay: 300ms; }
 
+/* === New-row highlight === */
+@keyframes row-highlight {
+  0%, 40% { background-color: rgba(139, 92, 246, 0.22); }
+  100% { background-color: transparent; }
+}
+tr.row-highlight > td {
+  animation: row-highlight 2.2s ease-out;
+}
+
 /* === Sticky column shadows (theme-aware) === */
 .sticky-shadow-left {
   box-shadow: 4px 0 6px -1px rgba(0, 0, 0, 0.3);
@@ -205,7 +214,8 @@ html.light .sticky-shadow-right {
   .animate-scale-in,
   .animate-slide-down,
   .animate-in,
-  .animate-stagger > * {
+  .animate-stagger > *,
+  tr.row-highlight > td {
     animation: none;
     opacity: 1;
   }

@@ -39,7 +39,13 @@ export default function Dashboard({ data, isEnded = false }: DashboardProps) {
     id: string;
     name: string;
   }>({ isOpen: false, id: '', name: '' });
+  const [highlightId, setHighlightId] = useState<string | null>(null);
   const { toast } = useToast();
+
+  const handleAdded = (participantId: string) => {
+    setHighlightId(participantId);
+    setTimeout(() => setHighlightId((current) => (current === participantId ? null : current)), 2400);
+  };
 
   const months = getMonthsFromRange(data.startMonth, data.endMonth);
 
@@ -160,6 +166,7 @@ export default function Dashboard({ data, isEnded = false }: DashboardProps) {
         months={months}
         isEnded={isEnded}
         loadingId={loadingId}
+        highlightId={highlightId}
         onToggle={handleToggle}
         onEdit={(p) => setEditModal({ isOpen: true, participant: p })}
         onMessage={(p) => setMsgModal({ isOpen: true, participant: p })}
@@ -172,6 +179,7 @@ export default function Dashboard({ data, isEnded = false }: DashboardProps) {
         onClose={() => setEditModal({ isOpen: false, participant: null })}
         campaignId={data.id}
         participant={editModal.participant}
+        onAdded={handleAdded}
       />
 
       <MessageModal

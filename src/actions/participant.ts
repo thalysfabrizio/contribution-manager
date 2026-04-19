@@ -9,7 +9,8 @@ import { type ActionResult, handlePrismaError, ok } from '@/lib/errors';
 export async function addParticipant(
   campaignId: string,
   formData: FormData,
-): Promise<ActionResult<void>> {
+): Promise<ActionResult<{ participantId: string }>> {
+  let participantId: string;
   try {
     const { user } = await requireCampaignAccess(campaignId);
 
@@ -18,7 +19,7 @@ export async function addParticipant(
       phone: (formData.get('phone') as string).trim().replace(/\D/g, ''),
     });
 
-    await prisma.$transaction(async (tx) => {
+    participantId = await prisma.$transaction(async (tx) => {
       let person = await tx.person.findUnique({ where: { phone: data.phone } });
 
       if (!person) {
@@ -57,13 +58,15 @@ export async function addParticipant(
           campaignId,
         },
       });
+
+      return participant.id;
     });
   } catch (e) {
     return handlePrismaError(e, { action: 'addParticipant', campaignId });
   }
 
   revalidatePath(`/campaigns/${campaignId}`);
-  return ok(undefined);
+  return ok({ participantId });
 }
 
 export async function editParticipant(

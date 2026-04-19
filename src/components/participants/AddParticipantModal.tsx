@@ -14,9 +14,10 @@ interface AddParticipantModalProps {
   onClose: () => void;
   campaignId: string;
   participant?: CampaignData['participants'][number] | null;
+  onAdded?: (participantId: string) => void;
 }
 
-export function AddParticipantModal({ isOpen, onClose, campaignId, participant }: AddParticipantModalProps) {
+export function AddParticipantModal({ isOpen, onClose, campaignId, participant, onAdded }: AddParticipantModalProps) {
   const isEditing = !!participant;
   const { toast } = useToast();
 
@@ -68,15 +69,24 @@ export function AddParticipantModal({ isOpen, onClose, campaignId, participant }
       <form
         action={async (formData) => {
           setLoading(true);
-          const result = isEditing
-            ? await editParticipant(campaignId, participant.id, formData)
-            : await addParticipant(campaignId, formData);
-          if (!result.ok) {
-            toast(result.error, 'error');
-            setLoading(false);
-            return;
+          if (isEditing) {
+            const result = await editParticipant(campaignId, participant.id, formData);
+            if (!result.ok) {
+              toast(result.error, 'error');
+              setLoading(false);
+              return;
+            }
+            toast('Participante atualizado', 'success');
+          } else {
+            const result = await addParticipant(campaignId, formData);
+            if (!result.ok) {
+              toast(result.error, 'error');
+              setLoading(false);
+              return;
+            }
+            toast('Participante adicionado', 'success');
+            onAdded?.(result.data.participantId);
           }
-          toast(isEditing ? 'Participante atualizado' : 'Participante adicionado', 'success');
           handleClose();
         }}
         className="space-y-4"

@@ -14,6 +14,7 @@ interface ParticipantTableProps {
   months: MonthEntry[];
   isEnded: boolean;
   loadingId: string | null;
+  highlightId?: string | null;
   onToggle: (participantId: string, monthDate: Date, newStatus: PaymentStatus) => void;
   onEdit: (participant: CampaignData['participants'][number]) => void;
   onMessage: (participant: CampaignData['participants'][number]) => void;
@@ -25,6 +26,7 @@ export function ParticipantTable({
   months,
   isEnded,
   loadingId,
+  highlightId,
   onToggle,
   onEdit,
   onMessage,
@@ -113,6 +115,7 @@ export function ParticipantTable({
                   months={months}
                   isEnded={isEnded}
                   loadingId={loadingId}
+                  isHighlighted={highlightId === p.id}
                   onToggle={onToggle}
                   onEdit={onEdit}
                   onMessage={onMessage}

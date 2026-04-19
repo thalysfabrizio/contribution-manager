@@ -1,5 +1,6 @@
 'use client';
 
+import { useEffect, useRef } from 'react';
 import { Pencil, MessageCircle, Trash2 } from 'lucide-react';
 import { PaymentToggle } from './PaymentToggle';
 import { isSameMonth, isCurrentMonth } from '@/lib/months';
@@ -11,6 +12,7 @@ interface ParticipantRowProps {
   months: MonthEntry[];
   isEnded: boolean;
   loadingId: string | null;
+  isHighlighted?: boolean;
   onToggle: (participantId: string, monthDate: Date, newStatus: PaymentStatus) => void;
   onEdit: (participant: CampaignData['participants'][number]) => void;
   onMessage: (participant: CampaignData['participants'][number]) => void;
@@ -22,18 +24,32 @@ export function ParticipantRow({
   months,
   isEnded,
   loadingId,
+  isHighlighted,
   onToggle,
   onEdit,
   onMessage,
   onDelete,
 }: ParticipantRowProps) {
+  const rowRef = useRef<HTMLTableRowElement>(null);
+
+  useEffect(() => {
+    if (isHighlighted && rowRef.current) {
+      rowRef.current.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    }
+  }, [isHighlighted]);
+
   const paidCount = p.payments.filter(
     (pay) => pay.status === 'PAID_PIX' || pay.status === 'PAID_CASH',
   ).length;
   const progressPct = months.length > 0 ? Math.round((paidCount / months.length) * 100) : 0;
 
   return (
-    <tr className="border-b border-border hover:bg-card-hover/30 transition-colors duration-150 group">
+    <tr
+      ref={rowRef}
+      className={`border-b border-border hover:bg-card-hover/30 transition-colors duration-150 group ${
+        isHighlighted ? 'row-highlight' : ''
+      }`}
+    >
       <td className="p-3 md:p-4 sticky left-0 bg-card z-10 sticky-shadow-left group-hover:bg-card-hover/30 transition-colors">
         <div className="font-medium text-text-primary text-sm">{p.person.name}</div>
         <div className="text-sm text-text-muted mt-0.5">{p.person.phone || '—'}</div>
