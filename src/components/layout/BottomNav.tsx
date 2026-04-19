@@ -4,14 +4,11 @@ import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { LayoutDashboard, Settings } from 'lucide-react';
 
-interface BottomNavProps {
-  campaignId?: string;
-}
-
-export function BottomNav({ campaignId }: BottomNavProps) {
+export function BottomNav() {
   const pathname = usePathname();
+  const campaignId = pathname?.match(/^\/campaigns\/([^/]+)/)?.[1];
 
-  if (!campaignId) return null;
+  if (!campaignId || campaignId === 'new') return null;
 
   const items = [
     {

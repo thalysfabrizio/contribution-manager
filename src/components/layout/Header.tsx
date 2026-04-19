@@ -3,6 +3,7 @@
 import { useState, useRef, useEffect, useCallback } from 'react';
 import { signOut } from 'next-auth/react';
 import Link from 'next/link';
+import { usePathname } from 'next/navigation';
 import { ChevronDown, Settings, LogOut, User, HandCoins, FileText, Shield, UserCog, Plus } from 'lucide-react';
 import { AccessibilityPanel } from './AccessibilityPanel';
 
@@ -18,15 +19,16 @@ interface HeaderProps {
   userName: string | null;
   userImage: string | null;
   campaigns: Campaign[];
-  currentCampaignId?: string;
 }
 
-export function Header({ userName, userImage, campaigns, currentCampaignId }: HeaderProps) {
+export function Header({ userName, userImage, campaigns }: HeaderProps) {
   const [campaignOpen, setCampaignOpen] = useState(false);
   const [profileOpen, setProfileOpen] = useState(false);
   const campaignRef = useRef<HTMLDivElement>(null);
   const profileRef = useRef<HTMLDivElement>(null);
 
+  const pathname = usePathname();
+  const currentCampaignId = pathname?.match(/^\/campaigns\/([^/]+)/)?.[1];
   const currentCampaign = campaigns.find((c) => c.id === currentCampaignId);
 
   const closeAll = useCallback(() => {

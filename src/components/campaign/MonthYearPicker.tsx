@@ -1,5 +1,7 @@
 'use client';
 
+import { useState } from 'react';
+
 interface MonthYearPickerProps {
   name: string;
   label: string;
@@ -27,15 +29,16 @@ const selectClass =
   'w-full rounded-lg border border-border bg-app px-3 py-2.5 text-base text-text-primary transition-all duration-200 ease-in-out focus:outline-none focus:ring-2 focus:ring-primary/50 focus:border-primary';
 
 export function MonthYearPicker({ name, label, value, onChange, required }: MonthYearPickerProps) {
-  const [year, month] = value ? value.split('-') : ['', ''];
+  const [localMonth, setLocalMonth] = useState(() => (value ? value.split('-')[1] ?? '' : ''));
+  const [localYear, setLocalYear] = useState(() => (value ? value.split('-')[0] ?? '' : ''));
 
   const currentYear = new Date().getUTCFullYear();
   const yearSet = new Set<number>();
   for (let y = currentYear - 1; y <= currentYear + 5; y++) yearSet.add(y);
-  if (year) yearSet.add(parseInt(year, 10));
+  if (localYear) yearSet.add(parseInt(localYear, 10));
   const years = [...yearSet].sort((a, b) => a - b);
 
-  const update = (nextMonth: string, nextYear: string) => {
+  const emit = (nextMonth: string, nextYear: string) => {
     onChange(nextMonth && nextYear ? `${nextYear}-${nextMonth}` : '');
   };
 
@@ -51,8 +54,11 @@ export function MonthYearPicker({ name, label, value, onChange, required }: Mont
         <select
           id={monthId}
           aria-label={`${label} — mês`}
-          value={month}
-          onChange={(e) => update(e.target.value, year)}
+          value={localMonth}
+          onChange={(e) => {
+            setLocalMonth(e.target.value);
+            emit(e.target.value, localYear);
+          }}
           required={required}
           className={selectClass}
         >
@@ -66,8 +72,11 @@ export function MonthYearPicker({ name, label, value, onChange, required }: Mont
         <select
           id={yearId}
           aria-label={`${label} — ano`}
-          value={year}
-          onChange={(e) => update(month, e.target.value)}
+          value={localYear}
+          onChange={(e) => {
+            setLocalYear(e.target.value);
+            emit(localMonth, e.target.value);
+          }}
           required={required}
           className={selectClass}
         >

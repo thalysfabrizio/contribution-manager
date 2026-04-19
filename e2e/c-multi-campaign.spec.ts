@@ -12,7 +12,8 @@ test('C: two campaigns → header selector navigates between them', async ({ pag
   await page.goto(`/campaigns/${firstId}`);
   await expect(page.getByRole('heading', { level: 1, name: 'Campanha Alpha' })).toBeVisible();
 
-  await page.getByRole('button', { name: 'Selecionar' }).click();
+  const selectorTrigger = page.getByRole('banner').getByRole('button', { name: 'Campanha Alpha' });
+  await selectorTrigger.click();
 
   const menu = page.getByRole('menu');
   await expect(menu).toBeVisible();
@@ -23,4 +24,5 @@ test('C: two campaigns → header selector navigates between them', async ({ pag
   await page.waitForURL(`**/campaigns/${secondId}`);
 
   await expect(page.getByRole('heading', { level: 1, name: 'Campanha Beta' })).toBeVisible();
+  await expect(page.getByRole('banner').getByRole('button', { name: 'Campanha Beta' })).toBeVisible();
 });
