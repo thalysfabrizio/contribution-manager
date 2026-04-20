@@ -11,12 +11,17 @@ import type { Adapter, AdapterUser, AdapterSession } from 'next-auth/adapters';
 function PrismaAdapter(): Adapter {
   return {
     async createUser(data) {
+      // NextAuth força emailVerified=null no fluxo OAuth
+      // (handle-login.js:260). Como OAuth providers já verificam o email
+      // pela autenticação OIDC, marcamos como verificado na criação.
+      // Magic link chega aqui com emailVerified=Date (pós-verificação) e
+      // permanece.
       const user = await prisma.user.create({
         data: {
           email: data.email,
           name: data.name,
           image: data.image,
-          emailVerified: data.emailVerified,
+          emailVerified: data.emailVerified ?? new Date(),
         },
       });
       return user as AdapterUser;
@@ -147,15 +152,6 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
     Google({
       clientId: env.GOOGLE_CLIENT_ID,
       clientSecret: env.GOOGLE_CLIENT_SECRET,
-      profile(profile) {
-        return {
-          id: profile.sub,
-          name: profile.name ?? null,
-          email: profile.email,
-          image: profile.picture ?? null,
-          emailVerified: profile.email_verified ? new Date() : null,
-        };
-      },
     }),
     Resend({
       apiKey: env.RESEND_API_KEY,
