@@ -84,7 +84,9 @@ export default async function CampaignSettingsPage({ params }: Props) {
           />
         </section>
 
-        <MemberList campaignId={id} members={memberList} />
+        <section id="leaders" className="scroll-mt-20">
+          <MemberList campaignId={id} members={memberList} />
+        </section>
 
         <BrandingForm
           campaignId={id}

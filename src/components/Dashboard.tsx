@@ -2,7 +2,7 @@
 
 import { useState } from 'react';
 import Link from 'next/link';
-import { Plus, Copy, Check, MessageSquare, FileDown } from 'lucide-react';
+import { Plus, Copy, Check, MessageSquare, FileDown, UserPlus } from 'lucide-react';
 import { updatePaymentStatus } from '@/actions/payment';
 import { removeParticipant } from '@/actions/participant';
 import { Button } from './ui/Button';
@@ -23,7 +23,8 @@ interface DashboardProps {
   userRole?: string;
 }
 
-export default function Dashboard({ data, isEnded = false }: DashboardProps) {
+export default function Dashboard({ data, isEnded = false, userRole }: DashboardProps) {
+  const isOwner = userRole === 'OWNER';
   const [loadingId, setLoadingId] = useState<string | null>(null);
   const [copied, setCopied] = useState(false);
   const [copiedFull, setCopiedFull] = useState(false);
@@ -163,6 +164,17 @@ export default function Dashboard({ data, isEnded = false }: DashboardProps) {
             <span className="hidden md:inline">Editar mensagens</span>
             <span className="md:hidden">Mensagens</span>
           </Link>
+          {isOwner && (
+            <Link
+              href={`/campaigns/${data.id}/settings#leaders`}
+              className="inline-flex items-center justify-center gap-2 rounded-lg font-medium px-4 min-h-[44px] text-sm bg-transparent text-text-secondary border border-border hover:bg-card-hover hover:text-text-primary transition-all duration-200 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary"
+              aria-label="Convidar líder para administrar a campanha"
+            >
+              <UserPlus size={16} aria-hidden="true" />
+              <span className="hidden md:inline">Convidar líder</span>
+              <span className="md:hidden">Convidar</span>
+            </Link>
+          )}
           {!isEnded && (
             <Button className="hidden md:inline-flex" onClick={() => setEditModal({ isOpen: true, participant: null })}>
               <Plus size={16} aria-hidden="true" />
