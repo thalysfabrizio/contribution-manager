@@ -14,9 +14,6 @@ const eslintConfig = defineConfig([
     "next-env.d.ts",
     // Coverage reports are generated artifacts, not source.
     "coverage/**",
-    // Cloudflare build outputs (OpenNext + Wrangler).
-    ".open-next/**",
-    ".wrangler/**",
   ]),
 ]);
 
