@@ -80,10 +80,12 @@ export default async function CampaignsPage() {
               const startLabel = campaign.startMonth.toLocaleDateString('pt-BR', {
                 month: 'short',
                 year: 'numeric',
+                timeZone: 'UTC',
               });
               const endLabel = campaign.endMonth.toLocaleDateString('pt-BR', {
                 month: 'short',
                 year: 'numeric',
+                timeZone: 'UTC',
               });
 
               return (
