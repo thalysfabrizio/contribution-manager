@@ -116,6 +116,13 @@ export const brandingSchema = z.object({
   messageSignature: z.string().trim().max(500).nullable(),
 });
 
+export const templatesSchema = z.object({
+  charge: z.string().trim().min(1).max(2000),
+  reminder: z.string().trim().min(1).max(2000),
+  overdue: z.string().trim().min(1).max(2000),
+  thanks: z.string().trim().min(1).max(2000),
+});
+
 export const participantSchema = z.object({
   name: z.string().min(1, 'Nome é obrigatório').max(100),
   phone: z

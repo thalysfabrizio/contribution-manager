@@ -2,7 +2,7 @@
 
 import { prisma } from '@/lib/prisma';
 import { getSessionUser, requireCampaignOwner } from '@/lib/permissions';
-import { brandingSchema, campaignSchema } from '@/lib/validators';
+import { brandingSchema, campaignSchema, templatesSchema } from '@/lib/validators';
 import { CampaignRole } from '@/generated/prisma/client';
 import { revalidatePath } from 'next/cache';
 import { redirect } from 'next/navigation';
@@ -24,6 +24,26 @@ export async function createCampaign(formData: FormData): Promise<ActionResult<n
       paymentDayEnd: parseInt(formData.get('paymentDayEnd') as string),
     });
 
+    const hasBranding =
+      formData.has('orgName') ||
+      formData.has('logoUrl') ||
+      formData.has('bannerUrl') ||
+      formData.has('accentColor') ||
+      formData.has('messageSignature');
+
+    const branding = hasBranding
+      ? brandingSchema.parse({
+          orgName: (formData.get('orgName') as string) || null,
+          logoUrl: (formData.get('logoUrl') as string) || null,
+          bannerUrl: (formData.get('bannerUrl') as string) || null,
+          accentColor: (formData.get('accentColor') as string) || null,
+          messageSignature: (formData.get('messageSignature') as string) || null,
+        })
+      : null;
+
+    const templatesRaw = formData.get('templates') as string | null;
+    const templates = templatesRaw ? templatesSchema.parse(JSON.parse(templatesRaw)) : null;
+
     const campaign = await prisma.$transaction(async (tx) => {
       const created = await tx.campaign.create({
         data: {
@@ -36,6 +56,8 @@ export async function createCampaign(formData: FormData): Promise<ActionResult<n
           paymentDayStart: data.paymentDayStart,
           paymentDayEnd: data.paymentDayEnd,
           owner: { connect: { id: user.id } },
+          ...(branding ?? {}),
+          ...(templates ? { templates } : {}),
         },
       });
 

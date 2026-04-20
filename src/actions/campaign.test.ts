@@ -114,6 +114,69 @@ describe('createCampaign', () => {
     expect(typeof tx.mock.calls[0][0]).toBe('function');
     expect(revalidatePath).not.toHaveBeenCalled();
   });
+
+  it('persiste branding quando enviado no FormData', async () => {
+    mockPrisma.campaign.create.mockResolvedValue(fakeCampaign());
+    mockPrisma.campaignMember.create.mockResolvedValue({});
+    mockPrisma.auditLog.create.mockResolvedValue({});
+
+    const fd = fakeFormData({
+      name: 'Campanha Nova',
+      description: '',
+      pixKey: 'pix@teste.com',
+      monthlyValue: '50',
+      startMonth: '2026-01-01',
+      endMonth: '2026-12-01',
+      paymentDayStart: '10',
+      paymentDayEnd: '15',
+      orgName: 'Igreja X',
+      logoUrl: '',
+      bannerUrl: '',
+      accentColor: '#3b82f6',
+      messageSignature: 'Equipe X',
+    });
+
+    await expect(createCampaign(fd)).rejects.toThrow('NEXT_REDIRECT');
+
+    const call = mockPrisma.campaign.create.mock.calls[0][0];
+    expect(call.data.orgName).toBe('Igreja X');
+    expect(call.data.accentColor).toBe('#3b82f6');
+    expect(call.data.messageSignature).toBe('Equipe X');
+    expect(call.data.logoUrl).toBeNull();
+    expect(call.data.bannerUrl).toBeNull();
+  });
+
+  it('persiste templates quando enviados como JSON no FormData', async () => {
+    mockPrisma.campaign.create.mockResolvedValue(fakeCampaign());
+    mockPrisma.campaignMember.create.mockResolvedValue({});
+    mockPrisma.auditLog.create.mockResolvedValue({});
+
+    const templates = {
+      charge: 'Cobrança',
+      reminder: 'Lembrete',
+      overdue: 'Atrasado',
+      thanks: 'Obrigado',
+    };
+    const fd = validFormData();
+    fd.append('templates', JSON.stringify(templates));
+
+    await expect(createCampaign(fd)).rejects.toThrow('NEXT_REDIRECT');
+
+    const call = mockPrisma.campaign.create.mock.calls[0][0];
+    expect(call.data.templates).toEqual(templates);
+  });
+
+  it('não inclui branding nem templates quando ausentes', async () => {
+    mockPrisma.campaign.create.mockResolvedValue(fakeCampaign());
+    mockPrisma.campaignMember.create.mockResolvedValue({});
+    mockPrisma.auditLog.create.mockResolvedValue({});
+
+    await expect(createCampaign(validFormData())).rejects.toThrow('NEXT_REDIRECT');
+
+    const call = mockPrisma.campaign.create.mock.calls[0][0];
+    expect(call.data).not.toHaveProperty('orgName');
+    expect(call.data).not.toHaveProperty('templates');
+  });
 });
 
 describe('updateCampaign', () => {

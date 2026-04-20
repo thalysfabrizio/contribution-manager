@@ -4,20 +4,9 @@ import { useState } from 'react';
 import { updateBranding } from '@/actions/campaign';
 import { Card } from '@/components/ui/Card';
 import { Button } from '@/components/ui/Button';
-import { Input, Textarea } from '@/components/ui/Input';
 import { useToast } from '@/components/ui/Toast';
 import { Palette, Save } from 'lucide-react';
-
-const ACCENT_PRESETS = [
-  { label: 'Roxo', value: '#8b5cf6' },
-  { label: 'Azul', value: '#3b82f6' },
-  { label: 'Verde', value: '#10b981' },
-  { label: 'Vermelho', value: '#ef4444' },
-  { label: 'Laranja', value: '#f59e0b' },
-  { label: 'Rosa', value: '#ec4899' },
-  { label: 'Teal', value: '#14b8a6' },
-  { label: 'Indigo', value: '#6366f1' },
-];
+import { BrandingFields, DEFAULT_ACCENT, type BrandingValues } from './BrandingFields';
 
 interface BrandingFormProps {
   campaignId: string;
@@ -37,7 +26,13 @@ export function BrandingForm({
   messageSignature,
 }: BrandingFormProps) {
   const [loading, setLoading] = useState(false);
-  const [selectedColor, setSelectedColor] = useState(accentColor || '#8b5cf6');
+  const [values, setValues] = useState<BrandingValues>({
+    orgName: orgName ?? '',
+    logoUrl: logoUrl ?? '',
+    bannerUrl: bannerUrl ?? '',
+    accentColor: accentColor ?? DEFAULT_ACCENT,
+    messageSignature: messageSignature ?? '',
+  });
   const { toast } = useToast();
 
   return (
@@ -48,9 +43,14 @@ export function BrandingForm({
       </div>
 
       <form
-        action={async (formData) => {
+        action={async () => {
           setLoading(true);
-          formData.set('accentColor', selectedColor);
+          const formData = new FormData();
+          formData.set('orgName', values.orgName);
+          formData.set('logoUrl', values.logoUrl);
+          formData.set('bannerUrl', values.bannerUrl);
+          formData.set('accentColor', values.accentColor);
+          formData.set('messageSignature', values.messageSignature);
           const result = await updateBranding(campaignId, formData);
           setLoading(false);
           if (!result.ok) {
@@ -61,73 +61,7 @@ export function BrandingForm({
         }}
         className="space-y-5"
       >
-        <Input
-          name="orgName"
-          label="Nome da organizacao"
-          defaultValue={orgName ?? ''}
-          placeholder="Ex: Igreja Batista Central"
-        />
-
-        <Input
-          name="logoUrl"
-          label="URL do logo"
-          defaultValue={logoUrl ?? ''}
-          placeholder="https://exemplo.com/logo.png"
-          type="url"
-        />
-
-        <Input
-          name="bannerUrl"
-          label="URL da imagem de capa"
-          defaultValue={bannerUrl ?? ''}
-          placeholder="https://exemplo.com/banner.jpg"
-          type="url"
-        />
-
-        {/* Preview de imagens */}
-        {(logoUrl || bannerUrl) && (
-          <div className="flex items-center gap-3">
-            {logoUrl && (
-              <div className="size-12 rounded-lg border border-border overflow-hidden bg-app flex items-center justify-center">
-                <img src={logoUrl} alt="Logo" className="max-w-full max-h-full object-contain" />
-              </div>
-            )}
-            {bannerUrl && (
-              <div className="flex-1 h-16 rounded-lg border border-border overflow-hidden bg-app">
-                <img src={bannerUrl} alt="Banner" className="w-full h-full object-cover" />
-              </div>
-            )}
-          </div>
-        )}
-
-        <div className="space-y-2">
-          <label className="block text-sm font-medium text-text-secondary">Cor de destaque</label>
-          <div className="flex flex-wrap gap-2">
-            {ACCENT_PRESETS.map((preset) => (
-              <button
-                key={preset.value}
-                type="button"
-                onClick={() => setSelectedColor(preset.value)}
-                className={`size-9 rounded-full border-2 transition-all duration-200 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary ${
-                  selectedColor === preset.value
-                    ? 'border-white scale-110 shadow-lg'
-                    : 'border-transparent hover:scale-105'
-                }`}
-                style={{ backgroundColor: preset.value }}
-                aria-label={preset.label}
-                title={preset.label}
-              />
-            ))}
-          </div>
-        </div>
-
-        <Textarea
-          name="messageSignature"
-          label="Assinatura para mensagens"
-          defaultValue={messageSignature ?? ''}
-          placeholder="Texto adicionado ao final das mensagens de WhatsApp"
-          rows={2}
-        />
+        <BrandingFields values={values} onChange={setValues} />
 
         <div className="flex justify-end pt-1">
           <Button type="submit" disabled={loading}>
