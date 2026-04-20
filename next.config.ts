@@ -3,6 +3,7 @@ import { withSentryConfig } from '@sentry/nextjs';
 
 const nextConfig: NextConfig = {
   productionBrowserSourceMaps: true,
+  output: 'standalone',
 };
 
 const sentryEnabled = Boolean(process.env.SENTRY_AUTH_TOKEN);
