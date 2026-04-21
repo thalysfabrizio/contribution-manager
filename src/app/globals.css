@@ -209,6 +209,224 @@ html.light .sticky-shadow-right {
   box-shadow: -4px 0 6px -1px rgba(0, 0, 0, 0.08);
 }
 
+/* === Print report (rendered hidden on dashboard; só visível em @media print) === */
+@page { size: A4 portrait; margin: 1.2cm; }
+
+.print-report { display: none; }
+
+@media print {
+  body * { visibility: hidden; }
+  .print-report, .print-report * { visibility: visible; }
+  .print-report {
+    display: block;
+    position: absolute;
+    left: 0;
+    top: 0;
+    width: 100%;
+    color: #18181b;
+    background: #fff;
+    font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif;
+    font-size: 9.5pt;
+    line-height: 1.35;
+    -webkit-print-color-adjust: exact;
+    print-color-adjust: exact;
+  }
+
+  .print-report h1 {
+    font-size: 18pt;
+    margin: 0;
+    font-weight: 700;
+    letter-spacing: -0.01em;
+    color: #09090b;
+  }
+  .print-report h2 {
+    font-size: 9pt;
+    margin: 14px 0 6px;
+    font-weight: 700;
+    color: #52525b;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    border-bottom: 1px solid #e4e4e7;
+    padding-bottom: 3px;
+  }
+
+  /* Cabeçalho */
+  .print-report .pr-head {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    gap: 16px;
+    padding-bottom: 8px;
+    border-bottom: 2px solid #18181b;
+  }
+  .print-report .pr-sub {
+    font-size: 9.5pt;
+    color: #52525b;
+    margin-top: 2px;
+  }
+  .print-report .pr-head-meta {
+    text-align: right;
+    font-size: 9pt;
+    white-space: nowrap;
+  }
+  .print-report .pr-period {
+    font-weight: 600;
+    color: #18181b;
+    text-transform: capitalize;
+  }
+  .print-report .pr-muted { color: #71717a; }
+  .print-report .pr-description {
+    margin: 8px 0 0;
+    color: #3f3f46;
+    font-size: 9.5pt;
+    line-height: 1.4;
+  }
+
+  /* KPIs */
+  .print-report .pr-kpis {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 8px;
+    margin-top: 12px;
+  }
+  .print-report .pr-kpi {
+    border: 1px solid #e4e4e7;
+    border-radius: 4px;
+    padding: 8px 10px;
+    background: #fafafa;
+  }
+  .print-report .pr-kpi-label {
+    font-size: 7.5pt;
+    font-weight: 600;
+    color: #71717a;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    margin-bottom: 3px;
+  }
+  .print-report .pr-kpi-value {
+    font-size: 14pt;
+    font-weight: 700;
+    color: #09090b;
+    line-height: 1.15;
+  }
+  .print-report .pr-kpi-sub {
+    font-size: 8pt;
+    color: #52525b;
+    margin-top: 2px;
+  }
+
+  /* Metadados da campanha em linha */
+  .print-report .pr-meta-row {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 14px;
+    margin-top: 10px;
+    font-size: 9pt;
+    color: #27272a;
+    border: 1px solid #e4e4e7;
+    border-radius: 4px;
+    padding: 6px 10px;
+    background: #fff;
+  }
+  .print-report .pr-meta-label {
+    font-weight: 600;
+    color: #71717a;
+    text-transform: uppercase;
+    font-size: 7.5pt;
+    letter-spacing: 0.05em;
+    margin-right: 4px;
+  }
+
+  .print-report .pr-section { margin-top: 4px; }
+
+  /* Progresso mensal — barras horizontais por mês */
+  .print-report .pr-progress {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 3px 18px;
+  }
+  .print-report .pr-progress li {
+    display: grid;
+    grid-template-columns: 58px 1fr 46px;
+    align-items: center;
+    gap: 8px;
+    font-size: 8.5pt;
+    break-inside: avoid;
+  }
+  .print-report .pr-progress-month {
+    color: #27272a;
+    font-weight: 500;
+    text-transform: capitalize;
+  }
+  .print-report .pr-progress-bar {
+    display: block;
+    height: 7px;
+    background: #f4f4f5;
+    border: 1px solid #e4e4e7;
+    border-radius: 3px;
+    overflow: hidden;
+  }
+  .print-report .pr-progress-fill {
+    display: block;
+    height: 100%;
+    background: #18181b;
+  }
+  .print-report .pr-progress-count {
+    text-align: right;
+    font-variant-numeric: tabular-nums;
+    color: #52525b;
+    font-size: 8pt;
+  }
+
+  /* Duas colunas: Pendências × Em dia */
+  .print-report .pr-two-col {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 16px;
+  }
+  .print-report .pr-col-empty h2 { color: #a1a1aa; }
+  .print-report .pr-list {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+  }
+  .print-report .pr-list li {
+    break-inside: avoid;
+    font-size: 8.5pt;
+    padding: 3px 0;
+    border-bottom: 1px dotted #e4e4e7;
+  }
+  .print-report .pr-list li:last-child { border-bottom: none; }
+  .print-report .pr-list-sub {
+    color: #52525b;
+    font-size: 8pt;
+    margin-top: 1px;
+  }
+  .print-report .pr-list-compact {
+    columns: 2;
+    column-gap: 16px;
+  }
+  .print-report .pr-list-compact li { padding: 2px 0; }
+
+  /* Rodapé-resumo */
+  .print-report .pr-footer-summary {
+    margin-top: 14px;
+    padding-top: 8px;
+    border-top: 1px solid #e4e4e7;
+    font-size: 9pt;
+    color: #27272a;
+    display: flex;
+    gap: 10px;
+    justify-content: center;
+    flex-wrap: wrap;
+  }
+  .print-report .pr-footer-summary strong { color: #09090b; }
+  .print-report .pr-footer-summary .pr-sep { color: #d4d4d8; }
+}
+
 @media (prefers-reduced-motion: reduce) {
   .animate-fade-in,
   .animate-slide-up,
