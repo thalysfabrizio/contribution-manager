@@ -49,3 +49,4 @@ next-env.d.ts
 
 # Dados pessoais (LGPD)
 /data/contributions.json
+/backups

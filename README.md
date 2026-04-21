@@ -59,6 +59,8 @@ npx prisma migrate deploy   # aplicar
 | `npm run db:migrate-json` | importa dados de JSON legado |
 | `npm run cleanup:audit-logs -- --dry-run` | simula exclusão de audit logs > 24 meses |
 | `npm run cleanup:audit-logs` | exclui audit logs > 24 meses (retenção LGPD) |
+| `npm run db:backup` | `pg_dump` do banco pra `./backups/` (retém 30 dias) |
+| `npm run db:restore <arquivo>` | restaura um dump — SOBRESCREVE o banco (exige typed-confirm) |
 | `npm run e2e` | roda Playwright (exige `E2E_DATABASE_URL` em banco separado) |
 | `npm run e2e:migrate` | aplica migrations no banco de E2E |
 
@@ -90,10 +92,21 @@ Comandos úteis:
 ```bash
 docker compose stop           # para o Postgres preservando dados
 docker compose down           # remove container (dados ficam no volume pgdata)
-docker compose down -v        # remove container E volume (apaga os dados)
+docker compose down -v        # ⚠ DESTRUTIVO: remove container E volume (apaga TODOS os dados)
 npx prisma studio             # GUI para inspecionar o banco
 npx prisma migrate dev        # cria nova migration a partir de mudanças no schema
 ```
+
+### Backup local
+
+Como os dados ficam no volume Docker (ponto único de falha), rode backups antes de qualquer operação arriscada (migrations, `down -v`, troca de máquina). Restauração exige digitar o nome do banco.
+
+```bash
+npm run db:backup                                 # cria ./backups/contribution_manager-YYYYMMDD-HHMMSS.sql.gz
+npm run db:restore backups/<arquivo>.sql.gz       # restaura (sobrescreve o banco)
+```
+
+Os backups são ignorados pelo git. Considere copiar periodicamente pra outro disco ou serviço externo.
 
 ## Retenção de audit logs (LGPD)
 
