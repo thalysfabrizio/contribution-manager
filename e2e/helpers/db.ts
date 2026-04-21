@@ -1,14 +1,13 @@
 import 'dotenv/config';
 import { Pool } from 'pg';
 import { randomUUID } from 'node:crypto';
+import { getE2EDatabaseUrl } from './db-url';
 
 let cached: Pool | null = null;
 
 export function getPool(): Pool {
   if (cached) return cached;
-  const url = process.env.DATABASE_URL;
-  if (!url) throw new Error('DATABASE_URL não definida (E2E helper).');
-  cached = new Pool({ connectionString: url, max: 4 });
+  cached = new Pool({ connectionString: getE2EDatabaseUrl(), max: 4 });
   return cached;
 }
 

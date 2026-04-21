@@ -11,6 +11,7 @@ services:
       POSTGRES_DB: contribution_manager
     volumes:
       - pgdata:/var/lib/postgresql/data
+      - ./scripts/init-e2e-db.sql:/docker-entrypoint-initdb.d/init-e2e-db.sql:ro
     healthcheck:
       test: ["CMD-SHELL", "pg_isready -U postgres"]
       interval: 5s

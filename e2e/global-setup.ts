@@ -4,18 +4,18 @@ import path from 'node:path';
 import { randomUUID } from 'node:crypto';
 import { Pool } from 'pg';
 import { encode } from 'next-auth/jwt';
+import { getE2EDatabaseUrl } from './helpers/db-url';
 
 const COOKIE_NAME = 'authjs.session-token';
 const STORAGE_STATE_PATH = path.join(process.cwd(), 'e2e/.auth/user.json');
 const TEST_EMAIL = 'e2e@example.com';
 
 export default async function globalSetup() {
-  const DATABASE_URL = process.env.DATABASE_URL;
+  const E2E_DATABASE_URL = getE2EDatabaseUrl();
   const NEXTAUTH_SECRET = process.env.NEXTAUTH_SECRET;
-  if (!DATABASE_URL) throw new Error('DATABASE_URL não definida (E2E globalSetup).');
   if (!NEXTAUTH_SECRET) throw new Error('NEXTAUTH_SECRET não definida (E2E globalSetup).');
 
-  const pool = new Pool({ connectionString: DATABASE_URL, max: 2 });
+  const pool = new Pool({ connectionString: E2E_DATABASE_URL, max: 2 });
 
   try {
     await pool.query(`

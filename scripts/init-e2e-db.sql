@@ -1,0 +1,1 @@
+CREATE DATABASE contribution_manager_e2e;

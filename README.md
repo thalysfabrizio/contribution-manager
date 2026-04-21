@@ -55,10 +55,29 @@ npx prisma migrate deploy   # aplicar
 | `npm test` | vitest (run único) |
 | `npm run test:watch` | vitest em modo watch |
 | `npm run test:coverage` | cobertura |
-| `npm run db:seed` | popula o banco com dados de seed |
+| `npm run db:seed` | popula o banco com dados de seed (aborta se já tem dados; use `-- --force` pra limpar) |
 | `npm run db:migrate-json` | importa dados de JSON legado |
 | `npm run cleanup:audit-logs -- --dry-run` | simula exclusão de audit logs > 24 meses |
 | `npm run cleanup:audit-logs` | exclui audit logs > 24 meses (retenção LGPD) |
+| `npm run e2e` | roda Playwright (exige `E2E_DATABASE_URL` em banco separado) |
+| `npm run e2e:migrate` | aplica migrations no banco de E2E |
+
+## Testes E2E
+
+Os testes E2E apagam todos os usuários a cada rodada (`e2e/global-setup.ts`). Por isso exigem um banco separado — `E2E_DATABASE_URL` deve apontar para `contribution_manager_e2e`. Setup:
+
+```bash
+# Cria o banco dedicado (rodar uma vez)
+docker compose exec db psql -U postgres -c "CREATE DATABASE contribution_manager_e2e;"
+
+# Aplica migrations
+npm run e2e:migrate
+
+# Roda os testes
+npm run e2e
+```
+
+Se `E2E_DATABASE_URL` não estiver definida ou for igual a `DATABASE_URL`, o setup falha imediatamente com erro explicativo.
 
 ## Banco de dados
 
