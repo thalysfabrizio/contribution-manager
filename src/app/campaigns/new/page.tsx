@@ -9,7 +9,7 @@ export default async function NewCampaignPage() {
   if (!session?.user?.id) redirect('/login');
 
   return (
-    <main className="min-h-[calc(100dvh-3.5rem)] p-4 md:p-8">
+    <main id="main" className="min-h-[calc(100dvh-3.5rem)] p-4 md:p-8">
       <div className="max-w-[640px] mx-auto space-y-6">
         <div>
           <Link

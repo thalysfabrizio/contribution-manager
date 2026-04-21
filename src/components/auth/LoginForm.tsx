@@ -30,7 +30,7 @@ export function LoginForm() {
 
   if (isVerify) {
     return (
-      <main className="min-h-dvh grid place-items-center px-4 py-8 bg-app">
+      <main id="main" className="min-h-dvh grid place-items-center px-4 py-8 bg-app">
         <div className="w-full max-w-[400px] text-center animate-in">
           <div className="bg-card border border-border rounded-2xl px-8 py-12 shadow-xl shadow-black/10">
             <div className="mx-auto size-20 rounded-full bg-success/10 flex items-center justify-center mb-6">
@@ -60,7 +60,7 @@ export function LoginForm() {
   }
 
   return (
-    <main className="min-h-dvh grid place-items-center px-4 py-8 bg-app relative overflow-hidden">
+    <main id="main" className="min-h-dvh grid place-items-center px-4 py-8 bg-app relative overflow-hidden">
       {/* Glow decorativo */}
       <div className="absolute top-1/3 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[700px] h-[500px] bg-primary/[0.05] rounded-full blur-[120px] pointer-events-none" />
       <div className="absolute bottom-0 left-1/2 -translate-x-1/2 w-[400px] h-[200px] bg-primary/[0.03] rounded-full blur-[80px] pointer-events-none" />

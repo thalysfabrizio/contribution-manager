@@ -28,6 +28,12 @@ export default function RootLayout({
         />
       </head>
       <body className={`${geistSans.variable} font-[family-name:var(--font-geist-sans)]`}>
+        <a
+          href="#main"
+          className="sr-only focus-visible:not-sr-only focus-visible:fixed focus-visible:top-2 focus-visible:left-2 focus-visible:z-[100] focus-visible:bg-primary focus-visible:text-primary-fg focus-visible:px-4 focus-visible:py-2 focus-visible:rounded-lg focus-visible:font-medium"
+        >
+          Pular para o conteúdo
+        </a>
         <ToastProvider>{children}</ToastProvider>
       </body>
     </html>

@@ -32,7 +32,7 @@ export default async function CampaignsPage() {
   }
 
   return (
-    <main className="min-h-[calc(100dvh-4rem)] px-5 py-8 md:px-10 md:py-12">
+    <main id="main" className="min-h-[calc(100dvh-4rem)] px-5 py-8 md:px-10 md:py-12">
       <div className="max-w-[800px] mx-auto space-y-8">
         <div className="flex items-center justify-between gap-4">
           <div>

@@ -95,7 +95,7 @@ export default async function CampaignPage({ params }: Props) {
   }));
 
   return (
-    <main className="min-h-[calc(100dvh-3.5rem)]">
+    <main id="main" className="min-h-[calc(100dvh-3.5rem)]">
       {campaign.bannerUrl && (
         <div className="relative w-full h-32 md:h-44 overflow-hidden">
           <Image

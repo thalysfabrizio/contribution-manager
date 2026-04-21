@@ -8,7 +8,7 @@ export const metadata: Metadata = {
 
 export default function LegalLayout({ children }: { children: React.ReactNode }) {
   return (
-    <main className="min-h-dvh bg-app text-text-primary">
+    <main id="main" className="min-h-dvh bg-app text-text-primary">
       <header className="border-b border-border">
         <div className="max-w-[760px] mx-auto px-5 md:px-8 h-16 flex items-center justify-between">
           <Link
