@@ -9,8 +9,19 @@ if (!DATABASE_URL) {
 const adapter = new PrismaPg(DATABASE_URL);
 const prisma = new PrismaClient({ adapter });
 
+const force = process.argv.includes('--force');
+
 async function main() {
-  // Limpar dados existentes
+  const existing = await prisma.user.count();
+  if (existing > 0 && !force) {
+    console.error(
+      `Seed abortado: o banco já tem ${existing} usuário(s). ` +
+      `Rodar o seed APAGARIA todos os dados (User, Campaign, Payment, etc.). ` +
+      `Use \`npm run db:seed -- --force\` se realmente quiser limpar este banco.`,
+    );
+    process.exit(1);
+  }
+
   await prisma.payment.deleteMany();
   await prisma.participant.deleteMany();
   await prisma.campaignMember.deleteMany();
