@@ -163,17 +163,16 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
     async signIn({ user, account, profile }) {
       const adapterUser = user as AdapterUser;
       const isOAuthProvider = account?.type === 'oauth' || account?.type === 'oidc';
-      if (
-        isOAuthProvider &&
-        (profile as { email_verified?: boolean } | undefined)?.email_verified &&
-        adapterUser.id &&
-        !adapterUser.emailVerified
-      ) {
-        const updated = await prisma.user.update({
+      const oauthVerified = (profile as { email_verified?: boolean } | undefined)?.email_verified;
+      if (!isOAuthProvider || !oauthVerified || adapterUser.emailVerified) return true;
+
+      const now = new Date();
+      adapterUser.emailVerified = now;
+      if (adapterUser.id) {
+        await prisma.user.updateMany({
           where: { id: adapterUser.id },
-          data: { emailVerified: new Date() },
+          data: { emailVerified: now },
         });
-        adapterUser.emailVerified = updated.emailVerified;
       }
       return true;
     },
