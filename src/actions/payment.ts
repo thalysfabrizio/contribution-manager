@@ -28,6 +28,12 @@ export async function updatePaymentStatus(
 
     paymentStatusSchema.parse(newStatus);
 
+    const participant = await prisma.participant.findFirst({
+      where: { id: participantId, campaignId },
+      select: { id: true },
+    });
+    if (!participant) throw new Error('Participante não encontrado');
+
     const existingPayment = await prisma.payment.findUnique({
       where: { participantId_month: { participantId, month } },
       select: { status: true },

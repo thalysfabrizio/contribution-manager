@@ -22,17 +22,18 @@ import { updatePaymentStatus } from './payment';
 
 const mockPrisma = prisma as unknown as Record<string, Record<string, Mock>>;
 
+const campaignId = 'campaign-1';
+const participantId = 'participant-1';
+const month = new Date(Date.UTC(2026, 3, 1));
+
 beforeEach(() => {
   vi.clearAllMocks();
   (requireCampaignAccess as Mock).mockResolvedValue({
     user: fakeUser(),
     member: fakeMember(),
   });
+  mockPrisma.participant.findFirst.mockResolvedValue({ id: participantId });
 });
-
-const campaignId = 'campaign-1';
-const participantId = 'participant-1';
-const month = new Date(Date.UTC(2026, 3, 1));
 
 describe('updatePaymentStatus', () => {
   it('verifica permissão via requireCampaignAccess', async () => {
@@ -96,6 +97,17 @@ describe('updatePaymentStatus', () => {
       where: { participantId, month },
     });
     expect(mockPrisma.payment.upsert).not.toHaveBeenCalled();
+  });
+
+  it('bloqueia quando participante não pertence à campanha', async () => {
+    mockPrisma.campaign.findUnique.mockResolvedValue(fakeCampaign());
+    mockPrisma.participant.findFirst.mockResolvedValue(null);
+
+    const result = await updatePaymentStatus(campaignId, 'de-outra-campanha', month, 'PAID_PIX');
+    expect(result.ok).toBe(false);
+    if (!result.ok) expect(result.error).toBe('Participante não encontrado');
+    expect(mockPrisma.payment.upsert).not.toHaveBeenCalled();
+    expect(mockPrisma.payment.deleteMany).not.toHaveBeenCalled();
   });
 
   it('bloqueia campanha encerrada', async () => {

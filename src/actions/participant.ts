@@ -82,8 +82,8 @@ export async function editParticipant(
       phone: (formData.get('phone') as string).trim().replace(/\D/g, ''),
     });
 
-    const participant = await prisma.participant.findUnique({
-      where: { id: participantId },
+    const participant = await prisma.participant.findFirst({
+      where: { id: participantId, campaignId },
       select: { personId: true },
     });
 
@@ -119,8 +119,8 @@ export async function removeParticipant(
   try {
     const { user } = await requireCampaignAccess(campaignId);
 
-    const participant = await prisma.participant.findUnique({
-      where: { id: participantId },
+    const participant = await prisma.participant.findFirst({
+      where: { id: participantId, campaignId },
       include: { person: true },
     });
 
@@ -151,13 +151,18 @@ export async function searchPersonByPhone(
   phone: string,
 ): Promise<ActionResult<{ name: string; phone: string } | null>> {
   try {
-    await requireCampaignAccess(campaignId);
+    const { user } = await requireCampaignAccess(campaignId);
 
     const cleaned = phone.replace(/\D/g, '');
     if (cleaned.length < 10) return ok(null);
 
-    const person = await prisma.person.findUnique({
-      where: { phone: cleaned },
+    const person = await prisma.person.findFirst({
+      where: {
+        phone: cleaned,
+        participants: {
+          some: { campaign: { members: { some: { userId: user.id } } } },
+        },
+      },
       select: { name: true, phone: true },
     });
 
