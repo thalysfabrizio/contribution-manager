@@ -105,6 +105,7 @@ export default async function CampaignPage({ params }: Props) {
             sizes="100vw"
             className="object-cover"
             priority
+            unoptimized
           />
           <div className="absolute inset-0 bg-gradient-to-b from-transparent via-transparent to-app" />
         </div>
