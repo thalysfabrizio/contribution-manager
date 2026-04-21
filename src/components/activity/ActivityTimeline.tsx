@@ -31,8 +31,6 @@ export function ActivityTimeline({ campaignId, initialItems, hasMore: initialHas
   const [loading, setLoading] = useState(false);
   const { toast } = useToast();
 
-  // Ressincroniza quando o server revalida (revalidatePath troca os props)
-  // usando o padrão "adjust state during render" do React 19.
   const [prevInitialItems, setPrevInitialItems] = useState(initialItems);
   const [prevInitialHasMore, setPrevInitialHasMore] = useState(initialHasMore);
   if (prevInitialItems !== initialItems || prevInitialHasMore !== initialHasMore) {

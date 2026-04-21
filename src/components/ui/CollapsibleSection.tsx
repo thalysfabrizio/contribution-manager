@@ -9,14 +9,12 @@ interface CollapsibleSectionProps {
   defaultOpen?: boolean;
   headerExtra?: React.ReactNode;
   className?: string;
-  /** Modo controlado: se fornecido, o componente deixa de usar localStorage. */
   open?: boolean;
   onOpenChange?: (open: boolean) => void;
   children: React.ReactNode;
 }
 
 const STORAGE_PREFIX = 'cm:collapse:';
-// Evento disparado pelo próprio toggle — o storage event nativo só cruza tabs.
 const STORAGE_SAME_TAB_EVENT = 'cm:collapse:change';
 
 function subscribeStorage(cb: () => void) {
@@ -79,8 +77,6 @@ export function CollapsibleSection({
   const panelId = useId();
   const rootRef = useRef<HTMLElement>(null);
 
-  // Quando o hash bate com esta seção, faz scroll suave e — em modo controlado —
-  // avisa o pai pra abrir. Scroll é side effect puro, não setState local.
   useEffect(() => {
     if (!isHashTarget) return;
     if (isControlled) onOpenChange?.(true);
@@ -99,7 +95,7 @@ export function CollapsibleSection({
       window.localStorage.setItem(storageKey, next ? 'open' : 'closed');
       window.dispatchEvent(new Event(STORAGE_SAME_TAB_EVENT));
     } catch {
-      /* localStorage indisponível — sem persistência */
+      /* noop */
     }
   };
 

@@ -4,7 +4,6 @@ import { withSentryConfig } from '@sentry/nextjs';
 const nextConfig: NextConfig = {
   productionBrowserSourceMaps: true,
   images: {
-    // URLs de logo/banner de campanha e avatar OAuth são user-provided.
     remotePatterns: [{ protocol: 'https', hostname: '**' }],
   },
 };

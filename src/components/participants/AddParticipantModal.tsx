@@ -27,8 +27,6 @@ export function AddParticipantModal({ isOpen, onClose, campaignId, participant, 
   const [isSearching, setIsSearching] = useState(false);
   const [loading, setLoading] = useState(false);
 
-  // Ressincroniza os campos quando o modal abre ou o participante em edição muda
-  // (padrão "adjust state during render" do React 19 — substitui useEffect+setState).
   const [prevIsOpen, setPrevIsOpen] = useState(isOpen);
   const [prevParticipant, setPrevParticipant] = useState(participant);
   if (prevIsOpen !== isOpen || prevParticipant !== participant) {
@@ -55,7 +53,6 @@ export function AddParticipantModal({ isOpen, onClose, campaignId, participant, 
       const result = await searchPersonByPhone(campaignId, cleaned);
       if (result.ok && result.data) {
         setPhoneLookup(result.data);
-        // Sugere o nome encontrado quando o campo está vazio.
         if (!name) setName(result.data.name);
       } else {
         setPhoneLookup(null);

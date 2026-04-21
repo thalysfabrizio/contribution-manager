@@ -9,8 +9,6 @@ export async function expectNoA11yViolations(
   label: string,
   options: { include?: string; exclude?: string[] } = {},
 ): Promise<void> {
-  // Emula reduce-motion pra estabilizar elementos com animate-stagger durante o scan —
-  // opacity 0 mid-animation faz o axe calcular contraste errado.
   await page.emulateMedia({ reducedMotion: 'reduce' });
 
   let builder = new AxeBuilder({ page }).withTags(WCAG_TAGS);

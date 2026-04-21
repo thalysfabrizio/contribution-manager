@@ -8,7 +8,6 @@ test.describe('D: a11y audit — páginas fora dos fluxos principais', () => {
   });
 
   test('/login (não autenticado)', async ({ browser }) => {
-    // Override do storageState pra testar o login form sem sessão ativa.
     const ctx = await browser.newContext({ storageState: { cookies: [], origins: [] } });
     const page = await ctx.newPage();
     try {

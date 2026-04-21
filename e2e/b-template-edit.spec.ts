@@ -17,7 +17,6 @@ test('B: edit charge template → persist on reload → WhatsApp link available'
   const chargeTextarea = page.getByLabel('Template: Cobrança mensal');
   await expect(chargeTextarea).toBeVisible();
   await chargeTextarea.fill(`Olá [Nome Participante], ${CUSTOM_MARKER}.`);
-  // Há três sanfonas com "Salvar" no header (Dados/Templates/Branding) — escopa ao #templates.
   await page.locator('#templates').getByRole('button', { name: 'Salvar', exact: true }).click();
 
   await expect(page.getByText('Templates salvos')).toBeVisible({ timeout: 10_000 });

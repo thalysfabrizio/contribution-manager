@@ -46,9 +46,6 @@ test('A: create campaign → add participant → mark paid → export PDF', asyn
   await page.getByRole('menuitem', { name: 'PIX', exact: true }).click();
   await expect(row.getByRole('button', { name: /PIX/ }).first()).toBeVisible();
 
-  // Export PDF agora é inline (window.print() chamado pelo botão "Exportar PDF").
-  // Em vez de tentar capturar o print dialog (não-funcional em headless), valida
-  // que o botão existe e que o print-report está renderizado no DOM com os dados.
   await expect(page.getByRole('button', { name: /Imprimir ou salvar relatório/ })).toBeVisible();
   const printReport = page.locator('.print-report');
   await expect(printReport).toContainText('Zé Participante');

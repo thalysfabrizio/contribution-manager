@@ -75,8 +75,6 @@ export function CampaignPrintReport({ data, orgName }: CampaignPrintReportProps)
         </div>
         <div className="pr-head-meta">
           <div className="pr-period">{period}</div>
-          {/* suppressHydrationWarning: o timestamp usa hora do momento do render —
-              server e client renderizam instantes diferentes; esse delta é esperado. */}
           <div className="pr-muted" suppressHydrationWarning>Gerado em {generatedAt}</div>
         </div>
       </header>
