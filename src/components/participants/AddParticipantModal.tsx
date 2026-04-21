@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useState } from 'react';
 import { addParticipant, editParticipant, searchPersonByPhone } from '@/actions/participant';
 import { Modal } from '@/components/ui/Modal';
 import { Button } from '@/components/ui/Button';
@@ -27,22 +27,19 @@ export function AddParticipantModal({ isOpen, onClose, campaignId, participant, 
   const [isSearching, setIsSearching] = useState(false);
   const [loading, setLoading] = useState(false);
 
-  // Sincroniza os campos com a prop participant sempre que o modal abre.
-  // Sem isto, reabrir o modal com outro participante (ou alternar entre
-  // "Novo" e "Editar") mantém os valores da abertura anterior no state.
-  useEffect(() => {
-    if (!isOpen) return;
-    setPhone(participant?.person.phone ?? '');
-    setName(participant?.person.name ?? '');
-    setPhoneLookup(null);
-  }, [isOpen, participant]);
-
-  // Quando o telefone casa com uma pessoa existente, sugere o nome se o campo estiver vazio.
-  useEffect(() => {
-    if (phoneLookup && !isEditing && !name) {
-      setName(phoneLookup.name);
+  // Ressincroniza os campos quando o modal abre ou o participante em edição muda
+  // (padrão "adjust state during render" do React 19 — substitui useEffect+setState).
+  const [prevIsOpen, setPrevIsOpen] = useState(isOpen);
+  const [prevParticipant, setPrevParticipant] = useState(participant);
+  if (prevIsOpen !== isOpen || prevParticipant !== participant) {
+    setPrevIsOpen(isOpen);
+    setPrevParticipant(participant);
+    if (isOpen) {
+      setPhone(participant?.person.phone ?? '');
+      setName(participant?.person.name ?? '');
+      setPhoneLookup(null);
     }
-  }, [phoneLookup, isEditing, name]);
+  }
 
   const handlePhoneChange = async (value: string) => {
     setPhone(value);
@@ -56,7 +53,13 @@ export function AddParticipantModal({ isOpen, onClose, campaignId, participant, 
     setIsSearching(true);
     try {
       const result = await searchPersonByPhone(campaignId, cleaned);
-      setPhoneLookup(result.ok ? result.data : null);
+      if (result.ok && result.data) {
+        setPhoneLookup(result.data);
+        // Sugere o nome encontrado quando o campo está vazio.
+        if (!name) setName(result.data.name);
+      } else {
+        setPhoneLookup(null);
+      }
     } finally {
       setIsSearching(false);
     }
