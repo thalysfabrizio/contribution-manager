@@ -3,6 +3,7 @@
 import { useState, useRef, useEffect, useCallback } from 'react';
 import { signOut } from 'next-auth/react';
 import Link from 'next/link';
+import Image from 'next/image';
 import { usePathname } from 'next/navigation';
 import { ChevronDown, LogOut, User, HandCoins, FileText, Shield, UserCog, Plus } from 'lucide-react';
 import { AccessibilityPanel } from './AccessibilityPanel';
@@ -65,7 +66,14 @@ export function Header({ userName, userImage, campaigns }: HeaderProps) {
             className="flex items-center gap-2 text-text-primary hover:text-primary transition-colors focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary rounded-md"
           >
             {currentCampaign?.logoUrl ? (
-              <img src={currentCampaign.logoUrl} alt="" className="size-7 rounded-md object-contain" />
+              <Image
+                src={currentCampaign.logoUrl}
+                alt=""
+                width={28}
+                height={28}
+                className="rounded-md object-contain"
+                unoptimized
+              />
             ) : (
               <HandCoins size={20} className="text-primary" aria-hidden="true" />
             )}
@@ -147,7 +155,15 @@ export function Header({ userName, userImage, campaigns }: HeaderProps) {
               className="flex items-center gap-2 min-h-[44px] px-2 rounded-lg hover:bg-card-hover transition-all duration-200 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary"
             >
               {userImage ? (
-                <img src={userImage} alt="" referrerPolicy="no-referrer" className="size-8 rounded-full ring-2 ring-border" />
+                <Image
+                  src={userImage}
+                  alt=""
+                  width={32}
+                  height={32}
+                  referrerPolicy="no-referrer"
+                  className="rounded-full ring-2 ring-border"
+                  unoptimized
+                />
               ) : (
                 <div className="size-8 rounded-full bg-primary/15 flex items-center justify-center">
                   <User size={16} className="text-primary" aria-hidden="true" />

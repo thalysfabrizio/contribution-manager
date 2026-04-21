@@ -29,7 +29,6 @@ interface DashboardProps {
 export default function Dashboard({ data, orgName = null, isEnded = false, userRole }: DashboardProps) {
   const isOwner = userRole === 'OWNER';
   const [loadingId, setLoadingId] = useState<string | null>(null);
-  const [copied, setCopied] = useState(false);
   const [copiedFull, setCopiedFull] = useState(false);
   const [editModal, setEditModal] = useState<{
     isOpen: boolean;
@@ -75,11 +74,9 @@ export default function Dashboard({ data, orgName = null, isEnded = false, userR
   const handleCopyPix = async () => {
     try {
       await navigator.clipboard.writeText(data.pixKey);
-      setCopied(true);
       setCopiedFull(true);
       toast('Chave PIX copiada', 'success');
       setTimeout(() => {
-        setCopied(false);
         setCopiedFull(false);
       }, 2000);
     } catch {

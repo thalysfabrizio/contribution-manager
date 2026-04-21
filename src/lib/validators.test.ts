@@ -36,7 +36,7 @@ describe('campaignSchema', () => {
   });
 
   it('aceita descrição ausente', () => {
-    const { description: _, ...semDescricao } = valid;
+    const semDescricao = { ...valid, description: undefined };
     expect(() => campaignSchema.parse(semDescricao)).not.toThrow();
   });
 

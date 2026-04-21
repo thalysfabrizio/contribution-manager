@@ -22,7 +22,7 @@ export function OnboardingStepper({ hasParticipants, hasPayments }: OnboardingSt
       <p className="text-sm font-medium text-text-primary mb-3">Primeiros passos</p>
       {/* Mobile: vertical layout */}
       <div className="flex flex-col gap-2.5 md:hidden">
-        {steps.map((step, i) => (
+        {steps.map((step) => (
           <div key={step.label} className="flex items-center gap-3">
             {step.done ? (
               <CheckCircle size={20} className="text-success shrink-0" aria-hidden="true" />

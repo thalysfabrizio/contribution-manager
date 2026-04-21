@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useId, useRef, useState } from 'react';
+import { useEffect, useId, useRef, useSyncExternalStore } from 'react';
 import { ChevronDown } from 'lucide-react';
 
 interface CollapsibleSectionProps {
@@ -16,6 +16,22 @@ interface CollapsibleSectionProps {
 }
 
 const STORAGE_PREFIX = 'cm:collapse:';
+// Evento disparado pelo próprio toggle — o storage event nativo só cruza tabs.
+const STORAGE_SAME_TAB_EVENT = 'cm:collapse:change';
+
+function subscribeStorage(cb: () => void) {
+  window.addEventListener('storage', cb);
+  window.addEventListener(STORAGE_SAME_TAB_EVENT, cb);
+  return () => {
+    window.removeEventListener('storage', cb);
+    window.removeEventListener(STORAGE_SAME_TAB_EVENT, cb);
+  };
+}
+
+function subscribeHash(cb: () => void) {
+  window.addEventListener('hashchange', cb);
+  return () => window.removeEventListener('hashchange', cb);
+}
 
 export function CollapsibleSection({
   id,
@@ -28,39 +44,50 @@ export function CollapsibleSection({
   children,
 }: CollapsibleSectionProps) {
   const isControlled = controlledOpen !== undefined;
-  const [uncontrolledOpen, setUncontrolledOpen] = useState(defaultOpen);
+  const storageKey = `${STORAGE_PREFIX}${id}`;
+
+  const saved = useSyncExternalStore(
+    subscribeStorage,
+    () => {
+      try {
+        return window.localStorage.getItem(storageKey);
+      } catch {
+        return null;
+      }
+    },
+    () => null,
+  );
+
+  const hash = useSyncExternalStore(
+    subscribeHash,
+    () => window.location.hash.replace('#', ''),
+    () => '',
+  );
+  const isHashTarget = hash === id;
+
+  const uncontrolledOpen = isHashTarget
+    ? true
+    : saved === 'open'
+      ? true
+      : saved === 'closed'
+        ? false
+        : defaultOpen;
+
   const isOpen = isControlled ? controlledOpen : uncontrolledOpen;
 
   const headerId = useId();
   const panelId = useId();
   const rootRef = useRef<HTMLElement>(null);
 
-  // Hidratação: lê preferência do usuário do localStorage após mount (evita SSR mismatch).
-  // Só quando em modo não-controlado.
+  // Quando o hash bate com esta seção, faz scroll suave e — em modo controlado —
+  // avisa o pai pra abrir. Scroll é side effect puro, não setState local.
   useEffect(() => {
-    if (isControlled || typeof window === 'undefined') return;
-    try {
-      const saved = window.localStorage.getItem(`${STORAGE_PREFIX}${id}`);
-      if (saved === 'open') setUncontrolledOpen(true);
-      else if (saved === 'closed') setUncontrolledOpen(false);
-    } catch {
-      /* localStorage indisponível — mantém defaultOpen */
-    }
-  }, [id, isControlled]);
-
-  // Abrir automaticamente se o hash apontar pra esta seção (links #templates, #leaders etc).
-  useEffect(() => {
-    if (typeof window === 'undefined') return;
-    const hash = window.location.hash.replace('#', '');
-    if (hash && hash === id) {
-      if (isControlled) {
-        onOpenChange?.(true);
-      } else {
-        setUncontrolledOpen(true);
-      }
-      requestAnimationFrame(() => rootRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' }));
-    }
-  }, [id, isControlled, onOpenChange]);
+    if (!isHashTarget) return;
+    if (isControlled) onOpenChange?.(true);
+    requestAnimationFrame(() =>
+      rootRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' }),
+    );
+  }, [isHashTarget, isControlled, onOpenChange]);
 
   const toggle = () => {
     const next = !isOpen;
@@ -68,11 +95,11 @@ export function CollapsibleSection({
       onOpenChange?.(next);
       return;
     }
-    setUncontrolledOpen(next);
     try {
-      window.localStorage.setItem(`${STORAGE_PREFIX}${id}`, next ? 'open' : 'closed');
+      window.localStorage.setItem(storageKey, next ? 'open' : 'closed');
+      window.dispatchEvent(new Event(STORAGE_SAME_TAB_EVENT));
     } catch {
-      /* ignora */
+      /* localStorage indisponível — sem persistência */
     }
   };
 

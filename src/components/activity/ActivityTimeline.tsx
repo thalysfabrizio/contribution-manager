@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useState } from 'react';
 import { Button } from '@/components/ui/Button';
 import { CollapsibleSection } from '@/components/ui/CollapsibleSection';
 import { ActivityItem } from './ActivityItem';
@@ -31,13 +31,16 @@ export function ActivityTimeline({ campaignId, initialItems, hasMore: initialHas
   const [loading, setLoading] = useState(false);
   const { toast } = useToast();
 
-  // Quando o server component revalida (revalidatePath após mutações),
-  // initialItems chega atualizado — mas o useState só roda na montagem.
-  // Este effect mantém a timeline em dia sem precisar refresh manual.
-  useEffect(() => {
+  // Ressincroniza quando o server revalida (revalidatePath troca os props)
+  // usando o padrão "adjust state during render" do React 19.
+  const [prevInitialItems, setPrevInitialItems] = useState(initialItems);
+  const [prevInitialHasMore, setPrevInitialHasMore] = useState(initialHasMore);
+  if (prevInitialItems !== initialItems || prevInitialHasMore !== initialHasMore) {
+    setPrevInitialItems(initialItems);
+    setPrevInitialHasMore(initialHasMore);
     setItems(initialItems);
     setHasMore(initialHasMore);
-  }, [initialItems, initialHasMore]);
+  }
 
   const loadMore = async () => {
     setLoading(true);

@@ -31,8 +31,6 @@ export default async function CampaignsPage() {
     redirect(`/campaigns/${memberships[0].campaignId}`);
   }
 
-  const now = new Date();
-
   return (
     <main className="min-h-[calc(100dvh-4rem)] px-5 py-8 md:px-10 md:py-12">
       <div className="max-w-[800px] mx-auto space-y-8">

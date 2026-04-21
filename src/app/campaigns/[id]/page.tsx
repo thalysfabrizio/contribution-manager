@@ -1,6 +1,7 @@
 import { auth } from '@/lib/auth';
 import { prisma } from '@/lib/prisma';
 import { redirect, notFound } from 'next/navigation';
+import Image from 'next/image';
 import Dashboard from '@/components/Dashboard';
 import { MonthlyProgress } from '@/components/dashboard/MonthlyProgress';
 import { PaymentMethodChart } from '@/components/dashboard/PaymentMethodChart';
@@ -97,10 +98,13 @@ export default async function CampaignPage({ params }: Props) {
     <main className="min-h-[calc(100dvh-3.5rem)]">
       {campaign.bannerUrl && (
         <div className="relative w-full h-32 md:h-44 overflow-hidden">
-          <img
+          <Image
             src={campaign.bannerUrl}
             alt=""
-            className="w-full h-full object-cover"
+            fill
+            sizes="100vw"
+            className="object-cover"
+            priority
           />
           <div className="absolute inset-0 bg-gradient-to-b from-transparent via-transparent to-app" />
         </div>

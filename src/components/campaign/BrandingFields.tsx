@@ -1,5 +1,6 @@
 'use client';
 
+import Image from 'next/image';
 import { Input, Textarea } from '@/components/ui/Input';
 
 export const ACCENT_PRESETS = [
@@ -64,17 +65,27 @@ export function BrandingFields({ values, onChange }: BrandingFieldsProps) {
       {(values.logoUrl || values.bannerUrl) && (
         <div className="flex items-center gap-3">
           {values.logoUrl && (
-            <div className="size-12 rounded-lg border border-border overflow-hidden bg-app flex items-center justify-center">
-              <img
+            <div className="relative size-12 rounded-lg border border-border overflow-hidden bg-app">
+              <Image
                 src={values.logoUrl}
                 alt="Logo"
-                className="max-w-full max-h-full object-contain"
+                fill
+                sizes="48px"
+                className="object-contain"
+                unoptimized
               />
             </div>
           )}
           {values.bannerUrl && (
-            <div className="flex-1 h-16 rounded-lg border border-border overflow-hidden bg-app">
-              <img src={values.bannerUrl} alt="Banner" className="w-full h-full object-cover" />
+            <div className="relative flex-1 h-16 rounded-lg border border-border overflow-hidden bg-app">
+              <Image
+                src={values.bannerUrl}
+                alt="Banner"
+                fill
+                sizes="(max-width: 768px) 100vw, 50vw"
+                className="object-cover"
+                unoptimized
+              />
             </div>
           )}
         </div>
