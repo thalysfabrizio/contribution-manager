@@ -21,11 +21,21 @@ export function AddParticipantModal({ isOpen, onClose, campaignId, participant, 
   const isEditing = !!participant;
   const { toast } = useToast();
 
-  const [phone, setPhone] = useState(participant?.person.phone ?? '');
-  const [name, setName] = useState(participant?.person.name ?? '');
+  const [phone, setPhone] = useState('');
+  const [name, setName] = useState('');
   const [phoneLookup, setPhoneLookup] = useState<{ name: string; phone: string } | null>(null);
   const [isSearching, setIsSearching] = useState(false);
   const [loading, setLoading] = useState(false);
+
+  // Sincroniza os campos com a prop participant sempre que o modal abre.
+  // Sem isto, reabrir o modal com outro participante (ou alternar entre
+  // "Novo" e "Editar") mantém os valores da abertura anterior no state.
+  useEffect(() => {
+    if (!isOpen) return;
+    setPhone(participant?.person.phone ?? '');
+    setName(participant?.person.name ?? '');
+    setPhoneLookup(null);
+  }, [isOpen, participant]);
 
   // Quando o telefone casa com uma pessoa existente, sugere o nome se o campo estiver vazio.
   useEffect(() => {
@@ -53,9 +63,6 @@ export function AddParticipantModal({ isOpen, onClose, campaignId, participant, 
   };
 
   const handleClose = () => {
-    setPhone(participant?.person.phone ?? '');
-    setName(participant?.person.name ?? '');
-    setPhoneLookup(null);
     setLoading(false);
     onClose();
   };
