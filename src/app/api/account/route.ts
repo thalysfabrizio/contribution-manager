@@ -1,12 +1,13 @@
 import { auth } from '@/lib/auth';
 import { prisma } from '@/lib/prisma';
 import { deleteAccount } from '@/lib/account';
+import { checkRateLimit } from '@/lib/rate-limit';
 import { env } from '@/lib/env';
 
-function jsonError(status: number, error: string) {
+function jsonError(status: number, error: string, headers: Record<string, string> = {}) {
   return new Response(JSON.stringify({ error }), {
     status,
-    headers: { 'Content-Type': 'application/json' },
+    headers: { 'Content-Type': 'application/json', ...headers },
   });
 }
 
@@ -14,6 +15,11 @@ export async function DELETE(req: Request) {
   const session = await auth();
   if (!session?.user?.id || !session.user.email) {
     return jsonError(401, 'Unauthorized');
+  }
+
+  const limit = await checkRateLimit(`account-delete:${session.user.id}`, 3, 60 * 60_000);
+  if (!limit.allowed) {
+    return jsonError(429, 'Too Many Requests', { 'Retry-After': String(limit.retryAfter) });
   }
 
   let body: { confirmEmail?: unknown } = {};
