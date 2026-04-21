@@ -4,49 +4,13 @@ import { useState } from 'react';
 import { createCampaign } from '@/actions/campaign';
 import { Button } from '@/components/ui/Button';
 import { Input, Textarea } from '@/components/ui/Input';
-import { Card } from '@/components/ui/Card';
+import { CollapsibleSection } from '@/components/ui/CollapsibleSection';
 import { useToast } from '@/components/ui/Toast';
 import { MonthYearPicker } from './MonthYearPicker';
 import { BrandingFields, DEFAULT_ACCENT, type BrandingValues } from './BrandingFields';
 import { TemplateFieldsEditor } from '@/components/messaging/TemplateFieldsEditor';
 import { DEFAULT_TEMPLATES, type CampaignTemplates } from '@/lib/templates';
-import { Plus, ChevronDown, Palette, MessageSquare } from 'lucide-react';
-
-interface SectionProps {
-  title: string;
-  hint?: string;
-  icon: React.ReactNode;
-  open: boolean;
-  onToggle: () => void;
-  children: React.ReactNode;
-}
-
-function CollapsibleSection({ title, hint, icon, open, onToggle, children }: SectionProps) {
-  return (
-    <Card className="overflow-hidden">
-      <button
-        type="button"
-        onClick={onToggle}
-        aria-expanded={open}
-        className="w-full flex items-center justify-between gap-3 p-5 md:p-6 text-left hover:bg-card-hover/30 transition-colors focus-visible:outline-2 focus-visible:outline-offset-[-2px] focus-visible:outline-primary"
-      >
-        <div className="flex items-center gap-2.5 min-w-0">
-          <span className="text-primary shrink-0">{icon}</span>
-          <div className="min-w-0">
-            <h2 className="text-base font-semibold text-text-primary">{title}</h2>
-            {hint && <p className="text-xs text-text-muted mt-0.5">{hint}</p>}
-          </div>
-        </div>
-        <ChevronDown
-          size={18}
-          className={`text-text-muted shrink-0 transition-transform duration-200 ${open ? 'rotate-180' : ''}`}
-          aria-hidden="true"
-        />
-      </button>
-      {open && <div className="px-5 pb-5 md:px-6 md:pb-6">{children}</div>}
-    </Card>
-  );
-}
+import { Plus, UserPlus, X } from 'lucide-react';
 
 export function NewCampaignForm() {
   const { toast } = useToast();
@@ -61,7 +25,6 @@ export function NewCampaignForm() {
   const [paymentDayStart, setPaymentDayStart] = useState('10');
   const [paymentDayEnd, setPaymentDayEnd] = useState('15');
 
-  const [brandingOpen, setBrandingOpen] = useState(false);
   const [branding, setBranding] = useState<BrandingValues>({
     orgName: '',
     logoUrl: '',
@@ -70,11 +33,42 @@ export function NewCampaignForm() {
     messageSignature: '',
   });
 
-  const [templatesOpen, setTemplatesOpen] = useState(false);
   const [templates, setTemplates] = useState<CampaignTemplates>(DEFAULT_TEMPLATES);
   const [templatesTouched, setTemplatesTouched] = useState(false);
 
+  const [leaderInput, setLeaderInput] = useState('');
+  const [leaderEmails, setLeaderEmails] = useState<string[]>([]);
+  const [leaderError, setLeaderError] = useState<string | null>(null);
+
+  // Controlled state das sanfonas: todas abertas na criação,
+  // isolado do localStorage (que serve só ao settings/dashboard).
+  const [openDataCamp, setOpenDataCamp] = useState(true);
+  const [openTemplates, setOpenTemplates] = useState(true);
+  const [openBranding, setOpenBranding] = useState(true);
+  const [openLeaders, setOpenLeaders] = useState(true);
+
   const monthlyValueCents = Math.round((parseFloat(monthlyValue) || 0) * 100);
+
+  const addLeader = () => {
+    const trimmed = leaderInput.trim().toLowerCase();
+    if (!trimmed) return;
+    const ok = /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(trimmed);
+    if (!ok) {
+      setLeaderError('Email inválido');
+      return;
+    }
+    if (leaderEmails.includes(trimmed)) {
+      setLeaderError('Email já adicionado');
+      return;
+    }
+    setLeaderEmails([...leaderEmails, trimmed]);
+    setLeaderInput('');
+    setLeaderError(null);
+  };
+
+  const removeLeader = (email: string) => {
+    setLeaderEmails(leaderEmails.filter((e) => e !== email));
+  };
 
   return (
     <form
@@ -110,6 +104,10 @@ export function NewCampaignForm() {
             formData.set('templates', JSON.stringify(templates));
           }
 
+          if (leaderEmails.length > 0) {
+            formData.set('leaderEmails', JSON.stringify(leaderEmails));
+          }
+
           const result = await createCampaign(formData);
           // Em sucesso, redirect throw NEXT_REDIRECT antes de chegar aqui.
           if (!result.ok) toast(result.error, 'error');
@@ -119,8 +117,12 @@ export function NewCampaignForm() {
       }}
       className="space-y-4"
     >
-      <Card className="p-5 md:p-6">
-        <h2 className="text-base font-semibold text-text-primary mb-5">Dados da Campanha</h2>
+      <CollapsibleSection
+        id="new-campaign-data"
+        title="Dados da Campanha"
+        open={openDataCamp}
+        onOpenChange={setOpenDataCamp}
+      >
         <div className="space-y-5">
           <Input
             name="name"
@@ -207,25 +209,17 @@ export function NewCampaignForm() {
             </div>
           </fieldset>
         </div>
-      </Card>
-
-      <CollapsibleSection
-        title="Personalizar Aparência"
-        hint="Logo, cores e assinatura — opcional, dá pra configurar depois"
-        icon={<Palette size={18} aria-hidden="true" />}
-        open={brandingOpen}
-        onToggle={() => setBrandingOpen((v) => !v)}
-      >
-        <BrandingFields values={branding} onChange={setBranding} />
       </CollapsibleSection>
 
       <CollapsibleSection
+        id="new-templates"
         title="Templates de Mensagem"
-        hint="Personalizar mensagens de cobrança — opcional, há defaults prontos"
-        icon={<MessageSquare size={18} aria-hidden="true" />}
-        open={templatesOpen}
-        onToggle={() => setTemplatesOpen((v) => !v)}
+        open={openTemplates}
+        onOpenChange={setOpenTemplates}
       >
+        <p className="text-xs text-text-muted mb-4">
+          Personalizar mensagens de cobrança — opcional, há defaults prontos.
+        </p>
         <TemplateFieldsEditor
           templates={templates}
           onChange={(t) => {
@@ -238,6 +232,75 @@ export function NewCampaignForm() {
           paymentDayStart={parseInt(paymentDayStart) || 1}
           paymentDayEnd={parseInt(paymentDayEnd) || 1}
         />
+      </CollapsibleSection>
+
+      <CollapsibleSection
+        id="new-branding"
+        title="Personalizar Aparência"
+        open={openBranding}
+        onOpenChange={setOpenBranding}
+      >
+        <p className="text-xs text-text-muted mb-4">
+          Logo, cores e assinatura — opcional, dá pra configurar depois.
+        </p>
+        <BrandingFields values={branding} onChange={setBranding} />
+      </CollapsibleSection>
+
+      <CollapsibleSection
+        id="new-leaders"
+        title="Líderes da Campanha"
+        open={openLeaders}
+        onOpenChange={setOpenLeaders}
+      >
+        <p className="text-xs text-text-muted mb-4">
+          Convide outras pessoas para co-administrar — opcional, é possível adicionar depois.
+        </p>
+        <div className="flex gap-2">
+          <Input
+            name="leaderInput"
+            label="Email do líder"
+            type="email"
+            value={leaderInput}
+            onChange={(e) => {
+              setLeaderInput(e.target.value);
+              if (leaderError) setLeaderError(null);
+            }}
+            onKeyDown={(e) => {
+              if (e.key === 'Enter') {
+                e.preventDefault();
+                addLeader();
+              }
+            }}
+            placeholder="lider@exemplo.com"
+          />
+          <div className="flex items-end">
+            <Button type="button" variant="outline" onClick={addLeader} disabled={!leaderInput.trim()}>
+              <UserPlus size={14} aria-hidden="true" />
+              Adicionar
+            </Button>
+          </div>
+        </div>
+        {leaderError && <p className="text-sm text-danger mt-2">{leaderError}</p>}
+        {leaderEmails.length > 0 && (
+          <ul className="flex flex-wrap gap-2 mt-4">
+            {leaderEmails.map((email) => (
+              <li
+                key={email}
+                className="inline-flex items-center gap-2 pl-3 pr-1 py-1 bg-card-hover border border-border rounded-full text-sm text-text-primary"
+              >
+                {email}
+                <button
+                  type="button"
+                  onClick={() => removeLeader(email)}
+                  className="size-6 inline-flex items-center justify-center rounded-full text-text-muted hover:text-danger hover:bg-danger-bg transition-colors focus-visible:outline-2 focus-visible:outline-offset-1 focus-visible:outline-primary"
+                  aria-label={`Remover ${email}`}
+                >
+                  <X size={13} aria-hidden="true" />
+                </button>
+              </li>
+            ))}
+          </ul>
+        )}
       </CollapsibleSection>
 
       <div className="flex justify-end pt-2">

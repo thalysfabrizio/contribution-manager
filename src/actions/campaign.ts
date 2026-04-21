@@ -2,7 +2,7 @@
 
 import { prisma } from '@/lib/prisma';
 import { getSessionUser, requireCampaignOwner } from '@/lib/permissions';
-import { brandingSchema, campaignSchema, templatesSchema } from '@/lib/validators';
+import { brandingSchema, campaignSchema, emailSchema, templatesSchema } from '@/lib/validators';
 import { CampaignRole } from '@/generated/prisma/client';
 import { revalidatePath } from 'next/cache';
 import { redirect } from 'next/navigation';
@@ -44,6 +44,11 @@ export async function createCampaign(formData: FormData): Promise<ActionResult<n
     const templatesRaw = formData.get('templates') as string | null;
     const templates = templatesRaw ? templatesSchema.parse(JSON.parse(templatesRaw)) : null;
 
+    const leadersRaw = formData.get('leaderEmails') as string | null;
+    const leaderEmails: string[] = leadersRaw
+      ? (JSON.parse(leadersRaw) as unknown[]).map((e) => emailSchema.parse(e))
+      : [];
+
     const campaign = await prisma.$transaction(async (tx) => {
       const created = await tx.campaign.create({
         data: {
@@ -68,6 +73,35 @@ export async function createCampaign(formData: FormData): Promise<ActionResult<n
           role: CampaignRole.OWNER,
         },
       });
+
+      for (const email of leaderEmails) {
+        const existing = await tx.user.findUnique({ where: { email } });
+        const leader = existing ?? (await tx.user.create({ data: { email } }));
+
+        // Evita duplicar se o email coincidir com outra membership já criada nesta transação.
+        const alreadyMember = await tx.campaignMember.findUnique({
+          where: { userId_campaignId: { userId: leader.id, campaignId: created.id } },
+        });
+        if (alreadyMember) continue;
+
+        await tx.campaignMember.create({
+          data: {
+            userId: leader.id,
+            campaignId: created.id,
+            role: CampaignRole.MEMBER,
+          },
+        });
+
+        await tx.auditLog.create({
+          data: {
+            action: 'MEMBER_INVITED',
+            entity: 'CampaignMember',
+            details: { email, method: existing ? 'direct' : 'invite' },
+            userId: user.id,
+            campaignId: created.id,
+          },
+        });
+      }
 
       await tx.auditLog.create({
         data: {
