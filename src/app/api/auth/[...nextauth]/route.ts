@@ -5,7 +5,10 @@ type Handler = (req: Request) => Promise<Response> | Response;
 
 function getClientIp(req: Request): string {
   const xff = req.headers.get('x-forwarded-for');
-  if (xff) return xff.split(',')[0].trim();
+  if (xff) {
+    const parts = xff.split(',').map((s) => s.trim()).filter(Boolean);
+    if (parts.length > 0) return parts[parts.length - 1];
+  }
   return req.headers.get('x-real-ip') ?? 'unknown';
 }
 
