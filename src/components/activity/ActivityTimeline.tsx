@@ -1,8 +1,8 @@
 'use client';
 
-import { useState } from 'react';
-import { Card } from '@/components/ui/Card';
+import { useEffect, useState } from 'react';
 import { Button } from '@/components/ui/Button';
+import { CollapsibleSection } from '@/components/ui/CollapsibleSection';
 import { ActivityItem } from './ActivityItem';
 import { loadMoreActivity } from '@/actions/activity';
 import { useToast } from '@/components/ui/Toast';
@@ -31,6 +31,14 @@ export function ActivityTimeline({ campaignId, initialItems, hasMore: initialHas
   const [loading, setLoading] = useState(false);
   const { toast } = useToast();
 
+  // Quando o server component revalida (revalidatePath após mutações),
+  // initialItems chega atualizado — mas o useState só roda na montagem.
+  // Este effect mantém a timeline em dia sem precisar refresh manual.
+  useEffect(() => {
+    setItems(initialItems);
+    setHasMore(initialHasMore);
+  }, [initialItems, initialHasMore]);
+
   const loadMore = async () => {
     setLoading(true);
     const lastItem = items[items.length - 1];
@@ -46,13 +54,13 @@ export function ActivityTimeline({ campaignId, initialItems, hasMore: initialHas
 
   if (items.length === 0) {
     return (
-      <Card>
+      <CollapsibleSection id="activity" title="Atividade Recente" defaultOpen={false}>
         <EmptyState
           icon={<History size={32} className="text-primary/60" aria-hidden="true" />}
           title="Nenhuma atividade ainda"
           description="As acoes realizadas na campanha aparecerão aqui."
         />
-      </Card>
+      </CollapsibleSection>
     );
   }
 
@@ -69,8 +77,7 @@ export function ActivityTimeline({ campaignId, initialItems, hasMore: initialHas
   });
 
   return (
-    <Card className="p-5 md:p-6">
-      <h2 className="text-base font-semibold text-text-primary mb-5">Atividade Recente</h2>
+    <CollapsibleSection id="activity" title="Atividade Recente" defaultOpen={false}>
       <div className="space-y-5">
         {Object.entries(grouped).map(([day, dayItems]) => (
           <div key={day}>
@@ -100,6 +107,6 @@ export function ActivityTimeline({ campaignId, initialItems, hasMore: initialHas
           </Button>
         </div>
       )}
-    </Card>
+    </CollapsibleSection>
   );
 }
