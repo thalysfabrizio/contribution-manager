@@ -72,21 +72,15 @@ export default async function CampaignSettingsPage({ params }: Props) {
 
         <CampaignForm campaign={campaign} />
 
-        <section id="templates" className="scroll-mt-20">
-          <TemplateEditor
-            campaignId={id}
-            campaignName={campaign.name}
-            pixKey={campaign.pixKey}
-            monthlyValue={campaign.monthlyValue}
-            paymentDayStart={campaign.paymentDayStart}
-            paymentDayEnd={campaign.paymentDayEnd}
-            templates={campaign.templates as CampaignTemplates | null}
-          />
-        </section>
-
-        <section id="leaders" className="scroll-mt-20">
-          <MemberList campaignId={id} members={memberList} />
-        </section>
+        <TemplateEditor
+          campaignId={id}
+          campaignName={campaign.name}
+          pixKey={campaign.pixKey}
+          monthlyValue={campaign.monthlyValue}
+          paymentDayStart={campaign.paymentDayStart}
+          paymentDayEnd={campaign.paymentDayEnd}
+          templates={campaign.templates as CampaignTemplates | null}
+        />
 
         <BrandingForm
           campaignId={id}
@@ -96,6 +90,8 @@ export default async function CampaignSettingsPage({ params }: Props) {
           accentColor={campaign.accentColor ?? null}
           messageSignature={campaign.messageSignature ?? null}
         />
+
+        <MemberList campaignId={id} members={memberList} />
 
         <div className="border border-danger/20 rounded-xl p-5 md:p-6 space-y-3">
           <div className="flex items-center gap-2.5">

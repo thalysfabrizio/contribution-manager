@@ -2,7 +2,7 @@
 
 import { useState } from 'react';
 import { removeMember } from '@/actions/member';
-import { Card } from '@/components/ui/Card';
+import { CollapsibleSection } from '@/components/ui/CollapsibleSection';
 import { Button } from '@/components/ui/Button';
 import { Badge } from '@/components/ui/Badge';
 import { ConfirmModal } from '@/components/ui/ConfirmModal';
@@ -33,16 +33,20 @@ export function MemberList({ campaignId, members }: MemberListProps) {
   });
   const { toast } = useToast();
 
-  return (
-    <Card className="p-5 md:p-6">
-      <div className="flex items-center justify-between mb-5">
-        <h2 className="text-base font-semibold text-text-primary">Líderes da Campanha</h2>
-        <Button variant="outline" size="sm" onClick={() => setInviteOpen(true)}>
-          <UserPlus size={13} aria-hidden="true" />
-          Convidar
-        </Button>
-      </div>
+  const inviteButton = (
+    <Button variant="outline" size="sm" onClick={() => setInviteOpen(true)}>
+      <UserPlus size={13} aria-hidden="true" />
+      Convidar
+    </Button>
+  );
 
+  return (
+    <CollapsibleSection
+      id="leaders"
+      title="Líderes da Campanha"
+      headerExtra={inviteButton}
+      defaultOpen={false}
+    >
       <div className="space-y-1.5">
         {members.map((m) => (
           <div
@@ -102,6 +106,6 @@ export function MemberList({ campaignId, members }: MemberListProps) {
         confirmLabel="Remover"
         variant="danger"
       />
-    </Card>
+    </CollapsibleSection>
   );
 }

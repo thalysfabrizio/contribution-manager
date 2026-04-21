@@ -2,7 +2,7 @@
 
 import { useState } from 'react';
 import { Button } from '@/components/ui/Button';
-import { Card } from '@/components/ui/Card';
+import { CollapsibleSection } from '@/components/ui/CollapsibleSection';
 import { useToast } from '@/components/ui/Toast';
 import { Save } from 'lucide-react';
 import { DEFAULT_TEMPLATES, type CampaignTemplates } from '@/lib/templates';
@@ -32,40 +32,47 @@ export function TemplateEditor({
     initialTemplates ?? DEFAULT_TEMPLATES,
   );
   const [saving, setSaving] = useState(false);
+  const [open, setOpen] = useState(false);
   const { toast } = useToast();
 
-  return (
-    <Card className="p-5 md:p-6">
-      <div className="flex items-center justify-between mb-5">
-        <h2 className="text-base font-semibold text-text-primary">Templates de Mensagem</h2>
-        <form
-          action={async () => {
-            setSaving(true);
-            const result = await updateTemplates(campaignId, templates);
-            setSaving(false);
-            if (!result.ok) {
-              toast(result.error, 'error');
-              return;
-            }
-            toast('Templates salvos', 'success');
-          }}
-        >
-          <Button type="submit" size="sm" disabled={saving}>
-            {saving ? (
-              <span className="flex items-center gap-1.5">
-                <span className="size-3 border-2 border-primary-fg/30 border-t-primary-fg rounded-full animate-spin" />
-                Salvando...
-              </span>
-            ) : (
-              <>
-                <Save size={13} aria-hidden="true" />
-                Salvar
-              </>
-            )}
-          </Button>
-        </form>
-      </div>
+  const saveAction = (
+    <form
+      action={async () => {
+        setSaving(true);
+        const result = await updateTemplates(campaignId, templates);
+        setSaving(false);
+        if (!result.ok) {
+          toast(result.error, 'error');
+          return;
+        }
+        toast('Templates salvos', 'success');
+        setOpen(false);
+      }}
+    >
+      <Button type="submit" size="sm" disabled={saving}>
+        {saving ? (
+          <span className="flex items-center gap-1.5">
+            <span className="size-3 border-2 border-primary-fg/30 border-t-primary-fg rounded-full animate-spin" />
+            Salvando...
+          </span>
+        ) : (
+          <>
+            <Save size={13} aria-hidden="true" />
+            Salvar
+          </>
+        )}
+      </Button>
+    </form>
+  );
 
+  return (
+    <CollapsibleSection
+      id="templates"
+      title="Templates de Mensagem"
+      headerExtra={saveAction}
+      open={open}
+      onOpenChange={setOpen}
+    >
       <TemplateFieldsEditor
         templates={templates}
         onChange={setTemplates}
@@ -75,6 +82,6 @@ export function TemplateEditor({
         paymentDayStart={paymentDayStart}
         paymentDayEnd={paymentDayEnd}
       />
-    </Card>
+    </CollapsibleSection>
   );
 }
