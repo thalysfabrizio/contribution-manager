@@ -63,8 +63,7 @@ export function ParticipantTable({
       </div>
 
       {/* Desktop: tabela */}
-      <Card className="hidden md:block">
-      <div className="overflow-x-auto">
+      <div className="hidden md:block overflow-x-auto -mx-5 md:-mx-6">
         <table className="w-full text-sm border-collapse" role="grid">
           <thead>
             <tr className="border-b border-border text-left">
@@ -155,7 +154,6 @@ export function ParticipantTable({
           )}
         </table>
       </div>
-      </Card>
     </>
   );
 }

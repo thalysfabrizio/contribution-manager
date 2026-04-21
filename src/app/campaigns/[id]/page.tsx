@@ -5,6 +5,7 @@ import Dashboard from '@/components/Dashboard';
 import { MonthlyProgress } from '@/components/dashboard/MonthlyProgress';
 import { PaymentMethodChart } from '@/components/dashboard/PaymentMethodChart';
 import { ActivityTimeline } from '@/components/activity/ActivityTimeline';
+import { CollapsibleSection } from '@/components/ui/CollapsibleSection';
 import { getMonthsFromRange, isCampaignEnded } from '@/lib/months';
 import type { CampaignData } from '@/types';
 
@@ -105,11 +106,13 @@ export default async function CampaignPage({ params }: Props) {
         </div>
       )}
       <div className="max-w-[1200px] mx-auto px-5 py-8 md:px-10 md:py-10 space-y-8">
-        <Dashboard data={data} isEnded={isEnded} userRole={member.role} />
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-          <MonthlyProgress participants={data.participants} months={months} />
-          <PaymentMethodChart participants={data.participants} />
-        </div>
+        <Dashboard data={data} orgName={campaign.orgName ?? null} isEnded={isEnded} userRole={member.role} />
+        <CollapsibleSection id="analytics" title="Análise da Campanha">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-x-8 gap-y-8">
+            <MonthlyProgress participants={data.participants} months={months} />
+            <PaymentMethodChart participants={data.participants} />
+          </div>
+        </CollapsibleSection>
         <ActivityTimeline
           campaignId={id}
           initialItems={activityItems}

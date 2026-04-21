@@ -1,4 +1,3 @@
-import { Card } from '@/components/ui/Card';
 import { isSameMonth, isCurrentMonth } from '@/lib/months';
 import type { CampaignData } from '@/types';
 import type { MonthEntry } from '@/lib/months';
@@ -12,8 +11,8 @@ export function MonthlyProgress({ participants, months }: MonthlyProgressProps) 
   const total = participants.length;
 
   return (
-    <Card className="p-5 md:p-6">
-      <h2 className="text-base font-semibold text-text-primary mb-5">Progresso por Mês</h2>
+    <div>
+      <h3 className="text-sm font-semibold text-text-primary mb-3">Progresso por Mês</h3>
       <div className="space-y-2.5">
         {months.map((m) => {
           const paidCount = participants.filter((p) =>
@@ -52,6 +51,6 @@ export function MonthlyProgress({ participants, months }: MonthlyProgressProps) 
           );
         })}
       </div>
-    </Card>
+    </div>
   );
 }

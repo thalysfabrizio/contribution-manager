@@ -2,7 +2,7 @@
 
 import { useState } from 'react';
 import Link from 'next/link';
-import { Plus, Copy, Check, MessageSquare, FileDown, UserPlus } from 'lucide-react';
+import { Plus, Copy, Check, FileDown, Settings } from 'lucide-react';
 import { updatePaymentStatus } from '@/actions/payment';
 import { removeParticipant } from '@/actions/participant';
 import { Button } from './ui/Button';
@@ -14,16 +14,19 @@ import { OnboardingStepper } from './dashboard/OnboardingStepper';
 import { ParticipantTable } from './participants/ParticipantTable';
 import { AddParticipantModal } from './participants/AddParticipantModal';
 import { MessageModal } from './messaging/MessageModal';
+import { CampaignPrintReport } from './print/CampaignPrintReport';
+import { CollapsibleSection } from './ui/CollapsibleSection';
 import { getMonthsFromRange } from '@/lib/months';
 import type { CampaignData, PaymentStatus } from '@/types';
 
 interface DashboardProps {
   data: CampaignData;
+  orgName?: string | null;
   isEnded?: boolean;
   userRole?: string;
 }
 
-export default function Dashboard({ data, isEnded = false, userRole }: DashboardProps) {
+export default function Dashboard({ data, orgName = null, isEnded = false, userRole }: DashboardProps) {
   const isOwner = userRole === 'OWNER';
   const [loadingId, setLoadingId] = useState<string | null>(null);
   const [copied, setCopied] = useState(false);
@@ -144,35 +147,25 @@ export default function Dashboard({ data, isEnded = false, userRole }: Dashboard
           </span>
         </div>
         <div className="flex items-center gap-2">
-          <Link
-            href={`/campaigns/${data.id}/print`}
-            target="_blank"
-            rel="noopener"
+          <button
+            type="button"
+            onClick={() => window.print()}
             className="inline-flex items-center justify-center gap-2 rounded-lg font-medium px-4 min-h-[44px] text-sm bg-transparent text-text-secondary border border-border hover:bg-card-hover hover:text-text-primary transition-all duration-200 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary"
-            aria-label="Exportar relatório em PDF"
+            aria-label="Imprimir ou salvar relatório em PDF"
           >
             <FileDown size={16} aria-hidden="true" />
             <span className="hidden md:inline">Exportar PDF</span>
             <span className="md:hidden">PDF</span>
-          </Link>
-          <Link
-            href={`/campaigns/${data.id}/settings#templates`}
-            className="inline-flex items-center justify-center gap-2 rounded-lg font-medium px-4 min-h-[44px] text-sm bg-transparent text-text-secondary border border-border hover:bg-card-hover hover:text-text-primary transition-all duration-200 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary"
-            aria-label="Editar templates de mensagem"
-          >
-            <MessageSquare size={16} aria-hidden="true" />
-            <span className="hidden md:inline">Editar mensagens</span>
-            <span className="md:hidden">Mensagens</span>
-          </Link>
+          </button>
           {isOwner && (
             <Link
-              href={`/campaigns/${data.id}/settings#leaders`}
+              href={`/campaigns/${data.id}/settings`}
               className="inline-flex items-center justify-center gap-2 rounded-lg font-medium px-4 min-h-[44px] text-sm bg-transparent text-text-secondary border border-border hover:bg-card-hover hover:text-text-primary transition-all duration-200 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary"
-              aria-label="Convidar líder para administrar a campanha"
+              aria-label="Editar campanha"
             >
-              <UserPlus size={16} aria-hidden="true" />
-              <span className="hidden md:inline">Convidar líder</span>
-              <span className="md:hidden">Convidar</span>
+              <Settings size={16} aria-hidden="true" />
+              <span className="hidden md:inline">Editar Campanha</span>
+              <span className="md:hidden">Editar</span>
             </Link>
           )}
           {!isEnded && (
@@ -196,17 +189,19 @@ export default function Dashboard({ data, isEnded = false, userRole }: Dashboard
       )}
 
       {/* Participants Table */}
-      <ParticipantTable
-        participants={data.participants}
-        months={months}
-        isEnded={isEnded}
-        loadingId={loadingId}
-        highlightId={highlightId}
-        onToggle={handleToggle}
-        onEdit={(p) => setEditModal({ isOpen: true, participant: p })}
-        onMessage={(p) => setMsgModal({ isOpen: true, participant: p })}
-        onDelete={(id, name) => setDeleteConfirm({ isOpen: true, id, name })}
-      />
+      <CollapsibleSection id="participants" title="Participantes">
+        <ParticipantTable
+          participants={data.participants}
+          months={months}
+          isEnded={isEnded}
+          loadingId={loadingId}
+          highlightId={highlightId}
+          onToggle={handleToggle}
+          onEdit={(p) => setEditModal({ isOpen: true, participant: p })}
+          onMessage={(p) => setMsgModal({ isOpen: true, participant: p })}
+          onDelete={(id, name) => setDeleteConfirm({ isOpen: true, id, name })}
+        />
+      </CollapsibleSection>
 
       {/* Modals */}
       <AddParticipantModal
@@ -234,6 +229,8 @@ export default function Dashboard({ data, isEnded = false, userRole }: Dashboard
         confirmLabel="Excluir"
         variant="danger"
       />
+
+      <CampaignPrintReport data={data} orgName={orgName} />
     </div>
   );
 }

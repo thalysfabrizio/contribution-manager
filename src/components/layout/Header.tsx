@@ -4,7 +4,7 @@ import { useState, useRef, useEffect, useCallback } from 'react';
 import { signOut } from 'next-auth/react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import { ChevronDown, Settings, LogOut, User, HandCoins, FileText, Shield, UserCog, Plus } from 'lucide-react';
+import { ChevronDown, LogOut, User, HandCoins, FileText, Shield, UserCog, Plus } from 'lucide-react';
 import { AccessibilityPanel } from './AccessibilityPanel';
 
 interface Campaign {
@@ -74,8 +74,8 @@ export function Header({ userName, userImage, campaigns }: HeaderProps) {
             </span>
           </Link>
 
-          {/* Seletor de campanha — só aparece se 2+ */}
-          {campaigns.length >= 2 && (
+          {/* Seletor de campanha — aparece com 1+ para dar acesso a "Nova campanha" */}
+          {campaigns.length >= 1 && (
             <div ref={campaignRef} className="relative">
               <button
                 onClick={() => {
@@ -115,6 +115,16 @@ export function Header({ userName, userImage, campaigns }: HeaderProps) {
                       {c.name}
                     </Link>
                   ))}
+                  <div className="h-px bg-border my-1" role="separator" />
+                  <Link
+                    href="/campaigns/new"
+                    role="menuitem"
+                    onClick={() => setCampaignOpen(false)}
+                    className="flex items-center gap-2.5 px-3 py-2.5 text-sm text-primary hover:bg-primary/10 transition-colors rounded-lg"
+                  >
+                    <Plus size={16} aria-hidden="true" />
+                    Nova campanha
+                  </Link>
                 </div>
               )}
             </div>
@@ -123,18 +133,6 @@ export function Header({ userName, userImage, campaigns }: HeaderProps) {
 
         <div className="flex items-center gap-1.5">
           <AccessibilityPanel />
-
-          {/* Settings — só se tem campanha atual */}
-          {currentCampaignId && (
-            <Link
-              href={`/campaigns/${currentCampaignId}/settings`}
-              className="size-10 inline-flex items-center justify-center rounded-lg text-text-secondary hover:text-text-primary hover:bg-card-hover transition-colors duration-200 hidden md:inline-flex focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary"
-              aria-label="Configurações e templates da campanha"
-              title="Configurações e templates"
-            >
-              <Settings size={18} aria-hidden="true" />
-            </Link>
-          )}
 
           {/* Perfil */}
           <div ref={profileRef} className="relative">
@@ -167,26 +165,6 @@ export function Header({ userName, userImage, campaigns }: HeaderProps) {
                 <div className="px-3 py-2.5 text-xs text-text-muted border-b border-border mb-1">
                   {userName || 'Usuário'}
                 </div>
-                {currentCampaignId && (
-                  <Link
-                    href={`/campaigns/${currentCampaignId}/settings`}
-                    role="menuitem"
-                    onClick={() => setProfileOpen(false)}
-                    className="flex items-center gap-2.5 px-3 py-2.5 text-sm text-text-secondary hover:text-text-primary hover:bg-card-hover transition-colors rounded-lg md:hidden"
-                  >
-                    <Settings size={16} aria-hidden="true" />
-                    Configurações
-                  </Link>
-                )}
-                <Link
-                  href="/campaigns/new"
-                  role="menuitem"
-                  onClick={() => setProfileOpen(false)}
-                  className="flex items-center gap-2.5 px-3 py-2.5 text-sm text-text-secondary hover:text-text-primary hover:bg-card-hover transition-colors rounded-lg"
-                >
-                  <Plus size={16} aria-hidden="true" />
-                  Nova campanha
-                </Link>
                 <Link
                   href="/settings/account"
                   role="menuitem"
