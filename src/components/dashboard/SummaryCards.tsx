@@ -100,6 +100,7 @@ export function SummaryCards({ data, months }: SummaryCardsProps) {
                 aria-valuenow={card.progress}
                 aria-valuemin={0}
                 aria-valuemax={100}
+                aria-label={`${card.label}: ${card.progress}%`}
               />
             </div>
           )}

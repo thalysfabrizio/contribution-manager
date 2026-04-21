@@ -56,7 +56,7 @@ export default async function CampaignSettingsPage({ params }: Props) {
   }));
 
   return (
-    <main className="min-h-[calc(100dvh-4rem)] px-5 py-8 md:px-10 md:py-12">
+    <main id="main" className="min-h-[calc(100dvh-4rem)] px-5 py-8 md:px-10 md:py-12">
       <div className="max-w-[640px] mx-auto space-y-8">
         <div>
           <Link
@@ -96,7 +96,7 @@ export default async function CampaignSettingsPage({ params }: Props) {
         <div className="border border-danger/20 rounded-xl p-5 md:p-6 space-y-3">
           <div className="flex items-center gap-2.5">
             <AlertTriangle size={18} className="text-danger" aria-hidden="true" />
-            <h2 className="text-base font-semibold text-danger">Zona de perigo</h2>
+            <h2 className="text-base font-semibold text-danger-text">Zona de perigo</h2>
           </div>
           <p className="text-sm text-text-secondary leading-relaxed">
             Excluir a campanha remove todos os participantes, pagamentos e histórico permanentemente.

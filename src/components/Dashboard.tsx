@@ -114,7 +114,7 @@ export default function Dashboard({ data, orgName = null, isEnded = false, userR
           ) : (
             <>
               <span className="text-text-muted">PIX:</span>
-              <span className="text-primary font-medium max-w-[180px] truncate">{data.pixKey}</span>
+              <span className="text-primary-text font-medium max-w-[180px] truncate">{data.pixKey}</span>
               <Copy size={14} className="text-text-muted" aria-hidden="true" />
             </>
           )}

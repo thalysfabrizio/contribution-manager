@@ -13,20 +13,25 @@
   --color-text-secondary: #a1a1aa;
   --color-text-muted: #9898a3;
 
-  /* Ação */
-  --color-primary: #8b5cf6;
-  --color-primary-hover: #7c3aed;
+  /* Ação — primary darkened de violet-500 pra violet-600 pra atingir WCAG AA (4.5:1 com branco).
+     primary-text é a variante mais clara usada quando o accent vira *texto* sobre dark bg —
+     #7c3aed só tem 4.48:1 contra app/card (falha por uma fração); #a78bfa dá 7.4:1. */
+  --color-primary: #7c3aed;
+  --color-primary-hover: #6d28d9;
   --color-primary-fg: #ffffff;
+  --color-primary-text: #a78bfa;
 
-  /* Status */
+  /* Status — danger darkened de red-500 pra red-600 pra atingir WCAG AA com branco.
+     danger-text é a variante mais clara pra texto sobre dark bg. */
   --color-success: #10b981;
   --color-success-bg: rgba(16, 185, 129, 0.1);
   --color-info: #3b82f6;
   --color-info-bg: rgba(59, 130, 246, 0.1);
   --color-warning: #f59e0b;
   --color-warning-bg: rgba(245, 158, 11, 0.1);
-  --color-danger: #ef4444;
-  --color-danger-bg: rgba(239, 68, 68, 0.1);
+  --color-danger: #dc2626;
+  --color-danger-bg: rgba(220, 38, 38, 0.1);
+  --color-danger-text: #f87171;
   --color-pending: #71717a;
 }
 
@@ -39,10 +44,13 @@ html.light {
   --color-text-primary: #18181b;
   --color-text-secondary: #52525b;
   --color-text-muted: #71717a;
+  /* No light mode os accents de texto precisam ser ESCUROS pra contraste contra fundo claro. */
+  --color-primary-text: #6d28d9;
+  --color-danger-text: #b91c1c;
   --color-success-bg: rgba(16, 185, 129, 0.08);
   --color-info-bg: rgba(59, 130, 246, 0.08);
   --color-warning-bg: rgba(245, 158, 11, 0.08);
-  --color-danger-bg: rgba(239, 68, 68, 0.08);
+  --color-danger-bg: rgba(220, 38, 38, 0.08);
 }
 
 html.light ::-webkit-scrollbar-thumb {

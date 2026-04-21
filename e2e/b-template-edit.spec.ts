@@ -1,5 +1,6 @@
 import { test, expect } from '@playwright/test';
 import { resetData, seedCampaign, seedParticipant } from './helpers/db';
+import { expectNoA11yViolations } from './helpers/axe';
 
 test.beforeEach(async () => {
   await resetData();
@@ -11,11 +12,13 @@ test('B: edit charge template → persist on reload → WhatsApp link available'
 
   const CUSTOM_MARKER = 'MARCADOR-E2E-CHARGE';
   await page.goto(`/campaigns/${campaignId}/settings`);
+  await expectNoA11yViolations(page, 'campaign settings');
 
   const chargeTextarea = page.getByLabel('Template: Cobrança mensal');
   await expect(chargeTextarea).toBeVisible();
   await chargeTextarea.fill(`Olá [Nome Participante], ${CUSTOM_MARKER}.`);
-  await page.getByRole('button', { name: 'Salvar', exact: true }).click();
+  // Há três sanfonas com "Salvar" no header (Dados/Templates/Branding) — escopa ao #templates.
+  await page.locator('#templates').getByRole('button', { name: 'Salvar', exact: true }).click();
 
   await expect(page.getByText('Templates salvos')).toBeVisible({ timeout: 10_000 });
 

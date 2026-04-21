@@ -1,5 +1,6 @@
 import { test, expect } from '@playwright/test';
 import { resetData, seedCampaign } from './helpers/db';
+import { expectNoA11yViolations } from './helpers/axe';
 
 test.beforeEach(async () => {
   await resetData();
@@ -11,6 +12,7 @@ test('C: two campaigns → header selector navigates between them', async ({ pag
 
   await page.goto(`/campaigns/${firstId}`);
   await expect(page.getByRole('heading', { level: 1, name: 'Campanha Alpha' })).toBeVisible();
+  await expectNoA11yViolations(page, 'campaign dashboard (multi-campaign)');
 
   const selectorTrigger = page.getByRole('banner').getByRole('button', { name: 'Campanha Alpha' });
   await selectorTrigger.click();

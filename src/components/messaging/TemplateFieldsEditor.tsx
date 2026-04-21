@@ -131,7 +131,7 @@ export function TemplateFieldsEditor({
         <button
           type="button"
           onClick={() => setShowPreview(!showPreview)}
-          className="flex items-center gap-1.5 text-xs text-primary hover:text-primary-hover transition-colors min-h-[32px] px-1 focus-visible:outline-2 focus-visible:outline-offset-1 focus-visible:outline-primary rounded"
+          className="flex items-center gap-1.5 text-xs text-primary-text hover:opacity-80 transition-opacity min-h-[32px] px-1 focus-visible:outline-2 focus-visible:outline-offset-1 focus-visible:outline-primary rounded"
         >
           {showPreview ? <EyeOff size={12} aria-hidden="true" /> : <Eye size={12} aria-hidden="true" />}
           {showPreview ? 'Ocultar Preview' : 'Ver Preview'}
