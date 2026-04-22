@@ -102,6 +102,10 @@ export const campaignSchema = z
   .refine((data) => data.startMonth < data.endMonth, {
     message: 'Mês inicial deve ser anterior ao mês final',
     path: ['endMonth'],
+  })
+  .refine((data) => data.paymentDayStart <= data.paymentDayEnd, {
+    message: 'Dia de início precisa ser menor ou igual ao dia de fim',
+    path: ['paymentDayEnd'],
   });
 
 export const brandingSchema = z.object({
