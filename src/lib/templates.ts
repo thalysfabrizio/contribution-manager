@@ -10,15 +10,15 @@ export const DEFAULT_TEMPLATES: CampaignTemplates = {
 
 Efetue o pagamento no pix [Chave PIX]. O valor é de [Valor].
 
-[Meses Pendentes]
+Lembrando que estão pendentes os pagamentos dos meses: [Meses Pendentes].
 
 Se precisar de algo, só avisar!`,
 
-  reminder: `Olá [Nome Participante], lembrando que o prazo para contribuição do valor de [Valor] para a campanha [Nome da Campanha] é [Prazo Pagamento]! Nos ajude nessa obra!`,
+  reminder: `Olá [Nome Participante], lembrando que o prazo para contribuição do valor de [Valor] para a campanha [Nome da Campanha] é do dia [Prazo Pagamento] de cada mês! Nos ajude nessa obra!`,
 
   overdue: `Olá [Nome Participante], notamos que você tem pagamentos em atraso na campanha [Nome da Campanha].
 
-[Meses Pendentes]
+Meses em aberto: [Meses Pendentes].
 
 Por favor, regularize o quanto antes via PIX: [Chave PIX]. Valor: [Valor].
 

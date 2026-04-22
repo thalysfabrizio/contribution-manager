@@ -66,9 +66,9 @@ export function TemplateFieldsEditor({
         : 'R$ 0,00',
     campaignName: campaignName || '[Nome da Campanha]',
     currentMonth: new Date().toLocaleDateString('pt-BR', { month: '2-digit', year: '2-digit' }),
-    pendingMonths: 'Lembrando que estão pendentes os pagamentos dos meses: Jan/26, Fev/26.',
+    pendingMonths: 'Jan/26, Fev/26',
     remainingMonths: '6',
-    paymentDeadline: `do dia ${paymentDayStart} ao dia ${paymentDayEnd}`,
+    paymentDeadline: `${paymentDayStart} ao ${paymentDayEnd}`,
   };
 
   const tabs = Object.keys(TEMPLATE_LABELS) as (keyof CampaignTemplates)[];
