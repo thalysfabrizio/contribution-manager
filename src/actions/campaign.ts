@@ -5,11 +5,12 @@ import { getSessionUser, requireCampaignOwner } from '@/lib/permissions';
 import { brandingSchema, campaignSchema, emailSchema, templatesSchema } from '@/lib/validators';
 import { CampaignRole } from '@/generated/prisma/client';
 import { revalidatePath } from 'next/cache';
-import { redirect } from 'next/navigation';
 import { type ActionResult, handlePrismaError, ok } from '@/lib/errors';
 import { getStr, getOptStr } from '@/lib/form';
 
-export async function createCampaign(formData: FormData): Promise<ActionResult<never>> {
+export async function createCampaign(
+  formData: FormData,
+): Promise<ActionResult<{ campaignId: string }>> {
   let campaignId: string;
   try {
     const user = await getSessionUser();
@@ -122,7 +123,7 @@ export async function createCampaign(formData: FormData): Promise<ActionResult<n
     return handlePrismaError(e, { action: 'createCampaign' });
   }
 
-  redirect(`/campaigns/${campaignId}`);
+  return ok({ campaignId });
 }
 
 export async function updateCampaign(
@@ -226,7 +227,7 @@ export async function updateBranding(
   return ok(undefined);
 }
 
-export async function deleteCampaign(campaignId: string): Promise<ActionResult<never>> {
+export async function deleteCampaign(campaignId: string): Promise<ActionResult<void>> {
   try {
     await requireCampaignOwner(campaignId);
     await prisma.campaign.delete({ where: { id: campaignId } });
@@ -234,5 +235,6 @@ export async function deleteCampaign(campaignId: string): Promise<ActionResult<n
     return handlePrismaError(e, { action: 'deleteCampaign', campaignId });
   }
 
-  redirect('/campaigns');
+  revalidatePath('/campaigns');
+  return ok(undefined);
 }

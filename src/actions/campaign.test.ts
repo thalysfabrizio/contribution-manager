@@ -16,12 +16,6 @@ vi.mock('next/cache', () => ({
   revalidatePath: vi.fn(),
 }));
 
-vi.mock('next/navigation', () => ({
-  redirect: vi.fn((url: string) => {
-    throw new Error(`NEXT_REDIRECT:${url}`);
-  }),
-}));
-
 vi.mock('@/generated/prisma/client', () => ({
   CampaignRole: { OWNER: 'OWNER', MEMBER: 'MEMBER' },
 }));
@@ -61,7 +55,8 @@ describe('createCampaign', () => {
     mockPrisma.campaignMember.create.mockResolvedValue({});
     mockPrisma.auditLog.create.mockResolvedValue({});
 
-    await expect(createCampaign(validFormData())).rejects.toThrow('NEXT_REDIRECT');
+    const result = await createCampaign(validFormData());
+    expect(result).toEqual({ ok: true, data: { campaignId: 'new-campaign' } });
 
     expect(mockPrisma.campaign.create).toHaveBeenCalled();
     expect(mockPrisma.campaignMember.create).toHaveBeenCalledWith(
@@ -76,7 +71,7 @@ describe('createCampaign', () => {
     mockPrisma.campaignMember.create.mockResolvedValue({});
     mockPrisma.auditLog.create.mockResolvedValue({});
 
-    await expect(createCampaign(validFormData())).rejects.toThrow('NEXT_REDIRECT');
+    await createCampaign(validFormData());
 
     const call = mockPrisma.campaign.create.mock.calls[0][0];
     expect(call.data.monthlyValue).toBe(5000); // 50 * 100
@@ -87,18 +82,20 @@ describe('createCampaign', () => {
     mockPrisma.campaignMember.create.mockResolvedValue({});
     mockPrisma.auditLog.create.mockResolvedValue({});
 
-    await expect(createCampaign(validFormData())).rejects.toThrow('NEXT_REDIRECT');
+    await createCampaign(validFormData());
 
     const auditCall = mockPrisma.auditLog.create.mock.calls[0][0];
     expect(auditCall.data.action).toBe('CAMPAIGN_CREATED');
   });
 
-  it('faz redirect para /campaigns/{id}', async () => {
+  it('retorna campaignId no payload de sucesso', async () => {
     mockPrisma.campaign.create.mockResolvedValue(fakeCampaign({ id: 'abc123' }));
     mockPrisma.campaignMember.create.mockResolvedValue({});
     mockPrisma.auditLog.create.mockResolvedValue({});
 
-    await expect(createCampaign(validFormData())).rejects.toThrow('NEXT_REDIRECT:/campaigns/abc123');
+    const result = await createCampaign(validFormData());
+    expect(result.ok).toBe(true);
+    if (result.ok) expect(result.data.campaignId).toBe('abc123');
   });
 
   it('envolve as três operações em uma transação única', async () => {
@@ -136,7 +133,7 @@ describe('createCampaign', () => {
       messageSignature: 'Equipe X',
     });
 
-    await expect(createCampaign(fd)).rejects.toThrow('NEXT_REDIRECT');
+    await createCampaign(fd);
 
     const call = mockPrisma.campaign.create.mock.calls[0][0];
     expect(call.data.orgName).toBe('Igreja X');
@@ -160,7 +157,7 @@ describe('createCampaign', () => {
     const fd = validFormData();
     fd.append('templates', JSON.stringify(templates));
 
-    await expect(createCampaign(fd)).rejects.toThrow('NEXT_REDIRECT');
+    await createCampaign(fd);
 
     const call = mockPrisma.campaign.create.mock.calls[0][0];
     expect(call.data.templates).toEqual(templates);
@@ -171,7 +168,7 @@ describe('createCampaign', () => {
     mockPrisma.campaignMember.create.mockResolvedValue({});
     mockPrisma.auditLog.create.mockResolvedValue({});
 
-    await expect(createCampaign(validFormData())).rejects.toThrow('NEXT_REDIRECT');
+    await createCampaign(validFormData());
 
     const call = mockPrisma.campaign.create.mock.calls[0][0];
     expect(call.data).not.toHaveProperty('orgName');
@@ -202,12 +199,14 @@ describe('updateCampaign', () => {
 });
 
 describe('deleteCampaign', () => {
-  it('exige OWNER, deleta e redirect para /campaigns', async () => {
+  it('exige OWNER, deleta e revalida /campaigns', async () => {
     mockPrisma.campaign.delete.mockResolvedValue({});
 
-    await expect(deleteCampaign('campaign-1')).rejects.toThrow('NEXT_REDIRECT:/campaigns');
+    const result = await deleteCampaign('campaign-1');
+    expect(result).toEqual({ ok: true, data: undefined });
     expect(requireCampaignOwner).toHaveBeenCalledWith('campaign-1');
     expect(mockPrisma.campaign.delete).toHaveBeenCalledWith({ where: { id: 'campaign-1' } });
+    expect(revalidatePath).toHaveBeenCalledWith('/campaigns');
   });
 });
 

@@ -1,6 +1,7 @@
 'use client';
 
 import { useState } from 'react';
+import { useRouter } from 'next/navigation';
 import { deleteCampaign } from '@/actions/campaign';
 import { Button } from '@/components/ui/Button';
 import { Modal } from '@/components/ui/Modal';
@@ -13,6 +14,7 @@ interface Props {
 }
 
 export function DeleteCampaignButton({ campaignId, campaignName }: Props) {
+  const router = useRouter();
   const [isOpen, setIsOpen] = useState(false);
   const [loading, setLoading] = useState(false);
   const [confirmText, setConfirmText] = useState('');
@@ -87,7 +89,9 @@ export function DeleteCampaignButton({ campaignId, campaignName }: Props) {
                 if (!result.ok) {
                   toast(result.error, 'error');
                   setLoading(false);
+                  return;
                 }
+                router.push('/campaigns');
               }}
               disabled={!canSubmit}
               className="flex-1"
