@@ -1,153 +1,17 @@
 import NextAuth from 'next-auth';
 import Google from 'next-auth/providers/google';
 import Resend from 'next-auth/providers/resend';
+import { PrismaAdapter } from '@auth/prisma-adapter';
 import { prisma } from './prisma';
 import { authConfig } from './auth.config';
 import { CURRENT_CONSENT_VERSION } from './consent';
 import { recordConsentIfMissing } from './consent-service';
 import { env } from './env';
-import type { Adapter, AdapterUser, AdapterSession } from 'next-auth/adapters';
-
-function PrismaAdapter(): Adapter {
-  return {
-    async createUser(data) {
-      // NextAuth força emailVerified=null no fluxo OAuth
-      // (handle-login.js:260). Como OAuth providers já verificam o email
-      // pela autenticação OIDC, marcamos como verificado na criação.
-      // Magic link chega aqui com emailVerified=Date (pós-verificação) e
-      // permanece.
-      const user = await prisma.user.create({
-        data: {
-          email: data.email,
-          name: data.name,
-          image: data.image,
-          emailVerified: data.emailVerified ?? new Date(),
-        },
-      });
-      return user as AdapterUser;
-    },
-
-    async getUser(id) {
-      const user = await prisma.user.findUnique({ where: { id } });
-      return (user as AdapterUser) ?? null;
-    },
-
-    async getUserByEmail(email) {
-      const user = await prisma.user.findUnique({ where: { email } });
-      return (user as AdapterUser) ?? null;
-    },
-
-    async getUserByAccount({ provider, providerAccountId }) {
-      const account = await prisma.account.findUnique({
-        where: { provider_providerAccountId: { provider, providerAccountId } },
-        include: { user: true },
-      });
-      return (account?.user as AdapterUser) ?? null;
-    },
-
-    async updateUser(data) {
-      const user = await prisma.user.update({
-        where: { id: data.id },
-        data: {
-          name: data.name,
-          email: data.email,
-          image: data.image,
-          emailVerified: data.emailVerified,
-        },
-      });
-      return user as AdapterUser;
-    },
-
-    async deleteUser(id) {
-      await prisma.user.delete({ where: { id } });
-    },
-
-    async linkAccount(data) {
-      await prisma.account.create({
-        data: {
-          userId: data.userId,
-          type: data.type,
-          provider: data.provider,
-          providerAccountId: data.providerAccountId,
-          refresh_token: data.refresh_token,
-          access_token: data.access_token,
-          expires_at: data.expires_at,
-          token_type: data.token_type,
-          scope: data.scope,
-          id_token: data.id_token,
-          session_state: data.session_state as string | undefined,
-        },
-      });
-    },
-
-    async unlinkAccount({ provider, providerAccountId }) {
-      await prisma.account.delete({
-        where: { provider_providerAccountId: { provider, providerAccountId } },
-      });
-    },
-
-    async createSession(data) {
-      const session = await prisma.session.create({
-        data: {
-          userId: data.userId,
-          sessionToken: data.sessionToken,
-          expires: data.expires,
-        },
-      });
-      return session as AdapterSession;
-    },
-
-    async getSessionAndUser(sessionToken) {
-      const session = await prisma.session.findUnique({
-        where: { sessionToken },
-        include: { user: true },
-      });
-      if (!session) return null;
-      return {
-        session: session as AdapterSession,
-        user: session.user as AdapterUser,
-      };
-    },
-
-    async updateSession(data) {
-      const session = await prisma.session.update({
-        where: { sessionToken: data.sessionToken },
-        data: { expires: data.expires },
-      });
-      return session as AdapterSession;
-    },
-
-    async deleteSession(sessionToken) {
-      await prisma.session.delete({ where: { sessionToken } });
-    },
-
-    async createVerificationToken(data) {
-      const token = await prisma.verificationToken.create({
-        data: {
-          identifier: data.identifier,
-          token: data.token,
-          expires: data.expires,
-        },
-      });
-      return token;
-    },
-
-    async useVerificationToken({ identifier, token }) {
-      try {
-        const vt = await prisma.verificationToken.delete({
-          where: { identifier_token: { identifier, token } },
-        });
-        return vt;
-      } catch {
-        return null;
-      }
-    },
-  };
-}
+import type { AdapterUser } from 'next-auth/adapters';
 
 export const { handlers, auth, signIn, signOut } = NextAuth({
   ...authConfig,
-  adapter: PrismaAdapter(),
+  adapter: PrismaAdapter(prisma),
   providers: [
     Google({
       clientId: env.GOOGLE_CLIENT_ID,
@@ -161,6 +25,9 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
   callbacks: {
     ...authConfig.callbacks,
     async signIn({ user, account, profile }) {
+      // OAuth providers verificam email pela autenticação OIDC; marcamos
+      // como verificado para evitar o "verifique seu email" que NextAuth
+      // dispara por default mesmo após Google/etc.
       const adapterUser = user as AdapterUser;
       const isOAuthProvider = account?.type === 'oauth' || account?.type === 'oidc';
       const oauthVerified = (profile as { email_verified?: boolean } | undefined)?.email_verified;
@@ -178,6 +45,18 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
     },
   },
   events: {
+    async createUser({ user }) {
+      // O PrismaAdapter oficial não recebe emailVerified no createUser;
+      // backfill aqui pra fluxo magic-link (que cria + verifica em sequência)
+      // continuar idempotente.
+      const adapterUser = user as AdapterUser;
+      if (adapterUser.id && !adapterUser.emailVerified) {
+        await prisma.user.update({
+          where: { id: adapterUser.id },
+          data: { emailVerified: new Date() },
+        });
+      }
+    },
     async signIn({ user }) {
       if (!user?.id) return;
       await recordConsentIfMissing(prisma, user.id, CURRENT_CONSENT_VERSION);
