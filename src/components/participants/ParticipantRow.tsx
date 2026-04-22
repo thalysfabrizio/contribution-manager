@@ -11,7 +11,6 @@ interface ParticipantRowProps {
   participant: CampaignData['participants'][number];
   months: MonthEntry[];
   isEnded: boolean;
-  loadingId: string | null;
   isHighlighted?: boolean;
   onToggle: (participantId: string, monthDate: Date, newStatus: PaymentStatus) => void;
   onEdit: (participant: CampaignData['participants'][number]) => void;
@@ -23,7 +22,6 @@ export function ParticipantRow({
   participant: p,
   months,
   isEnded,
-  loadingId,
   isHighlighted,
   onToggle,
   onEdit,
@@ -66,8 +64,6 @@ export function ParticipantRow({
       {months.map((m) => {
         const payment = p.payments.find((pay) => isSameMonth(pay.month, m.date));
         const status = payment?.status;
-        const cellId = `${p.id}-${m.date.toISOString()}`;
-        const isLoading = loadingId === cellId;
         return (
           <td
             key={m.date.toISOString()}
@@ -75,7 +71,7 @@ export function ParticipantRow({
           >
             <PaymentToggle
               status={status}
-              isLoading={isLoading}
+              isLoading={false}
               isDisabled={isEnded}
               onSelect={(newStatus) => onToggle(p.id, m.date, newStatus)}
             />

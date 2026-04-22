@@ -11,7 +11,6 @@ interface ParticipantCardProps {
   participant: CampaignData['participants'][number];
   months: MonthEntry[];
   isEnded: boolean;
-  loadingId: string | null;
   isHighlighted?: boolean;
   onToggle: (participantId: string, monthDate: Date, newStatus: PaymentStatus) => void;
   onEdit: (participant: CampaignData['participants'][number]) => void;
@@ -23,7 +22,6 @@ export function ParticipantCard({
   participant: p,
   months,
   isEnded,
-  loadingId,
   isHighlighted,
   onToggle,
   onEdit,
@@ -99,8 +97,6 @@ export function ParticipantCard({
         {months.map((m) => {
           const payment = p.payments.find((pay) => isSameMonth(pay.month, m.date));
           const status = payment?.status;
-          const cellId = `${p.id}-${m.date.toISOString()}`;
-          const isLoading = loadingId === cellId;
           return (
             <div key={m.date.toISOString()} className="flex flex-col items-center gap-1">
               <span
@@ -112,7 +108,7 @@ export function ParticipantCard({
               </span>
               <PaymentToggle
                 status={status}
-                isLoading={isLoading}
+                isLoading={false}
                 isDisabled={isEnded}
                 onSelect={(newStatus) => onToggle(p.id, m.date, newStatus)}
               />

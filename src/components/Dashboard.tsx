@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useOptimistic, useState, startTransition } from 'react';
 import Link from 'next/link';
 import { Plus, Copy, Check, FileDown, Settings } from 'lucide-react';
 import { updatePaymentStatus } from '@/actions/payment';
@@ -24,9 +24,52 @@ interface DashboardProps {
   printSlot?: React.ReactNode;
 }
 
+type OptimisticUpdate = {
+  participantId: string;
+  monthIso: string;
+  status: PaymentStatus;
+};
+
+function applyOptimisticUpdate(
+  participants: CampaignData['participants'],
+  update: OptimisticUpdate,
+): CampaignData['participants'] {
+  return participants.map((p) => {
+    if (p.id !== update.participantId) return p;
+    const idx = p.payments.findIndex((pay) => pay.month.toISOString() === update.monthIso);
+    if (update.status === 'PENDING') {
+      return idx >= 0
+        ? { ...p, payments: p.payments.filter((_, i) => i !== idx) }
+        : p;
+    }
+    if (idx >= 0) {
+      return {
+        ...p,
+        payments: p.payments.map((pay, i) =>
+          i === idx ? { ...pay, status: update.status } : pay,
+        ),
+      };
+    }
+    return {
+      ...p,
+      payments: [
+        ...p.payments,
+        {
+          id: `optimistic-${update.participantId}-${update.monthIso}`,
+          month: new Date(update.monthIso),
+          status: update.status,
+        },
+      ],
+    };
+  });
+}
+
 export default function Dashboard({ data, isEnded = false, userRole, topSlot, printSlot }: DashboardProps) {
   const isOwner = userRole === 'OWNER';
-  const [loadingId, setLoadingId] = useState<string | null>(null);
+  const [optimisticParticipants, addOptimistic] = useOptimistic(
+    data.participants,
+    applyOptimisticUpdate,
+  );
   const [copiedFull, setCopiedFull] = useState(false);
   const [editModal, setEditModal] = useState<{
     isOpen: boolean;
@@ -51,13 +94,17 @@ export default function Dashboard({ data, isEnded = false, userRole, topSlot, pr
 
   const months = getMonthsFromRange(data.startMonth, data.endMonth);
 
-  const handleToggle = async (participantId: string, monthDate: Date, newStatus: PaymentStatus) => {
-    if (loadingId || isEnded) return;
-    const id = `${participantId}-${monthDate.toISOString()}`;
-    setLoadingId(id);
-    const result = await updatePaymentStatus(data.id, participantId, monthDate, newStatus);
-    if (!result.ok) toast(result.error, 'error');
-    setLoadingId(null);
+  const handleToggle = (participantId: string, monthDate: Date, newStatus: PaymentStatus) => {
+    if (isEnded) return;
+    startTransition(async () => {
+      addOptimistic({
+        participantId,
+        monthIso: monthDate.toISOString(),
+        status: newStatus,
+      });
+      const result = await updatePaymentStatus(data.id, participantId, monthDate, newStatus);
+      if (!result.ok) toast(result.error, 'error');
+    });
   };
 
   const handleDelete = async () => {
@@ -179,10 +226,9 @@ export default function Dashboard({ data, isEnded = false, userRole, topSlot, pr
       {/* Participants Table */}
       <CollapsibleSection id="participants" title="Participantes">
         <ParticipantTable
-          participants={data.participants}
+          participants={optimisticParticipants}
           months={months}
           isEnded={isEnded}
-          loadingId={loadingId}
           highlightId={highlightId}
           onToggle={handleToggle}
           onEdit={(p) => setEditModal({ isOpen: true, participant: p })}

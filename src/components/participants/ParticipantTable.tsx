@@ -13,7 +13,6 @@ interface ParticipantTableProps {
   participants: CampaignData['participants'];
   months: MonthEntry[];
   isEnded: boolean;
-  loadingId: string | null;
   highlightId?: string | null;
   onToggle: (participantId: string, monthDate: Date, newStatus: PaymentStatus) => void;
   onEdit: (participant: CampaignData['participants'][number]) => void;
@@ -25,7 +24,6 @@ export function ParticipantTable({
   participants,
   months,
   isEnded,
-  loadingId,
   highlightId,
   onToggle,
   onEdit,
@@ -51,7 +49,6 @@ export function ParticipantTable({
               participant={p}
               months={months}
               isEnded={isEnded}
-              loadingId={loadingId}
               isHighlighted={highlightId === p.id}
               onToggle={onToggle}
               onEdit={onEdit}
@@ -112,7 +109,6 @@ export function ParticipantTable({
                   participant={p}
                   months={months}
                   isEnded={isEnded}
-                  loadingId={loadingId}
                   isHighlighted={highlightId === p.id}
                   onToggle={onToggle}
                   onEdit={onEdit}
