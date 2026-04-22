@@ -192,13 +192,16 @@ export default function Dashboard({ data, isEnded = false, userRole, topSlot, pr
       </CollapsibleSection>
 
       {/* Modals */}
-      <AddParticipantModal
-        isOpen={editModal.isOpen}
-        onClose={() => setEditModal({ isOpen: false, participant: null })}
-        campaignId={data.id}
-        participant={editModal.participant}
-        onAdded={handleAdded}
-      />
+      {editModal.isOpen && (
+        <AddParticipantModal
+          key={editModal.participant?.id ?? 'new'}
+          isOpen
+          onClose={() => setEditModal({ isOpen: false, participant: null })}
+          campaignId={data.id}
+          participant={editModal.participant}
+          onAdded={handleAdded}
+        />
+      )}
 
       <MessageModal
         isOpen={msgModal.isOpen}

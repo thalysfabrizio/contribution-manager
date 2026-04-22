@@ -114,6 +114,7 @@ export default async function CampaignPage({ params }: Props) {
           </div>
         </CollapsibleSection>
         <ActivityTimeline
+          key={id}
           campaignId={id}
           initialItems={activityItems}
           hasMore={logs.length > 20}

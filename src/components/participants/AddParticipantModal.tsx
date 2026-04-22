@@ -21,23 +21,11 @@ export function AddParticipantModal({ isOpen, onClose, campaignId, participant, 
   const isEditing = !!participant;
   const { toast } = useToast();
 
-  const [phone, setPhone] = useState('');
-  const [name, setName] = useState('');
+  const [phone, setPhone] = useState(participant?.person.phone ?? '');
+  const [name, setName] = useState(participant?.person.name ?? '');
   const [phoneLookup, setPhoneLookup] = useState<{ name: string; phone: string } | null>(null);
   const [isSearching, setIsSearching] = useState(false);
   const [loading, setLoading] = useState(false);
-
-  const [prevIsOpen, setPrevIsOpen] = useState(isOpen);
-  const [prevParticipant, setPrevParticipant] = useState(participant);
-  if (prevIsOpen !== isOpen || prevParticipant !== participant) {
-    setPrevIsOpen(isOpen);
-    setPrevParticipant(participant);
-    if (isOpen) {
-      setPhone(participant?.person.phone ?? '');
-      setName(participant?.person.name ?? '');
-      setPhoneLookup(null);
-    }
-  }
 
   const handlePhoneChange = async (value: string) => {
     setPhone(value);

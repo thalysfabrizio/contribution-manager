@@ -31,15 +31,6 @@ export function ActivityTimeline({ campaignId, initialItems, hasMore: initialHas
   const [loading, setLoading] = useState(false);
   const { toast } = useToast();
 
-  const [prevInitialItems, setPrevInitialItems] = useState(initialItems);
-  const [prevInitialHasMore, setPrevInitialHasMore] = useState(initialHasMore);
-  if (prevInitialItems !== initialItems || prevInitialHasMore !== initialHasMore) {
-    setPrevInitialItems(initialItems);
-    setPrevInitialHasMore(initialHasMore);
-    setItems(initialItems);
-    setHasMore(initialHasMore);
-  }
-
   const loadMore = async () => {
     setLoading(true);
     const lastItem = items[items.length - 1];
