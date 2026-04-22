@@ -1,5 +1,4 @@
 import { auth } from '@/lib/auth';
-import { prisma } from '@/lib/prisma';
 import { redirect } from 'next/navigation';
 import Link from 'next/link';
 import { Card } from '@/components/ui/Card';
@@ -7,6 +6,7 @@ import { Button } from '@/components/ui/Button';
 import { Badge } from '@/components/ui/Badge';
 import { Plus, Users, Calendar, ArrowRight } from 'lucide-react';
 import { isCampaignEnded } from '@/lib/months';
+import { getUserMemberships } from '@/lib/queries';
 
 export const dynamic = 'force-dynamic';
 
@@ -14,21 +14,11 @@ export default async function CampaignsPage() {
   const session = await auth();
   if (!session?.user?.id) redirect('/login');
 
-  const memberships = await prisma.campaignMember.findMany({
-    where: { userId: session.user.id },
-    include: {
-      campaign: {
-        include: {
-          _count: { select: { participants: true } },
-        },
-      },
-    },
-    orderBy: { campaign: { createdAt: 'desc' } },
-  });
+  const memberships = await getUserMemberships(session.user.id);
 
   // 1 campanha → ir direto
   if (memberships.length === 1) {
-    redirect(`/campaigns/${memberships[0].campaignId}`);
+    redirect(`/campaigns/${memberships[0].campaign.id}`);
   }
 
   return (
