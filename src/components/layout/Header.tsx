@@ -1,12 +1,14 @@
 'use client';
 
-import { useState, useRef, useEffect, useCallback } from 'react';
+import { useState, useRef } from 'react';
 import { signOut } from 'next-auth/react';
 import Link from 'next/link';
 import Image from 'next/image';
 import { usePathname } from 'next/navigation';
 import { ChevronDown, LogOut, User, HandCoins, FileText, Shield, UserCog, Plus } from 'lucide-react';
 import { AccessibilityPanel } from './AccessibilityPanel';
+import { useClickOutside } from '@/hooks/useClickOutside';
+import { useEscape } from '@/hooks/useEscape';
 
 interface Campaign {
   id: string;
@@ -32,30 +34,13 @@ export function Header({ userName, userImage, campaigns }: HeaderProps) {
   const currentCampaignId = pathname?.match(/^\/campaigns\/([^/]+)/)?.[1];
   const currentCampaign = campaigns.find((c) => c.id === currentCampaignId);
 
-  const closeAll = useCallback(() => {
+  const anyOpen = campaignOpen || profileOpen;
+  useClickOutside(campaignRef, () => setCampaignOpen(false), campaignOpen);
+  useClickOutside(profileRef, () => setProfileOpen(false), profileOpen);
+  useEscape(() => {
     setCampaignOpen(false);
     setProfileOpen(false);
-  }, []);
-
-  useEffect(() => {
-    function handleClick(e: MouseEvent) {
-      if (campaignRef.current && !campaignRef.current.contains(e.target as Node)) {
-        setCampaignOpen(false);
-      }
-      if (profileRef.current && !profileRef.current.contains(e.target as Node)) {
-        setProfileOpen(false);
-      }
-    }
-    function handleKeyDown(e: KeyboardEvent) {
-      if (e.key === 'Escape') closeAll();
-    }
-    document.addEventListener('mousedown', handleClick);
-    document.addEventListener('keydown', handleKeyDown);
-    return () => {
-      document.removeEventListener('mousedown', handleClick);
-      document.removeEventListener('keydown', handleKeyDown);
-    };
-  }, [closeAll]);
+  }, anyOpen);
 
   return (
     <header className="sticky top-0 z-40 bg-app/90 backdrop-blur-md border-b border-border">

@@ -1,8 +1,10 @@
 'use client';
 
-import { useState, useRef, useEffect, useCallback } from 'react';
+import { useState, useRef } from 'react';
 import { getStatusDisplay } from '@/lib/payment-utils';
 import { PAYMENT_OPTIONS } from '@/lib/payment-utils';
+import { useClickOutside } from '@/hooks/useClickOutside';
+import { useEscape } from '@/hooks/useEscape';
 import type { PaymentStatus } from '@/types';
 
 interface PaymentToggleProps {
@@ -18,7 +20,7 @@ export function PaymentToggle({ status, isLoading, isDisabled, onSelect }: Payme
   const ref = useRef<HTMLDivElement>(null);
   const display = getStatusDisplay(status);
 
-  const close = useCallback(() => setOpen(false), []);
+  const close = () => setOpen(false);
 
   const toggle = () => {
     if (isDisabled || isLoading) return;
@@ -32,21 +34,8 @@ export function PaymentToggle({ status, isLoading, isDisabled, onSelect }: Payme
     setOpen(!open);
   };
 
-  useEffect(() => {
-    if (!open) return;
-    function handleClick(e: MouseEvent) {
-      if (ref.current && !ref.current.contains(e.target as Node)) close();
-    }
-    function handleKey(e: KeyboardEvent) {
-      if (e.key === 'Escape') close();
-    }
-    document.addEventListener('mousedown', handleClick);
-    document.addEventListener('keydown', handleKey);
-    return () => {
-      document.removeEventListener('mousedown', handleClick);
-      document.removeEventListener('keydown', handleKey);
-    };
-  }, [open, close]);
+  useClickOutside(ref, close, open);
+  useEscape(close, open);
 
   return (
     <div ref={ref} className="relative inline-flex">

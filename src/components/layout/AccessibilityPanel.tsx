@@ -2,6 +2,8 @@
 
 import { useState, useEffect, useRef } from 'react';
 import { Sun, Moon, Type, Eye } from 'lucide-react';
+import { useClickOutside } from '@/hooks/useClickOutside';
+import { useEscape } from '@/hooks/useEscape';
 
 type FontSize = 'normal' | 'large' | 'xl';
 type Theme = 'dark' | 'light';
@@ -50,21 +52,8 @@ export function AccessibilityPanel() {
     if (hydrated) localStorage.setItem('a11y-motion', String(reducedMotion));
   }, [reducedMotion, hydrated]);
 
-  useEffect(() => {
-    if (!open) return;
-    function handleClick(e: MouseEvent) {
-      if (wrapperRef.current && !wrapperRef.current.contains(e.target as Node)) setOpen(false);
-    }
-    function handleKey(e: KeyboardEvent) {
-      if (e.key === 'Escape') setOpen(false);
-    }
-    document.addEventListener('mousedown', handleClick);
-    document.addEventListener('keydown', handleKey);
-    return () => {
-      document.removeEventListener('mousedown', handleClick);
-      document.removeEventListener('keydown', handleKey);
-    };
-  }, [open]);
+  useClickOutside(wrapperRef, () => setOpen(false), open);
+  useEscape(() => setOpen(false), open);
 
   return (
     <div ref={wrapperRef} className="relative">
