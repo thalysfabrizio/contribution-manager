@@ -1,13 +1,14 @@
 'use client';
 
-import { useState } from 'react';
+import { useActionState, useState } from 'react';
 import { updateCampaign } from '@/actions/campaign';
-import { Button } from '@/components/ui/Button';
+import { SubmitButton } from '@/components/ui/SubmitButton';
 import { Input, Textarea } from '@/components/ui/Input';
 import { CollapsibleSection } from '@/components/ui/CollapsibleSection';
 import { useToast } from '@/components/ui/Toast';
 import { MonthYearPicker } from './MonthYearPicker';
 import { Save } from 'lucide-react';
+import type { ActionResult } from '@/lib/errors';
 
 interface CampaignFormProps {
   campaign: {
@@ -31,7 +32,6 @@ function toMonthString(date: Date) {
 
 export function CampaignForm({ campaign }: CampaignFormProps) {
   const { toast } = useToast();
-  const [loading, setLoading] = useState(false);
   const [open, setOpen] = useState(false);
 
   const [name, setName] = useState(campaign.name);
@@ -53,40 +53,31 @@ export function CampaignForm({ campaign }: CampaignFormProps) {
     paymentDayStart !== String(campaign.paymentDayStart) ||
     paymentDayEnd !== String(campaign.paymentDayEnd);
 
+  const submit = async (
+    _prev: ActionResult<void> | null,
+    formData: FormData,
+  ): Promise<ActionResult<void>> => {
+    const result = await updateCampaign(campaign.id, formData);
+    if (!result.ok) {
+      toast(result.error, 'error');
+    } else {
+      toast('Campanha atualizada', 'success');
+      setOpen(false);
+    }
+    return result;
+  };
+
+  const [, formAction] = useActionState(submit, null);
+
   const saveButton = (
-    <Button type="submit" size="sm" disabled={loading || !isDirty} form="campaign-form">
-      {loading ? (
-        <span className="flex items-center gap-1.5">
-          <span className="size-3 border-2 border-primary-fg/30 border-t-primary-fg rounded-full animate-spin" />
-          Salvando...
-        </span>
-      ) : (
-        <>
-          <Save size={13} aria-hidden="true" />
-          Salvar
-        </>
-      )}
-    </Button>
+    <SubmitButton size="sm" disabled={!isDirty} form="campaign-form">
+      <Save size={13} aria-hidden="true" />
+      Salvar
+    </SubmitButton>
   );
 
   return (
-    <form
-      id="campaign-form"
-      action={async (formData) => {
-        setLoading(true);
-        try {
-          const result = await updateCampaign(campaign.id, formData);
-          if (!result.ok) {
-            toast(result.error, 'error');
-            return;
-          }
-          toast('Campanha atualizada', 'success');
-          setOpen(false);
-        } finally {
-          setLoading(false);
-        }
-      }}
-    >
+    <form id="campaign-form" action={formAction}>
       <CollapsibleSection
         id="campaign-data"
         title="Dados da Campanha"

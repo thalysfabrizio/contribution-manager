@@ -1,13 +1,15 @@
 'use client';
 
-import { useState } from 'react';
+import { useActionState, useState } from 'react';
 import { addParticipant, editParticipant, searchPersonByPhone } from '@/actions/participant';
 import { Modal } from '@/components/ui/Modal';
 import { Button } from '@/components/ui/Button';
+import { SubmitButton } from '@/components/ui/SubmitButton';
 import { Input } from '@/components/ui/Input';
 import { useToast } from '@/components/ui/Toast';
 import { UserCheck, Search } from 'lucide-react';
 import type { CampaignData } from '@/types';
+import type { ActionResult } from '@/lib/errors';
 
 interface AddParticipantModalProps {
   isOpen: boolean;
@@ -25,7 +27,6 @@ export function AddParticipantModal({ isOpen, onClose, campaignId, participant, 
   const [name, setName] = useState(participant?.person.name ?? '');
   const [phoneLookup, setPhoneLookup] = useState<{ name: string; phone: string } | null>(null);
   const [isSearching, setIsSearching] = useState(false);
-  const [loading, setLoading] = useState(false);
 
   const handlePhoneChange = async (value: string) => {
     setPhone(value);
@@ -50,42 +51,40 @@ export function AddParticipantModal({ isOpen, onClose, campaignId, participant, 
     }
   };
 
-  const handleClose = () => {
-    setLoading(false);
-    onClose();
+  const submit = async (
+    _prev: ActionResult<unknown> | null,
+    formData: FormData,
+  ): Promise<ActionResult<unknown>> => {
+    if (isEditing) {
+      const result = await editParticipant(campaignId, participant.id, formData);
+      if (!result.ok) {
+        toast(result.error, 'error');
+      } else {
+        toast('Participante atualizado', 'success');
+        onClose();
+      }
+      return result;
+    }
+    const result = await addParticipant(campaignId, formData);
+    if (!result.ok) {
+      toast(result.error, 'error');
+    } else {
+      toast('Participante adicionado', 'success');
+      onAdded?.(result.data.participantId);
+      onClose();
+    }
+    return result;
   };
+
+  const [, formAction] = useActionState(submit, null);
 
   return (
     <Modal
       isOpen={isOpen}
-      onClose={handleClose}
+      onClose={onClose}
       title={isEditing ? 'Editar Participante' : 'Novo Participante'}
     >
-      <form
-        action={async (formData) => {
-          setLoading(true);
-          if (isEditing) {
-            const result = await editParticipant(campaignId, participant.id, formData);
-            if (!result.ok) {
-              toast(result.error, 'error');
-              setLoading(false);
-              return;
-            }
-            toast('Participante atualizado', 'success');
-          } else {
-            const result = await addParticipant(campaignId, formData);
-            if (!result.ok) {
-              toast(result.error, 'error');
-              setLoading(false);
-              return;
-            }
-            toast('Participante adicionado', 'success');
-            onAdded?.(result.data.participantId);
-          }
-          handleClose();
-        }}
-        className="space-y-4"
-      >
+      <form action={formAction} className="space-y-4">
         <div>
           <Input
             name="phone"
@@ -125,19 +124,12 @@ export function AddParticipantModal({ isOpen, onClose, campaignId, participant, 
         />
 
         <div className="flex justify-end gap-3 pt-2">
-          <Button type="button" variant="ghost" onClick={handleClose} disabled={loading}>
+          <Button type="button" variant="ghost" onClick={onClose}>
             Cancelar
           </Button>
-          <Button type="submit" disabled={loading}>
-            {loading ? (
-              <span className="flex items-center gap-2">
-                <span className="size-4 border-2 border-primary-fg/30 border-t-primary-fg rounded-full animate-spin" />
-                Salvando...
-              </span>
-            ) : (
-              isEditing ? 'Salvar' : phoneLookup ? 'Vincular' : 'Adicionar'
-            )}
-          </Button>
+          <SubmitButton>
+            {isEditing ? 'Salvar' : phoneLookup ? 'Vincular' : 'Adicionar'}
+          </SubmitButton>
         </div>
       </form>
     </Modal>

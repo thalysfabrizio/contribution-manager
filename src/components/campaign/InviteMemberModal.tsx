@@ -1,12 +1,14 @@
 'use client';
 
-import { useState } from 'react';
+import { useActionState, useState } from 'react';
 import { inviteMember } from '@/actions/member';
 import { Modal } from '@/components/ui/Modal';
 import { Button } from '@/components/ui/Button';
+import { SubmitButton } from '@/components/ui/SubmitButton';
 import { Input } from '@/components/ui/Input';
 import { useToast } from '@/components/ui/Toast';
 import { UserPlus } from 'lucide-react';
+import type { ActionResult } from '@/lib/errors';
 
 interface InviteMemberModalProps {
   isOpen: boolean;
@@ -16,36 +18,36 @@ interface InviteMemberModalProps {
 
 export function InviteMemberModal({ isOpen, onClose, campaignId }: InviteMemberModalProps) {
   const [email, setEmail] = useState('');
-  const [loading, setLoading] = useState(false);
   const { toast } = useToast();
 
   const handleClose = () => {
     setEmail('');
-    setLoading(false);
     onClose();
   };
 
+  const submit = async (
+    _prev: ActionResult<{ method: 'direct' | 'invite' }> | null,
+  ): Promise<ActionResult<{ method: 'direct' | 'invite' }>> => {
+    const result = await inviteMember(campaignId, email);
+    if (!result.ok) {
+      toast(result.error, 'error');
+    } else {
+      toast(
+        result.data.method === 'direct'
+          ? 'Líder adicionado com sucesso'
+          : 'Convite enviado — o líder terá acesso ao fazer login',
+        'success',
+      );
+      handleClose();
+    }
+    return result;
+  };
+
+  const [, formAction] = useActionState(submit, null);
+
   return (
     <Modal isOpen={isOpen} onClose={handleClose} title="Convidar Líder" size="sm">
-      <form
-        action={async () => {
-          setLoading(true);
-          const result = await inviteMember(campaignId, email);
-          if (!result.ok) {
-            toast(result.error, 'error');
-            setLoading(false);
-            return;
-          }
-          toast(
-            result.data.method === 'direct'
-              ? 'Líder adicionado com sucesso'
-              : 'Convite enviado — o líder terá acesso ao fazer login',
-            'success',
-          );
-          handleClose();
-        }}
-        className="space-y-4"
-      >
+      <form action={formAction} className="space-y-4">
         <Input
           type="email"
           name="email"
@@ -61,22 +63,13 @@ export function InviteMemberModal({ isOpen, onClose, campaignId }: InviteMemberM
           Caso contrário, terá acesso ao fazer login pela primeira vez.
         </p>
         <div className="flex justify-end gap-3">
-          <Button type="button" variant="ghost" onClick={handleClose} disabled={loading}>
+          <Button type="button" variant="ghost" onClick={handleClose}>
             Cancelar
           </Button>
-          <Button type="submit" disabled={loading}>
-            {loading ? (
-              <span className="flex items-center gap-1.5">
-                <span className="size-3.5 border-2 border-primary-fg/30 border-t-primary-fg rounded-full animate-spin" />
-                Convidando...
-              </span>
-            ) : (
-              <>
-                <UserPlus size={15} aria-hidden="true" />
-                Convidar
-              </>
-            )}
-          </Button>
+          <SubmitButton pendingLabel="Convidando...">
+            <UserPlus size={15} aria-hidden="true" />
+            Convidar
+          </SubmitButton>
         </div>
       </form>
     </Modal>

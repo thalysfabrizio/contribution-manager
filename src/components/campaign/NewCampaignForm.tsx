@@ -1,8 +1,10 @@
 'use client';
 
-import { useState } from 'react';
+import { useActionState, useState } from 'react';
+import { useRouter } from 'next/navigation';
 import { createCampaign } from '@/actions/campaign';
 import { Button } from '@/components/ui/Button';
+import { SubmitButton } from '@/components/ui/SubmitButton';
 import { Input, Textarea } from '@/components/ui/Input';
 import { CollapsibleSection } from '@/components/ui/CollapsibleSection';
 import { useToast } from '@/components/ui/Toast';
@@ -11,10 +13,11 @@ import { BrandingFields, DEFAULT_ACCENT, type BrandingValues } from './BrandingF
 import { TemplateFieldsEditor } from '@/components/messaging/TemplateFieldsEditor';
 import { DEFAULT_TEMPLATES, type CampaignTemplates } from '@/lib/templates';
 import { Plus, UserPlus, X } from 'lucide-react';
+import type { ActionResult } from '@/lib/errors';
 
 export function NewCampaignForm() {
+  const router = useRouter();
   const { toast } = useToast();
-  const [loading, setLoading] = useState(false);
 
   const [name, setName] = useState('');
   const [description, setDescription] = useState('');
@@ -70,53 +73,55 @@ export function NewCampaignForm() {
     setLeaderEmails(leaderEmails.filter((e) => e !== email));
   };
 
+  const submit = async (
+    _prev: ActionResult<{ campaignId: string }> | null,
+  ): Promise<ActionResult<{ campaignId: string }>> => {
+    const formData = new FormData();
+    formData.set('name', name);
+    formData.set('description', description);
+    formData.set('pixKey', pixKey);
+    formData.set('monthlyValue', monthlyValue);
+    formData.set('startMonth', startMonth);
+    formData.set('endMonth', endMonth);
+    formData.set('paymentDayStart', paymentDayStart);
+    formData.set('paymentDayEnd', paymentDayEnd);
+
+    const hasBranding =
+      branding.orgName.trim() !== '' ||
+      branding.logoUrl.trim() !== '' ||
+      branding.bannerUrl.trim() !== '' ||
+      branding.accentColor !== DEFAULT_ACCENT ||
+      branding.messageSignature.trim() !== '';
+
+    if (hasBranding) {
+      formData.set('orgName', branding.orgName);
+      formData.set('logoUrl', branding.logoUrl);
+      formData.set('bannerUrl', branding.bannerUrl);
+      formData.set('accentColor', branding.accentColor);
+      formData.set('messageSignature', branding.messageSignature);
+    }
+
+    if (templatesTouched) {
+      formData.set('templates', JSON.stringify(templates));
+    }
+
+    if (leaderEmails.length > 0) {
+      formData.set('leaderEmails', JSON.stringify(leaderEmails));
+    }
+
+    const result = await createCampaign(formData);
+    if (!result.ok) {
+      toast(result.error, 'error');
+    } else {
+      router.push(`/campaigns/${result.data.campaignId}`);
+    }
+    return result;
+  };
+
+  const [, formAction] = useActionState(submit, null);
+
   return (
-    <form
-      action={async () => {
-        setLoading(true);
-        try {
-          const formData = new FormData();
-          formData.set('name', name);
-          formData.set('description', description);
-          formData.set('pixKey', pixKey);
-          formData.set('monthlyValue', monthlyValue);
-          formData.set('startMonth', startMonth);
-          formData.set('endMonth', endMonth);
-          formData.set('paymentDayStart', paymentDayStart);
-          formData.set('paymentDayEnd', paymentDayEnd);
-
-          const hasBranding =
-            branding.orgName.trim() !== '' ||
-            branding.logoUrl.trim() !== '' ||
-            branding.bannerUrl.trim() !== '' ||
-            branding.accentColor !== DEFAULT_ACCENT ||
-            branding.messageSignature.trim() !== '';
-
-          if (hasBranding) {
-            formData.set('orgName', branding.orgName);
-            formData.set('logoUrl', branding.logoUrl);
-            formData.set('bannerUrl', branding.bannerUrl);
-            formData.set('accentColor', branding.accentColor);
-            formData.set('messageSignature', branding.messageSignature);
-          }
-
-          if (templatesTouched) {
-            formData.set('templates', JSON.stringify(templates));
-          }
-
-          if (leaderEmails.length > 0) {
-            formData.set('leaderEmails', JSON.stringify(leaderEmails));
-          }
-
-          const result = await createCampaign(formData);
-          // Em sucesso, redirect throw NEXT_REDIRECT antes de chegar aqui.
-          if (!result.ok) toast(result.error, 'error');
-        } finally {
-          setLoading(false);
-        }
-      }}
-      className="space-y-4"
-    >
+    <form action={formAction} className="space-y-4">
       <CollapsibleSection
         id="new-campaign-data"
         title="Dados da Campanha"
@@ -304,19 +309,10 @@ export function NewCampaignForm() {
       </CollapsibleSection>
 
       <div className="flex justify-end pt-2">
-        <Button type="submit" disabled={loading}>
-          {loading ? (
-            <span className="flex items-center gap-2">
-              <span className="size-4 border-2 border-primary-fg/30 border-t-primary-fg rounded-full animate-spin" />
-              Criando...
-            </span>
-          ) : (
-            <>
-              <Plus size={16} aria-hidden="true" />
-              Criar Campanha
-            </>
-          )}
-        </Button>
+        <SubmitButton pendingLabel="Criando...">
+          <Plus size={16} aria-hidden="true" />
+          Criar Campanha
+        </SubmitButton>
       </div>
     </form>
   );

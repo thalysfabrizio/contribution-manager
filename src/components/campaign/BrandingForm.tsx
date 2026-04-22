@@ -1,12 +1,13 @@
 'use client';
 
-import { useState } from 'react';
+import { useActionState, useState } from 'react';
 import { updateBranding } from '@/actions/campaign';
 import { CollapsibleSection } from '@/components/ui/CollapsibleSection';
-import { Button } from '@/components/ui/Button';
+import { SubmitButton } from '@/components/ui/SubmitButton';
 import { useToast } from '@/components/ui/Toast';
 import { Save } from 'lucide-react';
 import { BrandingFields, DEFAULT_ACCENT, type BrandingValues } from './BrandingFields';
+import type { ActionResult } from '@/lib/errors';
 
 interface BrandingFormProps {
   campaignId: string;
@@ -25,7 +26,6 @@ export function BrandingForm({
   accentColor,
   messageSignature,
 }: BrandingFormProps) {
-  const [loading, setLoading] = useState(false);
   const [open, setOpen] = useState(false);
   const [values, setValues] = useState<BrandingValues>({
     orgName: orgName ?? '',
@@ -43,39 +43,33 @@ export function BrandingForm({
     values.accentColor !== (accentColor ?? DEFAULT_ACCENT) ||
     values.messageSignature !== (messageSignature ?? '');
 
+  const submit = async (
+    _prev: ActionResult<void> | null,
+  ): Promise<ActionResult<void>> => {
+    const formData = new FormData();
+    formData.set('orgName', values.orgName);
+    formData.set('logoUrl', values.logoUrl);
+    formData.set('bannerUrl', values.bannerUrl);
+    formData.set('accentColor', values.accentColor);
+    formData.set('messageSignature', values.messageSignature);
+    const result = await updateBranding(campaignId, formData);
+    if (!result.ok) {
+      toast(result.error, 'error');
+    } else {
+      toast('Aparência atualizada', 'success');
+      setOpen(false);
+    }
+    return result;
+  };
+
+  const [, formAction] = useActionState(submit, null);
+
   const saveAction = (
-    <form
-      action={async () => {
-        setLoading(true);
-        const formData = new FormData();
-        formData.set('orgName', values.orgName);
-        formData.set('logoUrl', values.logoUrl);
-        formData.set('bannerUrl', values.bannerUrl);
-        formData.set('accentColor', values.accentColor);
-        formData.set('messageSignature', values.messageSignature);
-        const result = await updateBranding(campaignId, formData);
-        setLoading(false);
-        if (!result.ok) {
-          toast(result.error, 'error');
-          return;
-        }
-        toast('Aparência atualizada', 'success');
-        setOpen(false);
-      }}
-    >
-      <Button type="submit" size="sm" disabled={loading || !isDirty}>
-        {loading ? (
-          <span className="flex items-center gap-1.5">
-            <span className="size-3 border-2 border-primary-fg/30 border-t-primary-fg rounded-full animate-spin" />
-            Salvando...
-          </span>
-        ) : (
-          <>
-            <Save size={13} aria-hidden="true" />
-            Salvar
-          </>
-        )}
-      </Button>
+    <form action={formAction}>
+      <SubmitButton size="sm" disabled={!isDirty}>
+        <Save size={13} aria-hidden="true" />
+        Salvar
+      </SubmitButton>
     </form>
   );
 

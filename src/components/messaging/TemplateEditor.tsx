@@ -1,13 +1,14 @@
 'use client';
 
-import { useState } from 'react';
-import { Button } from '@/components/ui/Button';
+import { useActionState, useState } from 'react';
+import { SubmitButton } from '@/components/ui/SubmitButton';
 import { CollapsibleSection } from '@/components/ui/CollapsibleSection';
 import { useToast } from '@/components/ui/Toast';
 import { Save } from 'lucide-react';
 import { DEFAULT_TEMPLATES, type CampaignTemplates } from '@/lib/templates';
 import { updateTemplates } from '@/actions/campaign';
 import { TemplateFieldsEditor } from './TemplateFieldsEditor';
+import type { ActionResult } from '@/lib/errors';
 
 interface TemplateEditorProps {
   campaignId: string;
@@ -31,7 +32,6 @@ export function TemplateEditor({
   const [templates, setTemplates] = useState<CampaignTemplates>(
     initialTemplates ?? DEFAULT_TEMPLATES,
   );
-  const [saving, setSaving] = useState(false);
   const [open, setOpen] = useState(false);
   const { toast } = useToast();
 
@@ -42,33 +42,27 @@ export function TemplateEditor({
     templates.overdue !== baseline.overdue ||
     templates.thanks !== baseline.thanks;
 
+  const submit = async (
+    _prev: ActionResult<void> | null,
+  ): Promise<ActionResult<void>> => {
+    const result = await updateTemplates(campaignId, templates);
+    if (!result.ok) {
+      toast(result.error, 'error');
+    } else {
+      toast('Templates salvos', 'success');
+      setOpen(false);
+    }
+    return result;
+  };
+
+  const [, formAction] = useActionState(submit, null);
+
   const saveAction = (
-    <form
-      action={async () => {
-        setSaving(true);
-        const result = await updateTemplates(campaignId, templates);
-        setSaving(false);
-        if (!result.ok) {
-          toast(result.error, 'error');
-          return;
-        }
-        toast('Templates salvos', 'success');
-        setOpen(false);
-      }}
-    >
-      <Button type="submit" size="sm" disabled={saving || !isDirty}>
-        {saving ? (
-          <span className="flex items-center gap-1.5">
-            <span className="size-3 border-2 border-primary-fg/30 border-t-primary-fg rounded-full animate-spin" />
-            Salvando...
-          </span>
-        ) : (
-          <>
-            <Save size={13} aria-hidden="true" />
-            Salvar
-          </>
-        )}
-      </Button>
+    <form action={formAction}>
+      <SubmitButton size="sm" disabled={!isDirty}>
+        <Save size={13} aria-hidden="true" />
+        Salvar
+      </SubmitButton>
     </form>
   );
 
