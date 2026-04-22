@@ -8,12 +8,18 @@ import { PaymentMethodChart } from '@/components/dashboard/PaymentMethodChart';
 import { ActivityTimeline } from '@/components/activity/ActivityTimeline';
 import { CollapsibleSection } from '@/components/ui/CollapsibleSection';
 import { getMonthsFromRange, isCampaignEnded } from '@/lib/months';
-import type { CampaignData } from '@/types';
+import { getCampaignDetail } from '@/lib/queries';
 
 export const dynamic = 'force-dynamic';
 
 interface Props {
   params: Promise<{ id: string }>;
+}
+
+export async function generateMetadata({ params }: Props) {
+  const { id } = await params;
+  const campaign = await getCampaignDetail(id);
+  return { title: campaign?.name ?? 'Campanha' };
 }
 
 export default async function CampaignPage({ params }: Props) {
@@ -28,60 +34,30 @@ export default async function CampaignPage({ params }: Props) {
         campaignId: id,
       },
     },
+    select: { role: true },
   });
 
   if (!member) notFound();
 
-  const campaign = await prisma.campaign.findUnique({
-    where: { id },
-    include: {
-      participants: {
-        include: {
-          person: true,
-          payments: { orderBy: { month: 'asc' } },
-        },
-        orderBy: { person: { name: 'asc' } },
-      },
-    },
-  });
-
+  const campaign = await getCampaignDetail(id);
   if (!campaign) notFound();
-
-  const data: CampaignData = {
-    id: campaign.id,
-    name: campaign.name,
-    description: campaign.description,
-    pixKey: campaign.pixKey,
-    monthlyValue: campaign.monthlyValue,
-    startMonth: campaign.startMonth,
-    endMonth: campaign.endMonth,
-    paymentDayStart: campaign.paymentDayStart,
-    paymentDayEnd: campaign.paymentDayEnd,
-    messageSignature: campaign.messageSignature,
-    participants: campaign.participants.map((p) => ({
-      id: p.id,
-      person: {
-        id: p.person.id,
-        name: p.person.name,
-        phone: p.person.phone,
-      },
-      payments: p.payments.map((pay) => ({
-        id: pay.id,
-        month: pay.month,
-        status: pay.status,
-      })),
-    })),
-  };
 
   const isEnded = isCampaignEnded(campaign.endMonth);
   const months = getMonthsFromRange(campaign.startMonth, campaign.endMonth);
 
-  // Activity logs (first page)
   const logs = await prisma.auditLog.findMany({
     where: { campaignId: id },
     orderBy: { createdAt: 'desc' },
     take: 21,
-    include: { user: { select: { name: true } } },
+    select: {
+      id: true,
+      action: true,
+      entity: true,
+      entityId: true,
+      details: true,
+      createdAt: true,
+      user: { select: { name: true } },
+    },
   });
 
   const activityItems = logs.slice(0, 20).map((log) => ({
@@ -111,11 +87,11 @@ export default async function CampaignPage({ params }: Props) {
         </div>
       )}
       <div className="max-w-[1200px] mx-auto px-5 py-8 md:px-10 md:py-10 space-y-8">
-        <Dashboard data={data} orgName={campaign.orgName ?? null} isEnded={isEnded} userRole={member.role} />
+        <Dashboard data={campaign} orgName={campaign.orgName ?? null} isEnded={isEnded} userRole={member.role} />
         <CollapsibleSection id="analytics" title="Análise da Campanha">
           <div className="grid grid-cols-1 md:grid-cols-2 gap-x-8 gap-y-8">
-            <MonthlyProgress participants={data.participants} months={months} />
-            <PaymentMethodChart participants={data.participants} />
+            <MonthlyProgress participants={campaign.participants} months={months} />
+            <PaymentMethodChart participants={campaign.participants} />
           </div>
         </CollapsibleSection>
         <ActivityTimeline
