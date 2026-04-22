@@ -122,6 +122,7 @@ model Participant {
   joinedAt   DateTime  @default(now())
 
   @@unique([personId, campaignId])
+  @@index([campaignId])
 }
 
 model Payment {
