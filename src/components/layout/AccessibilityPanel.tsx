@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { Sun, Moon, Type, Eye } from 'lucide-react';
 
 type FontSize = 'normal' | 'large' | 'xl';
@@ -17,38 +17,57 @@ export function AccessibilityPanel() {
   const [theme, setTheme] = useState<Theme>('dark');
   const [fontSize, setFontSize] = useState<FontSize>('normal');
   const [reducedMotion, setReducedMotion] = useState(false);
+  const [hydrated, setHydrated] = useState(false);
+  const wrapperRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     // eslint-disable-next-line react-hooks/set-state-in-effect -- reads localStorage on mount; lazy init would break SSR hydration
     setTheme(getStored<Theme>('a11y-theme', 'dark'));
     setFontSize(getStored<FontSize>('a11y-fontsize', 'normal'));
     setReducedMotion(localStorage.getItem('a11y-motion') === 'true');
+    setHydrated(true);
   }, []);
 
   useEffect(() => {
     const html = document.documentElement;
     html.classList.toggle('light', theme === 'light');
-    localStorage.setItem('a11y-theme', theme);
-  }, [theme]);
+    if (hydrated) localStorage.setItem('a11y-theme', theme);
+  }, [theme, hydrated]);
 
   useEffect(() => {
     const html = document.documentElement;
     html.classList.remove('font-large', 'font-xl');
     if (fontSize === 'large') html.classList.add('font-large');
     if (fontSize === 'xl') html.classList.add('font-xl');
-    localStorage.setItem('a11y-fontsize', fontSize);
-  }, [fontSize]);
+    if (hydrated) localStorage.setItem('a11y-fontsize', fontSize);
+  }, [fontSize, hydrated]);
 
   useEffect(() => {
     document.documentElement.style.setProperty(
       '--user-reduced-motion',
       reducedMotion ? 'reduce' : 'no-preference',
     );
-    localStorage.setItem('a11y-motion', String(reducedMotion));
-  }, [reducedMotion]);
+    if (hydrated) localStorage.setItem('a11y-motion', String(reducedMotion));
+  }, [reducedMotion, hydrated]);
+
+  useEffect(() => {
+    if (!open) return;
+    function handleClick(e: MouseEvent) {
+      if (wrapperRef.current && !wrapperRef.current.contains(e.target as Node)) setOpen(false);
+    }
+    function handleKey(e: KeyboardEvent) {
+      if (e.key === 'Escape') setOpen(false);
+    }
+    document.addEventListener('mousedown', handleClick);
+    document.addEventListener('keydown', handleKey);
+    return () => {
+      document.removeEventListener('mousedown', handleClick);
+      document.removeEventListener('keydown', handleKey);
+    };
+  }, [open]);
 
   return (
-    <div className="relative">
+    <div ref={wrapperRef} className="relative">
       <button
         onClick={() => setOpen(!open)}
         className="size-10 inline-flex items-center justify-center rounded-lg text-text-secondary hover:text-text-primary hover:bg-card-hover transition-colors duration-200 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary"
