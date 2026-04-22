@@ -4,6 +4,7 @@ import { useState } from 'react';
 import { signOut } from 'next-auth/react';
 import { Trash2 } from 'lucide-react';
 import { Modal } from '@/components/ui/Modal';
+import { deleteAccount } from '@/actions/account';
 
 interface AccountActionsProps {
   userEmail: string;
@@ -25,23 +26,13 @@ export function AccountActions({ userEmail }: AccountActionsProps) {
     if (!canSubmit) return;
     setSubmitting(true);
     setError(null);
-    try {
-      const res = await fetch('/api/account', {
-        method: 'DELETE',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ confirmEmail: confirmText.trim() }),
-      });
-      if (!res.ok) {
-        const payload = (await res.json().catch(() => null)) as { error?: string } | null;
-        setError(payload?.error ?? 'Falha ao excluir conta. Tente novamente.');
-        setSubmitting(false);
-        return;
-      }
-      await signOut({ callbackUrl: '/login' });
-    } catch {
-      setError('Erro de rede. Tente novamente.');
+    const result = await deleteAccount(confirmText.trim());
+    if (!result.ok) {
+      setError(result.error);
       setSubmitting(false);
+      return;
     }
+    await signOut({ callbackUrl: '/login' });
   }
 
   return (
