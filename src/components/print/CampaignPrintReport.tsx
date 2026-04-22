@@ -40,7 +40,11 @@ export function CampaignPrintReport({ data, orgName }: CampaignPrintReportProps)
 
   const now = new Date();
   const cmStart = currentMonthStart();
-  const currentMonthOverdue = now.getUTCDate() > data.paymentDayEnd;
+  const lastDayOfCurrentMonth = new Date(
+    Date.UTC(now.getUTCFullYear(), now.getUTCMonth() + 1, 0),
+  ).getUTCDate();
+  const effectivePaymentDayEnd = Math.min(data.paymentDayEnd, lastDayOfCurrentMonth);
+  const currentMonthOverdue = now.getUTCDate() > effectivePaymentDayEnd;
   const overdueMonths = months.filter((m) => {
     if (m.date < cmStart) return true;
     const sameAsCurrent =
