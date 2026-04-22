@@ -1,5 +1,3 @@
-'use client';
-
 import { CheckCircle, Circle } from 'lucide-react';
 
 interface OnboardingStepperProps {

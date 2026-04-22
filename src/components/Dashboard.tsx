@@ -9,24 +9,22 @@ import { Button } from './ui/Button';
 import { Badge } from './ui/Badge';
 import { ConfirmModal } from './ui/ConfirmModal';
 import { useToast } from './ui/Toast';
-import { SummaryCards } from './dashboard/SummaryCards';
-import { OnboardingStepper } from './dashboard/OnboardingStepper';
 import { ParticipantTable } from './participants/ParticipantTable';
 import { AddParticipantModal } from './participants/AddParticipantModal';
 import { MessageModal } from './messaging/MessageModal';
-import { CampaignPrintReport } from './print/CampaignPrintReport';
 import { CollapsibleSection } from './ui/CollapsibleSection';
 import { getMonthsFromRange } from '@/lib/months';
 import type { CampaignData, PaymentStatus } from '@/types';
 
 interface DashboardProps {
   data: CampaignData;
-  orgName?: string | null;
   isEnded?: boolean;
   userRole?: string;
+  topSlot?: React.ReactNode;
+  printSlot?: React.ReactNode;
 }
 
-export default function Dashboard({ data, orgName = null, isEnded = false, userRole }: DashboardProps) {
+export default function Dashboard({ data, isEnded = false, userRole, topSlot, printSlot }: DashboardProps) {
   const isOwner = userRole === 'OWNER';
   const [loadingId, setLoadingId] = useState<string | null>(null);
   const [copiedFull, setCopiedFull] = useState(false);
@@ -121,14 +119,7 @@ export default function Dashboard({ data, orgName = null, isEnded = false, userR
         </button>
       </div>
 
-      {/* Onboarding stepper */}
-      <OnboardingStepper
-        hasParticipants={data.participants.length > 0}
-        hasPayments={data.participants.some((p) => p.payments.some((pay) => pay.status !== 'PENDING'))}
-      />
-
-      {/* Summary Cards */}
-      <SummaryCards data={data} months={months} />
+      {topSlot}
 
       {/* Actions bar */}
       <div className="flex items-center justify-between gap-3 flex-wrap">
@@ -227,7 +218,7 @@ export default function Dashboard({ data, orgName = null, isEnded = false, userR
         variant="danger"
       />
 
-      <CampaignPrintReport data={data} orgName={orgName} />
+      {printSlot}
     </div>
   );
 }
