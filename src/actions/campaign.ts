@@ -7,6 +7,7 @@ import { CampaignRole } from '@/generated/prisma/client';
 import { revalidatePath } from 'next/cache';
 import { redirect } from 'next/navigation';
 import { type ActionResult, handlePrismaError, ok } from '@/lib/errors';
+import { getStr, getOptStr } from '@/lib/form';
 
 export async function createCampaign(formData: FormData): Promise<ActionResult<never>> {
   let campaignId: string;
@@ -14,14 +15,14 @@ export async function createCampaign(formData: FormData): Promise<ActionResult<n
     const user = await getSessionUser();
 
     const data = campaignSchema.parse({
-      name: formData.get('name') as string,
-      description: (formData.get('description') as string) || undefined,
-      pixKey: formData.get('pixKey') as string,
-      monthlyValue: Math.round(parseFloat(formData.get('monthlyValue') as string) * 100),
-      startMonth: new Date(formData.get('startMonth') as string),
-      endMonth: new Date(formData.get('endMonth') as string),
-      paymentDayStart: parseInt(formData.get('paymentDayStart') as string),
-      paymentDayEnd: parseInt(formData.get('paymentDayEnd') as string),
+      name: getStr(formData, 'name'),
+      description: getOptStr(formData, 'description') ?? undefined,
+      pixKey: getStr(formData, 'pixKey'),
+      monthlyValue: Math.round(parseFloat(getStr(formData, 'monthlyValue')) * 100),
+      startMonth: new Date(getStr(formData, 'startMonth')),
+      endMonth: new Date(getStr(formData, 'endMonth')),
+      paymentDayStart: parseInt(getStr(formData, 'paymentDayStart')),
+      paymentDayEnd: parseInt(getStr(formData, 'paymentDayEnd')),
     });
 
     const hasBranding =
@@ -33,18 +34,18 @@ export async function createCampaign(formData: FormData): Promise<ActionResult<n
 
     const branding = hasBranding
       ? brandingSchema.parse({
-          orgName: (formData.get('orgName') as string) || null,
-          logoUrl: (formData.get('logoUrl') as string) || null,
-          bannerUrl: (formData.get('bannerUrl') as string) || null,
-          accentColor: (formData.get('accentColor') as string) || null,
-          messageSignature: (formData.get('messageSignature') as string) || null,
+          orgName: getOptStr(formData, 'orgName'),
+          logoUrl: getOptStr(formData, 'logoUrl'),
+          bannerUrl: getOptStr(formData, 'bannerUrl'),
+          accentColor: getOptStr(formData, 'accentColor'),
+          messageSignature: getOptStr(formData, 'messageSignature'),
         })
       : null;
 
-    const templatesRaw = formData.get('templates') as string | null;
+    const templatesRaw = getOptStr(formData, 'templates');
     const templates = templatesRaw ? templatesSchema.parse(JSON.parse(templatesRaw)) : null;
 
-    const leadersRaw = formData.get('leaderEmails') as string | null;
+    const leadersRaw = getOptStr(formData, 'leaderEmails');
     const leaderEmails: string[] = leadersRaw
       ? (JSON.parse(leadersRaw) as unknown[]).map((e) => emailSchema.parse(e))
       : [];
@@ -132,14 +133,14 @@ export async function updateCampaign(
     const { user } = await requireCampaignOwner(campaignId);
 
     const data = campaignSchema.parse({
-      name: formData.get('name') as string,
-      description: (formData.get('description') as string) || undefined,
-      pixKey: formData.get('pixKey') as string,
-      monthlyValue: Math.round(parseFloat(formData.get('monthlyValue') as string) * 100),
-      startMonth: new Date(formData.get('startMonth') as string),
-      endMonth: new Date(formData.get('endMonth') as string),
-      paymentDayStart: parseInt(formData.get('paymentDayStart') as string),
-      paymentDayEnd: parseInt(formData.get('paymentDayEnd') as string),
+      name: getStr(formData, 'name'),
+      description: getOptStr(formData, 'description') ?? undefined,
+      pixKey: getStr(formData, 'pixKey'),
+      monthlyValue: Math.round(parseFloat(getStr(formData, 'monthlyValue')) * 100),
+      startMonth: new Date(getStr(formData, 'startMonth')),
+      endMonth: new Date(getStr(formData, 'endMonth')),
+      paymentDayStart: parseInt(getStr(formData, 'paymentDayStart')),
+      paymentDayEnd: parseInt(getStr(formData, 'paymentDayEnd')),
     });
 
     await prisma.campaign.update({
@@ -193,11 +194,11 @@ export async function updateBranding(
     const { user } = await requireCampaignOwner(campaignId);
 
     const data = brandingSchema.parse({
-      orgName: (formData.get('orgName') as string) || null,
-      logoUrl: (formData.get('logoUrl') as string) || null,
-      bannerUrl: (formData.get('bannerUrl') as string) || null,
-      accentColor: (formData.get('accentColor') as string) || null,
-      messageSignature: (formData.get('messageSignature') as string) || null,
+      orgName: getOptStr(formData, 'orgName'),
+      logoUrl: getOptStr(formData, 'logoUrl'),
+      bannerUrl: getOptStr(formData, 'bannerUrl'),
+      accentColor: getOptStr(formData, 'accentColor'),
+      messageSignature: getOptStr(formData, 'messageSignature'),
     });
 
     await prisma.campaign.update({

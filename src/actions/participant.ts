@@ -5,6 +5,7 @@ import { requireCampaignAccess } from '@/lib/permissions';
 import { participantSchema } from '@/lib/validators';
 import { revalidatePath } from 'next/cache';
 import { type ActionResult, handlePrismaError, ok } from '@/lib/errors';
+import { getStr } from '@/lib/form';
 
 export async function addParticipant(
   campaignId: string,
@@ -15,8 +16,8 @@ export async function addParticipant(
     const { user } = await requireCampaignAccess(campaignId);
 
     const data = participantSchema.parse({
-      name: (formData.get('name') as string).trim(),
-      phone: (formData.get('phone') as string).trim().replace(/\D/g, ''),
+      name: getStr(formData, 'name').trim(),
+      phone: getStr(formData, 'phone').trim().replace(/\D/g, ''),
     });
 
     participantId = await prisma.$transaction(async (tx) => {
@@ -78,8 +79,8 @@ export async function editParticipant(
     const { user } = await requireCampaignAccess(campaignId);
 
     const data = participantSchema.parse({
-      name: (formData.get('name') as string).trim(),
-      phone: (formData.get('phone') as string).trim().replace(/\D/g, ''),
+      name: getStr(formData, 'name').trim(),
+      phone: getStr(formData, 'phone').trim().replace(/\D/g, ''),
     });
 
     const participant = await prisma.participant.findFirst({
