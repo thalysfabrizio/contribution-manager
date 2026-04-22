@@ -17,6 +17,14 @@ export async function DELETE(req: Request) {
     return jsonError(401, 'Unauthorized');
   }
 
+  const exists = await prisma.user.findUnique({
+    where: { id: session.user.id },
+    select: { id: true },
+  });
+  if (!exists) {
+    return jsonError(401, 'Unauthorized');
+  }
+
   const limit = await checkRateLimit(`account-delete:${session.user.id}`, 3, 60 * 60_000);
   if (!limit.allowed) {
     return jsonError(429, 'Too Many Requests', { 'Retry-After': String(limit.retryAfter) });

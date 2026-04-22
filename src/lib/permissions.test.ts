@@ -26,6 +26,7 @@ describe('getSessionUser', () => {
     mockAuth.mockResolvedValue({
       user: { id: 'user-1', name: 'Teste', email: 'teste@teste.com' },
     });
+    mockPrisma.user.findUnique.mockResolvedValue({ id: 'user-1' });
 
     const user = await getSessionUser();
     expect(user.id).toBe('user-1');
@@ -43,6 +44,15 @@ describe('getSessionUser', () => {
 
     await expect(getSessionUser()).rejects.toThrow('Não autorizado');
   });
+
+  it('lança "Não autorizado" quando usuário não existe mais no banco', async () => {
+    mockAuth.mockResolvedValue({
+      user: { id: 'user-zumbi', name: 'Teste', email: 'teste@teste.com' },
+    });
+    mockPrisma.user.findUnique.mockResolvedValue(null);
+
+    await expect(getSessionUser()).rejects.toThrow('Não autorizado');
+  });
 });
 
 describe('requireCampaignAccess', () => {
@@ -50,6 +60,7 @@ describe('requireCampaignAccess', () => {
     mockAuth.mockResolvedValue({
       user: { id: 'user-1', name: 'Teste', email: 'teste@teste.com' },
     });
+    mockPrisma.user.findUnique.mockResolvedValue({ id: 'user-1' });
   });
 
   it('retorna user + member quando membro existe', async () => {
@@ -77,6 +88,7 @@ describe('requireCampaignOwner', () => {
     mockAuth.mockResolvedValue({
       user: { id: 'user-1', name: 'Teste', email: 'teste@teste.com' },
     });
+    mockPrisma.user.findUnique.mockResolvedValue({ id: 'user-1' });
   });
 
   it('retorna quando role é OWNER', async () => {

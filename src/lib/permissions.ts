@@ -6,6 +6,13 @@ export async function getSessionUser() {
   if (!session?.user?.id) {
     throw new Error('Não autorizado');
   }
+  const exists = await prisma.user.findUnique({
+    where: { id: session.user.id },
+    select: { id: true },
+  });
+  if (!exists) {
+    throw new Error('Não autorizado');
+  }
   return { ...session.user, id: session.user.id };
 }
 
