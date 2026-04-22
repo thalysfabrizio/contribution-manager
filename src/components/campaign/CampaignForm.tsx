@@ -43,8 +43,18 @@ export function CampaignForm({ campaign }: CampaignFormProps) {
   const [paymentDayStart, setPaymentDayStart] = useState(String(campaign.paymentDayStart));
   const [paymentDayEnd, setPaymentDayEnd] = useState(String(campaign.paymentDayEnd));
 
+  const isDirty =
+    name !== campaign.name ||
+    description !== (campaign.description ?? '') ||
+    pixKey !== campaign.pixKey ||
+    monthlyValue !== (campaign.monthlyValue / 100).toFixed(2) ||
+    startMonth !== toMonthString(campaign.startMonth) ||
+    endMonth !== toMonthString(campaign.endMonth) ||
+    paymentDayStart !== String(campaign.paymentDayStart) ||
+    paymentDayEnd !== String(campaign.paymentDayEnd);
+
   const saveButton = (
-    <Button type="submit" size="sm" disabled={loading} form="campaign-form">
+    <Button type="submit" size="sm" disabled={loading || !isDirty} form="campaign-form">
       {loading ? (
         <span className="flex items-center gap-1.5">
           <span className="size-3 border-2 border-primary-fg/30 border-t-primary-fg rounded-full animate-spin" />

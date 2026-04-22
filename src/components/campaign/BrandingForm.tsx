@@ -36,6 +36,13 @@ export function BrandingForm({
   });
   const { toast } = useToast();
 
+  const isDirty =
+    values.orgName !== (orgName ?? '') ||
+    values.logoUrl !== (logoUrl ?? '') ||
+    values.bannerUrl !== (bannerUrl ?? '') ||
+    values.accentColor !== (accentColor ?? DEFAULT_ACCENT) ||
+    values.messageSignature !== (messageSignature ?? '');
+
   const saveAction = (
     <form
       action={async () => {
@@ -56,7 +63,7 @@ export function BrandingForm({
         setOpen(false);
       }}
     >
-      <Button type="submit" size="sm" disabled={loading}>
+      <Button type="submit" size="sm" disabled={loading || !isDirty}>
         {loading ? (
           <span className="flex items-center gap-1.5">
             <span className="size-3 border-2 border-primary-fg/30 border-t-primary-fg rounded-full animate-spin" />

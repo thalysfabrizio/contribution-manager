@@ -35,6 +35,13 @@ export function TemplateEditor({
   const [open, setOpen] = useState(false);
   const { toast } = useToast();
 
+  const baseline = initialTemplates ?? DEFAULT_TEMPLATES;
+  const isDirty =
+    templates.charge !== baseline.charge ||
+    templates.reminder !== baseline.reminder ||
+    templates.overdue !== baseline.overdue ||
+    templates.thanks !== baseline.thanks;
+
   const saveAction = (
     <form
       action={async () => {
@@ -49,7 +56,7 @@ export function TemplateEditor({
         setOpen(false);
       }}
     >
-      <Button type="submit" size="sm" disabled={saving}>
+      <Button type="submit" size="sm" disabled={saving || !isDirty}>
         {saving ? (
           <span className="flex items-center gap-1.5">
             <span className="size-3 border-2 border-primary-fg/30 border-t-primary-fg rounded-full animate-spin" />
