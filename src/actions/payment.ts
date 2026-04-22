@@ -15,14 +15,9 @@ export async function updatePaymentStatus(
   newStatus: PaymentStatus,
 ): Promise<ActionResult<void>> {
   try {
-    const { user } = await requireCampaignAccess(campaignId);
+    const { user, member } = await requireCampaignAccess(campaignId);
 
-    const campaign = await prisma.campaign.findUnique({
-      where: { id: campaignId },
-      select: { endMonth: true },
-    });
-
-    if (campaign && isCampaignEnded(campaign.endMonth)) {
+    if (isCampaignEnded(member.campaign.endMonth)) {
       throw new Error('Campanha encerrada — somente leitura');
     }
 

@@ -111,9 +111,10 @@ describe('updatePaymentStatus', () => {
   });
 
   it('bloqueia campanha encerrada', async () => {
-    mockPrisma.campaign.findUnique.mockResolvedValue(
-      fakeCampaign({ endMonth: new Date(Date.UTC(2020, 0, 1)) }),
-    );
+    (requireCampaignAccess as Mock).mockResolvedValue({
+      user: fakeUser(),
+      member: fakeMember({ campaign: { endMonth: new Date(Date.UTC(2020, 0, 1)) } }),
+    });
 
     const result = await updatePaymentStatus(campaignId, participantId, month, 'PAID_PIX');
     expect(result.ok).toBe(false);
@@ -123,9 +124,10 @@ describe('updatePaymentStatus', () => {
   it('permite atualização quando endMonth é o mês atual', async () => {
     const now = new Date();
     const currentMonth = new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), 1));
-    mockPrisma.campaign.findUnique.mockResolvedValue(
-      fakeCampaign({ endMonth: currentMonth }),
-    );
+    (requireCampaignAccess as Mock).mockResolvedValue({
+      user: fakeUser(),
+      member: fakeMember({ campaign: { endMonth: currentMonth } }),
+    });
     mockPrisma.payment.findUnique.mockResolvedValue(null);
     mockPrisma.payment.upsert.mockResolvedValue({});
     mockPrisma.auditLog.create.mockResolvedValue({});

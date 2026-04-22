@@ -14,6 +14,7 @@ export function fakeMember(overrides: Record<string, unknown> = {}) {
     campaignId: 'campaign-1',
     role: 'OWNER' as const,
     joinedAt: new Date('2026-01-01'),
+    campaign: { endMonth: new Date('2026-12-01') },
     ...overrides,
   };
 }

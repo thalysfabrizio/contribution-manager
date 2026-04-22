@@ -26,6 +26,9 @@ export async function requireCampaignAccess(campaignId: string) {
         campaignId,
       },
     },
+    include: {
+      campaign: { select: { endMonth: true } },
+    },
   });
 
   if (!member) {
