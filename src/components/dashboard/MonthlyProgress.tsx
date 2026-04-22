@@ -44,7 +44,7 @@ export function MonthlyProgress({ participants, months }: MonthlyProgressProps) 
                   aria-label={`${m.label}: ${paidCount} de ${total}`}
                 />
               </div>
-              <span className="text-sm text-text-muted w-20 text-right tabular-nums">
+              <span className="text-sm text-text-muted w-24 text-right tabular-nums whitespace-nowrap">
                 {paidCount}/{total} ({pct}%)
               </span>
             </div>
