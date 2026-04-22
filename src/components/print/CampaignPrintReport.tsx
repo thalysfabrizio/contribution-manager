@@ -38,11 +38,19 @@ export function CampaignPrintReport({ data, orgName }: CampaignPrintReportProps)
   const period = `${formatMonthRange(data.startMonth)} – ${formatMonthRange(data.endMonth)}`;
   const generatedAt = new Date().toLocaleString('pt-BR');
 
+  const now = new Date();
   const cmStart = currentMonthStart();
-  const pastMonths = months.filter((m) => m.date < cmStart);
+  const currentMonthOverdue = now.getUTCDate() > data.paymentDayEnd;
+  const overdueMonths = months.filter((m) => {
+    if (m.date < cmStart) return true;
+    const sameAsCurrent =
+      m.date.getUTCFullYear() === cmStart.getUTCFullYear() &&
+      m.date.getUTCMonth() === cmStart.getUTCMonth();
+    return sameAsCurrent && currentMonthOverdue;
+  });
 
   const participantStatus = data.participants.map((p) => {
-    const openLabels = pastMonths
+    const openLabels = overdueMonths
       .filter((m) => {
         const pay = p.payments.find((pm) => isSameMonth(pm.month, m.date));
         return !pay || (pay.status !== 'PAID_PIX' && pay.status !== 'PAID_CASH');
