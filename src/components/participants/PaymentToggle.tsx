@@ -14,10 +14,23 @@ interface PaymentToggleProps {
 
 export function PaymentToggle({ status, isLoading, isDisabled, onSelect }: PaymentToggleProps) {
   const [open, setOpen] = useState(false);
+  const [direction, setDirection] = useState<'down' | 'up'>('down');
   const ref = useRef<HTMLDivElement>(null);
   const display = getStatusDisplay(status);
 
   const close = useCallback(() => setOpen(false), []);
+
+  const toggle = () => {
+    if (isDisabled || isLoading) return;
+    if (!open && ref.current) {
+      const rect = ref.current.getBoundingClientRect();
+      const spaceBelow = window.innerHeight - rect.bottom;
+      const spaceAbove = rect.top;
+      const MENU_HEIGHT = 200;
+      setDirection(spaceBelow < MENU_HEIGHT && spaceAbove > spaceBelow ? 'up' : 'down');
+    }
+    setOpen(!open);
+  };
 
   useEffect(() => {
     if (!open) return;
@@ -38,7 +51,7 @@ export function PaymentToggle({ status, isLoading, isDisabled, onSelect }: Payme
   return (
     <div ref={ref} className="relative inline-flex">
       <button
-        onClick={() => !isDisabled && !isLoading && setOpen(!open)}
+        onClick={toggle}
         disabled={isLoading || isDisabled}
         title={isDisabled ? 'Campanha encerrada' : 'Clique para alterar'}
         aria-label={display.ariaLabel}
@@ -54,7 +67,11 @@ export function PaymentToggle({ status, isLoading, isDisabled, onSelect }: Payme
       </button>
       {open && (
         <div
-          className="absolute top-full left-1/2 -translate-x-1/2 mt-1.5 bg-card border border-border rounded-xl shadow-xl py-1.5 z-30 animate-slide-down min-w-[140px]"
+          className={`absolute left-1/2 -translate-x-1/2 bg-card border border-border rounded-xl shadow-xl py-1.5 z-30 min-w-[140px] ${
+            direction === 'up'
+              ? 'bottom-full mb-1.5 animate-slide-up'
+              : 'top-full mt-1.5 animate-slide-down'
+          }`}
           role="menu"
         >
           {PAYMENT_OPTIONS.map((opt) => (
