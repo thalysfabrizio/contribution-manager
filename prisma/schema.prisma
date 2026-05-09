@@ -82,6 +82,7 @@ model Campaign {
   ownerId         String
   members         CampaignMember[]
   participants    Participant[]
+  events          Event[]
   auditLogs       AuditLog[]
   createdAt       DateTime         @default(now())
 }
@@ -144,6 +145,46 @@ enum PaymentStatus {
   LATE
 }
 
+model Event {
+  id           String             @id @default(cuid())
+  name         String
+  description  String?
+  eventDate    DateTime
+  status       EventStatus        @default(PLANNED)
+  campaign     Campaign           @relation(fields: [campaignId], references: [id], onDelete: Cascade)
+  campaignId   String
+  transactions EventTransaction[]
+  createdAt    DateTime           @default(now())
+  updatedAt    DateTime           @updatedAt
+
+  @@index([campaignId, eventDate])
+}
+
+model EventTransaction {
+  id          String          @id @default(cuid())
+  event       Event           @relation(fields: [eventId], references: [id], onDelete: Cascade)
+  eventId     String
+  kind        TransactionKind
+  amount      Int
+  description String
+  occurredAt  DateTime        @default(now())
+  createdAt   DateTime        @default(now())
+
+  @@index([eventId, occurredAt])
+}
+
+enum EventStatus {
+  PLANNED
+  ONGOING
+  FINISHED
+  CANCELED
+}
+
+enum TransactionKind {
+  EXPENSE
+  INCOME
+}
+
 model AuditLog {
   id             String      @id @default(cuid())
   action         AuditAction
@@ -171,6 +212,11 @@ enum AuditAction {
   CAMPAIGN_EDITED
   MEMBER_INVITED
   MEMBER_REMOVED
+  EVENT_CREATED
+  EVENT_EDITED
+  EVENT_REMOVED
+  EVENT_TRANSACTION_ADDED
+  EVENT_TRANSACTION_REMOVED
 }
 
 model RateLimit {

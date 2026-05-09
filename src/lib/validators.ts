@@ -142,3 +142,21 @@ export const emailSchema = z
   .trim()
   .toLowerCase()
   .email('Email inválido');
+
+export const eventStatusSchema = z.enum(['PLANNED', 'ONGOING', 'FINISHED', 'CANCELED']);
+
+export const transactionKindSchema = z.enum(['EXPENSE', 'INCOME']);
+
+export const eventSchema = z.object({
+  name: z.string().trim().min(1, 'Nome é obrigatório').max(120),
+  description: z.string().trim().max(500).optional(),
+  eventDate: z.date(),
+  status: eventStatusSchema.default('PLANNED'),
+});
+
+export const eventTransactionSchema = z.object({
+  kind: transactionKindSchema,
+  amount: z.number().int().positive('Valor deve ser positivo'),
+  description: z.string().trim().min(1, 'Descrição é obrigatória').max(200),
+  occurredAt: z.date(),
+});

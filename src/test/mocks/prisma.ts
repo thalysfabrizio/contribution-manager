@@ -10,6 +10,7 @@ const modelMethods = [
   'delete',
   'deleteMany',
   'count',
+  'groupBy',
 ] as const;
 
 const models = [
@@ -23,6 +24,8 @@ const models = [
   'session',
   'account',
   'verificationToken',
+  'event',
+  'eventTransaction',
 ] as const;
 
 type MockFn = ReturnType<typeof vi.fn>;
