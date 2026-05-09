@@ -74,52 +74,55 @@ export default async function CampaignPage({ params }: Props) {
   }));
 
   return (
-    <main id="main" className="min-h-[calc(100dvh-3.5rem)]">
-      {campaign.bannerUrl && (
-        <div className="relative w-full h-32 md:h-44 overflow-hidden">
-          <Image
-            src={campaign.bannerUrl}
-            alt=""
-            fill
-            sizes="100vw"
-            className="object-cover"
-            priority
-            unoptimized
-          />
-          <div className="absolute inset-0 bg-gradient-to-b from-transparent via-transparent to-app" />
-        </div>
-      )}
-      <div className="max-w-[1200px] mx-auto px-5 py-8 md:px-10 md:py-10 space-y-8">
-        <Dashboard
-          data={campaign}
-          isEnded={isEnded}
-          userRole={member.role}
-          topSlot={
-            <>
-              <OnboardingStepper
-                hasParticipants={campaign.participants.length > 0}
-                hasPayments={campaign.participants.some((p) =>
-                  p.payments.some((pay) => pay.status !== 'PENDING'),
-                )}
-              />
-              <SummaryCards data={campaign} months={months} />
-            </>
-          }
-          printSlot={<CampaignPrintReport data={campaign} orgName={campaign.orgName ?? null} />}
-        />
-        <CollapsibleSection id="analytics" title="Análise da Campanha">
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-x-8 gap-y-8">
-            <MonthlyProgress participants={campaign.participants} months={months} />
-            <PaymentMethodChart participants={campaign.participants} />
+    <main id="main" className="min-h-[calc(100dvh-3.5rem)] print:min-h-0">
+      <div className="print:hidden">
+        {campaign.bannerUrl && (
+          <div className="relative w-full h-32 md:h-44 overflow-hidden">
+            <Image
+              src={campaign.bannerUrl}
+              alt=""
+              fill
+              sizes="100vw"
+              className="object-cover"
+              priority
+              unoptimized
+            />
+            <div className="absolute inset-0 bg-gradient-to-b from-transparent via-transparent to-app" />
           </div>
-        </CollapsibleSection>
-        <ActivityTimeline
-          key={id}
-          campaignId={id}
-          initialItems={activityItems}
-          hasMore={logs.length > 20}
-        />
+        )}
+        <div className="max-w-[1200px] mx-auto px-5 py-8 md:px-10 md:py-10 space-y-8">
+          <Dashboard
+            data={campaign}
+            isEnded={isEnded}
+            userRole={member.role}
+            topSlot={
+              <>
+                <OnboardingStepper
+                  hasParticipants={campaign.participants.length > 0}
+                  hasPayments={campaign.participants.some((p) =>
+                    p.payments.some((pay) => pay.status !== 'PENDING'),
+                  )}
+                />
+                <SummaryCards data={campaign} months={months} />
+              </>
+            }
+          />
+          <CollapsibleSection id="analytics" title="Análise da Campanha">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-x-8 gap-y-8">
+              <MonthlyProgress participants={campaign.participants} months={months} />
+              <PaymentMethodChart participants={campaign.participants} />
+            </div>
+          </CollapsibleSection>
+          <ActivityTimeline
+            key={id}
+            campaignId={id}
+            initialItems={activityItems}
+            hasMore={logs.length > 20}
+          />
+        </div>
       </div>
+
+      <CampaignPrintReport data={campaign} orgName={campaign.orgName ?? null} />
     </main>
   );
 }
