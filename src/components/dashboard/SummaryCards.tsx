@@ -3,6 +3,7 @@ import { TrendingUp, Target, CheckCircle, Clock } from 'lucide-react';
 import type { CampaignData } from '@/types';
 import type { MonthEntry } from '@/lib/months';
 import { isSameMonth, isCurrentMonth } from '@/lib/months';
+import { brl } from '@/lib/format';
 
 const iconBgMap: Record<string, string> = {
   'text-success': 'bg-success-bg',
@@ -17,19 +18,14 @@ interface SummaryCardsProps {
   months: MonthEntry[];
 }
 
-const formatCurrency = (value: number) =>
-  value.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
-
 export function SummaryCards({ data, months }: SummaryCardsProps) {
-  const valueInReais = data.monthlyValue / 100;
-
-  const totalCollected = data.participants.reduce((acc, p) => {
+  const totalCollectedCents = data.participants.reduce((acc, p) => {
     const paid = p.payments.filter((pay) => pay.status === 'PAID_PIX' || pay.status === 'PAID_CASH').length;
-    return acc + paid * valueInReais;
+    return acc + paid * data.monthlyValue;
   }, 0);
 
-  const totalGoal = data.participants.length * months.length * valueInReais;
-  const progressPct = totalGoal > 0 ? Math.round((totalCollected / totalGoal) * 100) : 0;
+  const totalGoalCents = data.participants.length * months.length * data.monthlyValue;
+  const progressPct = totalGoalCents > 0 ? Math.round((totalCollectedCents / totalGoalCents) * 100) : 0;
 
   const currentMonthEntry = months.find((m) => isCurrentMonth(m.date));
   let paidThisMonth = 0;
@@ -49,7 +45,7 @@ export function SummaryCards({ data, months }: SummaryCardsProps) {
   const cards = [
     {
       label: 'Arrecadado',
-      value: formatCurrency(totalCollected),
+      value: brl(totalCollectedCents),
       sub: `${progressPct}% da meta`,
       icon: TrendingUp,
       color: 'text-success' as const,
@@ -57,7 +53,7 @@ export function SummaryCards({ data, months }: SummaryCardsProps) {
     },
     {
       label: 'Meta Total',
-      value: formatCurrency(totalGoal),
+      value: brl(totalGoalCents),
       sub: `${data.participants.length} x ${months.length} meses`,
       icon: Target,
       color: 'text-primary' as const,

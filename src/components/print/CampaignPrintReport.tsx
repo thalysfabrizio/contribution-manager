@@ -1,4 +1,5 @@
 import { getMonthsFromRange, isSameMonth } from '@/lib/months';
+import { brl } from '@/lib/format';
 import type { CampaignData } from '@/types';
 
 interface CampaignPrintReportProps {
@@ -8,10 +9,6 @@ interface CampaignPrintReportProps {
 
 function formatMonthRange(date: Date) {
   return date.toLocaleDateString('pt-BR', { month: 'long', year: 'numeric', timeZone: 'UTC' });
-}
-
-function brl(cents: number) {
-  return `R$ ${(cents / 100).toFixed(2).replace('.', ',')}`;
 }
 
 function currentMonthStart(): Date {
