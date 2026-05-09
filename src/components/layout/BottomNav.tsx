@@ -2,7 +2,7 @@
 
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import { LayoutDashboard, Settings } from 'lucide-react';
+import { CalendarDays, FileBarChart, LayoutDashboard, Settings } from 'lucide-react';
 
 export function BottomNav() {
   const pathname = usePathname();
@@ -18,6 +18,20 @@ export function BottomNav() {
       active: pathname === `/campaigns/${campaignId}`,
     },
     {
+      label: 'Eventos',
+      href: `/campaigns/${campaignId}/eventos`,
+      icon: CalendarDays,
+      active: pathname?.startsWith(`/campaigns/${campaignId}/eventos`) ?? false,
+    },
+    {
+      label: 'Relatório',
+      href: `/campaigns/${campaignId}/relatorio-geral`,
+      icon: FileBarChart,
+      active:
+        pathname === `/campaigns/${campaignId}/relatorio-geral` ||
+        pathname === `/campaigns/${campaignId}/relatorio`,
+    },
+    {
       label: 'Config',
       href: `/campaigns/${campaignId}/settings`,
       icon: Settings,
@@ -27,7 +41,7 @@ export function BottomNav() {
 
   return (
     <nav className="fixed bottom-0 left-0 right-0 z-40 bg-card/95 backdrop-blur-md border-t border-border md:hidden pb-[env(safe-area-inset-bottom)]">
-      <div className="flex items-center justify-center gap-16 h-16">
+      <div className="flex items-center justify-around h-16 px-2">
         {items.map((item) => (
           <Link
             key={item.href}

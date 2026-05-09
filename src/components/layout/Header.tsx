@@ -5,7 +5,19 @@ import { signOut } from 'next-auth/react';
 import Link from 'next/link';
 import Image from 'next/image';
 import { usePathname } from 'next/navigation';
-import { ChevronDown, LogOut, User, HandCoins, FileText, Shield, UserCog, Plus } from 'lucide-react';
+import {
+  CalendarDays,
+  ChevronDown,
+  FileBarChart,
+  FileText,
+  HandCoins,
+  LayoutDashboard,
+  LogOut,
+  Plus,
+  Shield,
+  User,
+  UserCog,
+} from 'lucide-react';
 import { AccessibilityPanel } from './AccessibilityPanel';
 import { useClickOutside } from '@/hooks/useClickOutside';
 import { useEscape } from '@/hooks/useEscape';
@@ -121,6 +133,54 @@ export function Header({ userName, userImage, campaigns }: HeaderProps) {
                 </div>
               )}
             </div>
+          )}
+
+          {currentCampaignId && currentCampaignId !== 'new' && (
+            <nav
+              aria-label="Navegação da campanha"
+              className="hidden md:flex items-center gap-1 ml-2"
+            >
+              {[
+                {
+                  label: 'Dashboard',
+                  href: `/campaigns/${currentCampaignId}`,
+                  icon: LayoutDashboard,
+                  active: pathname === `/campaigns/${currentCampaignId}`,
+                },
+                {
+                  label: 'Eventos',
+                  href: `/campaigns/${currentCampaignId}/eventos`,
+                  icon: CalendarDays,
+                  active:
+                    pathname?.startsWith(
+                      `/campaigns/${currentCampaignId}/eventos`,
+                    ) ?? false,
+                },
+                {
+                  label: 'Relatório geral',
+                  href: `/campaigns/${currentCampaignId}/relatorio-geral`,
+                  icon: FileBarChart,
+                  active:
+                    pathname ===
+                      `/campaigns/${currentCampaignId}/relatorio-geral` ||
+                    pathname === `/campaigns/${currentCampaignId}/relatorio`,
+                },
+              ].map((item) => (
+                <Link
+                  key={item.href}
+                  href={item.href}
+                  className={`inline-flex items-center gap-1.5 text-sm min-h-[44px] px-3 rounded-lg transition-colors ${
+                    item.active
+                      ? 'text-primary bg-primary/10'
+                      : 'text-text-secondary hover:text-text-primary hover:bg-card-hover'
+                  }`}
+                  aria-current={item.active ? 'page' : undefined}
+                >
+                  <item.icon size={14} aria-hidden="true" />
+                  {item.label}
+                </Link>
+              ))}
+            </nav>
           )}
         </div>
 
